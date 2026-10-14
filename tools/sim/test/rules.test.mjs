@@ -134,6 +134,13 @@ play("Final: entering 6 + two 6s = three in a row -> lifeline", { dice: [6, 6, 6
 play("Final: a capture costs no lifeline", { dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1, rules: LF }, (P) => eq(P[1].life, 3, "lifelines"));
 play("Final: losing the 3rd lifeline -> 0 left, still playing", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, life: 1 }], turns: 3, players: 1, rules: LF }, (P) => both(eq(P[0].life, 0, "lifelines"), eq(P[0].out, false, "still in"), eq(P[0].pos, 33, "moved")));
 play("Final: the 4th loss -> out", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, life: 0 }, { skip: 9 }, { skip: 9 }], turns: 9, players: 3, rules: LF }, (P) => eq(P[0].out, true, "out"));
+// Owner idea B: +1 for a 6 that gets you out, -1 when sent back to Start
+const LB = { stairs: true, lifelines: 3, outAfterZero: true, lifeOnEscape6: true, lifeOnCapture: true, lifeOnBackToStart: true };
+play("B: a 6 that enters gives a lifeline", { dice: [6, 2], turns: 1, players: 1, rules: LB }, (P) => eq(P[0].life, 4, "lifelines"));
+play("B: a 6 that leaves the trap gives a lifeline", { tiles: trapTiles, dice: [6, 2], setup: [{ pos: 30, trapped: true }], turns: 1, players: 1, rules: LB }, (P) => eq(P[0].life, 4, "lifelines"));
+play("B: a 6 during normal play gives nothing", { dice: [6, 2], setup: [{ pos: 10 }], turns: 1, players: 1, rules: LB }, (P) => eq(P[0].life, 3, "lifelines"));
+play("B: captured -> -1", { dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1, rules: LB }, (P) => eq(P[1].life, 2, "lifelines"));
+play("B: square 10 'back to start' -> -1", { tiles: { 10: { cat: "P", type: "jump", to: 0 } }, dice: [2], setup: [{ pos: 8 }], turns: 1, players: 1, rules: LB }, (P) => both(eq(P[0].pos, 0, "pos"), eq(P[0].life, 2, "lifelines")));
 
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASS");
 process.exit(fail ? 1 : 0);

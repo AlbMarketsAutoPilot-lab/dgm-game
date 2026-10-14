@@ -33,6 +33,8 @@ export const DEFAULTS = {
   lifeOnCapture: false,  // owner idea: a captured player (sent back to Start by another player) loses a lifeline
   lifeMax: Infinity,
   lifeOnTriple: false,   // owner (final): three 6s in a row in one turn give a lifeline
+  lifeOnEscape6: false,  // owner idea B: a 6 that gets you out of Start or the trap gives a lifeline
+  lifeOnBackToStart: false, // owner idea B: being sent to Start by a square (e.g. 10 "Back to start") costs a lifeline
   outAfterZero: false,   // owner (final): at 0 lifelines you play on ("Attention! no lifelines left"); the next loss = out   // squares that give a lifeline back (never above the starting number)
   roadblock: null,       // N2 roadblock event: { back, range } = the game puts it on a free plain square 1..range in front of the
                          // leader; the first player to land on it (anyone) goes back `back` squares, then it is placed again
@@ -99,7 +101,7 @@ export function simulate(board, rules, games, seed) {
     const P = Array.from({ length: s.players }, () => ({
       pos: s.entry === "six" ? OFF : 0, skip: 0, trapped: false, slow: false, dbl: false, leader: false,
       bonus: 0, jailPass: 0, captured: 0, tries: 0, rest: 0, life: s.lifelines, out: false, stairAt: 0, stairLeft: 0, onStair: false,
-      six1: 0, six2: 0, six3: 0, throwTurns: 0, gainSix: 0, gainTriple: 0, minLife: s.lifelines, lostWait: 0, lostCap: 0,
+      six1: 0, six2: 0, six3: 0, throwTurns: 0, gainSix: 0, gainTriple: 0, gainEscape: 0, lostStart: 0, minLife: s.lifelines, lostWait: 0, lostCap: 0,
       lost: 0, waitEnter: 0, waitTrap: 0, dry: 0, maxDry: 0, rewards: 0, punish: 0, gained: 0, lostSq: 0,
       hits: new Set(), opp: new Map(),
     }));
@@ -155,6 +157,7 @@ export function simulate(board, rules, games, seed) {
       p.pos = to; clearStairs(p);
       capture(pi, to);
       hitRoadblock(pi);
+      if (s.lifeOnBackToStart && s.lifelines && to === 0 && d < 0 && !p.out) { p.lostStart++; loseLife(pi); }
     };
     // How many squares a tile would move the player (thoughtful player's estimate); trap / hospital count as big.
     const swing = (pi, t, depth = 0) => {
@@ -317,6 +320,7 @@ export function simulate(board, rules, games, seed) {
             const r = d6();
             if (off ? s.enterFaces.includes(r) : r === 6) {
               const moved3 = p.tries >= 2;
+              if (s.lifeOnEscape6 && r === 6 && p.life < s.lifeMax) { p.life++; p.gainEscape++; }
               if (s.stairs) setStairs(p, off, p.tries); // each earlier failed throw left one stair step
               p.tries = 0;
               if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false;
@@ -368,7 +372,7 @@ export function simulate(board, rules, games, seed) {
     }
     if (winner < 0) { A.capped++; continue; }
     A.wins[winner]++; A.rounds.push(round);
-    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap, gainTriple: q.gainTriple, minLife: q.minLife, outRound: q.outRound ?? null, lifeAt: q.lifeAt, enterRound: q.enterRound ?? 0, lastLoss: q.lastLoss, capRounds: q.capRounds ?? [] })) });
+    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap, gainTriple: q.gainTriple, gainEscape: q.gainEscape, lostStart: q.lostStart, minLife: q.minLife, outRound: q.outRound ?? null, lifeAt: q.lifeAt, enterRound: q.enterRound ?? 0, lastLoss: q.lastLoss, capRounds: q.capRounds ?? [] })) });
     A.jackpots += gJack; A.falls += gFall; if (gJack) A.gamesJack++; if (gFall) A.gamesFall++;
     A.lateOvertakes += gLate; if (gLate) A.gamesLate++; if (gCap) A.gamesCapture++;
     if (lateFirst >= 0) { A.lateFirstN++; if (lateFirst === winner) A.lateFirstWin++; }
