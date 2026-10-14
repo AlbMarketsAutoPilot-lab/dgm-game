@@ -6,7 +6,7 @@ import { Dice } from "./dice";
 import { Overview } from "./overview";
 import { PLAYERS, tokenSvg } from "./players";
 import { Stage, describe } from "./stage";
-import { ICONS } from "../render/icons";
+import { artFor } from "../render/art";
 
 export interface Setup {
   board: Board;
@@ -24,10 +24,12 @@ type Story = {
   badges?: { snakeLeader?: { story?: string } };
 };
 
-const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, reduced() ? Math.min(ms, 120) : ms));
-const icon = (name: string, title: string) =>
-  `<svg class="ico" viewBox="0 0 24 24" role="img" aria-label="${title}"><path d="${ICONS[name]}" fill="none" stroke="#4b2377" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+// Pauses are reading time, so "reduce motion" keeps them (only the animations stop). `?fast` in the address
+// fast-forwards whole games (for testing).
+const fast = new URLSearchParams(location.search).has("fast");
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, fast ? Math.min(ms, 60) : ms));
+/** A small version of the real illustration (player bar). */
+const pic = (name: string, label: string) => `<span class="pic">${artFor(name, label)}</span>`;
 const lanternSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6M12 2v2M8 7h8l-1 11H9zM8 7c0-2 8-2 8 0M9.5 18h5v2.5h-5z" fill="#f2c230" stroke="#4b2377" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 export class GameScreen {
@@ -38,7 +40,7 @@ export class GameScreen {
   private readonly chips: HTMLElement;
   private readonly msg: HTMLElement;
   private readonly buttons: HTMLElement;
-  private readonly roundEl: HTMLElement;
+  private round = 0;
   private readonly story: Story;
   /** Where each token is shown (follows the events, one step behind the engine's final state). */
   private readonly places: { pos: Pos; stair: number }[];
@@ -51,13 +53,12 @@ export class GameScreen {
       <div class="game">
         <section class="overview" aria-label="The whole board"></section>
         <section class="stage-panel">
-          <div class="chips"></div>
+          <div class="chips" aria-label="Players"></div>
           <div class="stage"></div>
           <div class="controls">
             <div class="dice"></div>
             <div class="talk"><p class="msg" aria-live="polite"></p><div class="buttons"></div></div>
           </div>
-          <span class="round"></span>
         </section>
       </div>`;
     this.overview = new Overview(root.querySelector(".overview")!, board, players);
@@ -66,7 +67,6 @@ export class GameScreen {
     this.chips = root.querySelector(".chips")!;
     this.msg = root.querySelector(".msg")!;
     this.buttons = root.querySelector(".buttons")!;
-    this.roundEl = root.querySelector(".round")!;
     this.places = this.game.players.map((p) => ({ pos: p.pos, stair: 0 }));
     this.renderChips();
     void this.run();
@@ -155,7 +155,7 @@ export class GameScreen {
   private async play(e: GameEvent, seat: number): Promise<void> {
     const S = this.story, st = this.stage;
     switch (e.type) {
-      case "round": this.roundEl.textContent = `Round ${e.round}`; break;
+      case "round": this.round = e.round; this.renderChips(seat); break;
       case "roadblockPlaced": this.overview.setRoadblock(e.square); break;
       case "roadblockRemoved": this.overview.setRoadblock(null); break;
       case "roll": await this.dice.roll(e.value); break;
@@ -247,7 +247,7 @@ export class GameScreen {
   // ---- Talking and buttons ----
 
   private say(text: string, seat?: number): void {
-    this.msg.innerHTML = seat === undefined ? text : `<span class="who" style="color:${PLAYERS[seat].text}">${tokenSvg(seat, "mini")}</span>${text}`;
+    this.msg.innerHTML = seat === undefined ? text : `<span class="who">${tokenSvg(seat, "mini", true)}</span>${text}`;
   }
 
   private clearButtons(): void {
@@ -263,7 +263,7 @@ export class GameScreen {
         b.addEventListener("click", () => { this.clearButtons(); done(o.value); }, { once: true });
         return b;
       }));
-      (this.buttons.firstElementChild as HTMLElement | null)?.focus();
+      (this.buttons.firstElementChild as HTMLElement | null)?.focus({ preventScroll: true });
     });
   }
 
@@ -271,14 +271,14 @@ export class GameScreen {
   private renderChips(current = this.game.currentSeat): void {
     this.chips.innerHTML = this.game.players.map((p, i) => {
       const extras = [
-        p.bonus ? `<span class="tag">${icon("card", "Bonus card")}${p.bonus > 1 ? `×${p.bonus}` : ""}</span>` : "",
-        p.jailPass ? `<span class="tag">${icon("boots", "Bog boots")}${p.jailPass > 1 ? `×${p.jailPass}` : ""}</span>` : "",
-        p.snakeLeader ? `<span class="tag">${icon("snake-crown", "Snake Leader")}</span>` : "",
-        p.double ? `<span class="tag" title="Next throw doubled">×2</span>` : "",
-        p.skip ? `<span class="tag" title="Turns to wait">wait ${p.skip}</span>` : "",
+        p.bonus ? `<span class="tag">${pic("card", this.story.cards?.bonus?.name ?? "Bonus card")}${p.bonus > 1 ? `×${p.bonus}` : ""}</span>` : "",
+        p.jailPass ? `<span class="tag">${pic("boots", this.story.cards?.jailPass?.name ?? "Bog boots")}${p.jailPass > 1 ? `×${p.jailPass}` : ""}</span>` : "",
+        p.snakeLeader ? `<span class="tag">${pic("snake-crown", "Snake Leader")}</span>` : "",
+        p.double ? `<span class="tag" aria-label="Next throw doubled">×2</span>` : "",
+        p.skip ? `<span class="tag" aria-label="${p.skip} turn${p.skip > 1 ? "s" : ""} to wait">wait ${p.skip}</span>` : "",
       ].join("");
-      const lanterns = p.out ? `<span class="tag">out</span>` : `<span class="lanterns" title="Lanterns">${lanternSvg.repeat(Math.min(p.lanterns, 6))}${p.lanterns > 6 ? `+${p.lanterns - 6}` : ""}${p.lanterns === 0 ? "none" : ""}</span>`;
-      return `<div class="chip${i === current ? " now" : ""}${p.out ? " gone" : ""}">${tokenSvg(i, "mini")}<span class="nm">${PLAYERS[i].name}${this.setup.computer[i] ? " (cpu)" : ""}</span>${lanterns}${extras}</div>`;
-    }).join("");
+      const lanterns = p.out ? `<span class="tag">out</span>` : `<span class="lanterns" role="img" aria-label="${p.lanterns} lantern${p.lanterns === 1 ? "" : "s"}">${lanternSvg.repeat(Math.min(p.lanterns, 6))}${p.lanterns > 6 ? `+${p.lanterns - 6}` : ""}${p.lanterns === 0 ? "none" : `<b class="count">${p.lanterns}</b>`}</span>`;
+      return `<div class="chip${i === current ? " now" : ""}${p.out ? " gone" : ""}"${i === current ? ` aria-current="true"` : ""}>${tokenSvg(i, "mini", true)}<span class="nm">${PLAYERS[i].name}${this.setup.computer[i] ? " (cpu)" : ""}</span>${lanterns}${extras}</div>`;
+    }).join("") + (this.round ? `<span class="round">Round ${this.round}</span>` : "");
   }
 }

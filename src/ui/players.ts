@@ -33,10 +33,10 @@ function outline(shape: PlayerStyle["shape"]): string {
   }
 }
 
-/** A token as inline SVG (100 × 100): the button, its rim and four thread holes. */
-export function tokenSvg(seat: number, cls = "token"): string {
+/** A token as inline SVG (100 × 100): the button, its rim and four thread holes. `hidden`: the name is written next to it. */
+export function tokenSvg(seat: number, cls = "token", hidden = false): string {
   const p = PLAYERS[seat], o = outline(p.shape);
-  return `<svg class="${cls}" viewBox="0 0 100 100" role="img" aria-label="${p.name}">`
+  return `<svg class="${cls}" viewBox="0 0 100 100" ${hidden ? `aria-hidden="true"` : `role="img" aria-label="${p.name}"`}>`
     + `<g fill="${INK}" transform="translate(3 4)" opacity=".25">${o}</g>`
     + `<g fill="${p.colour}" stroke="${INK}" stroke-width="5" stroke-linejoin="round">${o}</g>`
     + `<g fill="${p.colour}">${o}</g>`

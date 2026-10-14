@@ -1,10 +1,10 @@
 // The whole board at a glance: squares only (no numbers), event squares in their crayon colour, the Shortcut
 // stones, Home and END, and where every token is. Tokens glide between places when the stage moves them.
-import { OFF, OUT, type Board, type Pos } from "../engine";
+import { OFF, OUT, START, isShortcut, type Board, type Pos } from "../engine";
 import { type BoardLayout, type Point, layoutFor, pointOf } from "../render/layout";
 import { INK, PAPER, REGION_WASH, SHORTCUT_COLOURS, crayonFor, regionOf } from "../render/palette";
 import { pen, wobblyBox } from "../render/sketch";
-import { tokenSvg } from "./players";
+import { PLAYERS, tokenSvg } from "./players";
 
 const U = 100;
 
@@ -14,9 +14,11 @@ export class Overview {
   private readonly tokens: SVGGElement[] = [];
   private readonly places: { pos: Pos; stair: number }[] = [];
   private readonly tree: SVGGElement;
+  private readonly end: number;
 
   constructor(host: HTMLElement, board: Board, players: number) {
     const L = (this.layout = layoutFor(board)), B = L.bounds;
+    this.end = board.endTile;
     const P = (p: Point) => ({ x: (p.x - B.x) * U, y: (p.y - B.y) * U }), T = L.tile * U;
     let squares = "";
     for (const s of L.shortcuts) {
@@ -95,5 +97,9 @@ export class Overview {
       t.style.opacity = "1";
       t.style.transform = `translate(${c.x + dx}px, ${c.y + dy}px)`;
     });
+    // For screen readers: where everyone is.
+    const where = ({ pos }: { pos: Pos }) => pos === OFF ? "at Home" : pos === OUT ? "out" : pos === START ? "on Start"
+      : pos === this.end ? "at the festival" : isShortcut(pos) ? "on the Shortcut" : `on square ${pos}`;
+    this.svg.setAttribute("aria-label", `The whole board. ${this.places.map((pl, i) => `${PLAYERS[i].name} ${where(pl)}`).join(", ")}.`);
   }
 }

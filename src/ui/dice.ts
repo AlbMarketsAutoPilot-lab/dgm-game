@@ -5,12 +5,15 @@ const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 export class Dice {
   private readonly die: HTMLElement;
   private readonly list: HTMLElement;
+  /** What a screen reader hears: every throw, and the total. */
+  private readonly said: HTMLElement;
   private throws: number[] = [];
 
   constructor(host: HTMLElement) {
-    host.innerHTML = `<div class="die" role="img" aria-label="Die"></div><span class="throws" aria-live="polite"></span>`;
+    host.innerHTML = `<div class="die" role="img" aria-label="Die"></div><span class="throws" aria-hidden="true"></span><span class="sr" aria-live="polite"></span>`;
     this.die = host.querySelector(".die")!;
     this.list = host.querySelector(".throws")!;
+    this.said = host.querySelector(".sr")!;
     this.face(6);
   }
 
@@ -22,6 +25,7 @@ export class Dice {
   clear(): void {
     this.throws = [];
     this.list.textContent = "";
+    this.said.textContent = "";
   }
 
   /** Tumbles and lands on `n`. */
@@ -38,6 +42,7 @@ export class Dice {
     this.throws.push(n);
     const total = this.throws.reduce((a, b) => a + b, 0);
     this.list.textContent = this.throws.length > 1 ? `${this.throws.join(" + ")} = ${total}` : "";
+    this.said.textContent = this.throws.length > 1 ? `Rolled ${n}. ${this.throws.join(" + ")} = ${total}` : `Rolled ${n}`;
     await new Promise((r) => setTimeout(r, reduced() ? 50 : n === 6 ? 650 : 380));
   }
 }

@@ -197,7 +197,8 @@ export class Stage {
 
   private resize(): void {
     const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
-    this.wrap.style.setProperty("--card", `${Math.max(120, Math.min(w * 0.62, h * 0.86))}px`);
+    // The token stands half over the card's bottom edge: at most .74 of the height keeps it whole.
+    this.wrap.style.setProperty("--card", `${Math.max(110, Math.min(w * 0.62, h * 0.74))}px`);
     this.moveTo(this.index, 0);
   }
 }
