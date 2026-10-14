@@ -3,35 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#4b2377" />
     <title>Don't Get Mad!</title>
-    <style>
-      :root { --paper: #f7f1e3; --ink: #4b2377; }
-      * { box-sizing: border-box; }
-      html, body { margin: 0; height: 100%; background: #d9cdb3; color: var(--ink); font-family: "Patrick Hand", "Comic Sans MS", cursive; overscroll-behavior: none; }
-      body { display: flex; flex-direction: column; }
-      header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 16px; background: var(--paper); border-bottom: 2px solid var(--ink); }
-      header h1 { font-size: 1.4rem; margin: 0 8px 0 0; font-weight: normal; }
-      button { font: inherit; font-size: 1.1rem; min-height: 44px; min-width: 44px; padding: 4px 14px; border: 2px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink); cursor: pointer; }
-      button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-      #view { flex: 1; min-height: 0; }
-      .zoom { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
-      .zoom button { width: 56px; height: 56px; padding: 0; font-size: 1.7rem; box-shadow: 0 3px 10px rgba(60, 40, 20, .3); }
-      .zoom button.small { font-size: 1rem; }
-    </style>
   </head>
   <body>
-    <header>
-      <h1>Don't Get Mad!</h1>
-      <button data-board="long" aria-pressed="true">The Grand Journey</button>
-      <button data-board="short" aria-pressed="false">The Quick Trip</button>
-    </header>
-    <div id="view" class="board-viewport" tabindex="0" aria-label="The board: drag to move, pinch or + and − to zoom"></div>
-    <div class="zoom">
-      <button id="zin" aria-label="Zoom in">+</button>
-      <button id="zout" aria-label="Zoom out">−</button>
-      <button id="all" class="small" aria-label="Whole board">All</button>
-      <button id="home" class="small" aria-label="Back to Start">Start</button>
-    </div>
+    <main id="app"></main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
