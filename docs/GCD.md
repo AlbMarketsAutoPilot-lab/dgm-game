@@ -188,6 +188,18 @@ Transcribed from the paper cards. All upside-down in the photos; read as best as
 | Q21 | Owner already has a Google Play developer account → publish on Google Play at no extra cost. |
 | Direction | The paper rules were "just for fun". The digital game gets a **rebuilt story and rule set**, designed with simulation so every player has equal opportunities, with measured resilience and reward-vs-punishment balance. Remaining questions below now become **design decisions** for that rebuild (see `docs/analysis/SIM_REPORT_v0.md`). |
 
+### 9.1 Owner decisions after the market report (14 Oct 2026)
+
+| Topic | Decision |
+|---|---|
+| Target audience | **Families with young children** (core) **and young adults 18–34** (strongly wanted). |
+| Content rating | Must keep a **family / kids-safe Google Play age rating**. No violence, crime, alcohol, gambling-style or other risky references. Story elements that could put the rating at risk must be **replaced** in the rebuild (Step 1c). |
+| Online | **No online play, no chat, no ads, no accounts, no data collected.** |
+| Board length | Two boards: **Long = 203 tiles**, **Short = 101 tiles**. Game duration is **not** a target. It comes from luck (dice + rewards/punishments met), and the simulator only reports the resulting distribution. |
+| Numbers read aloud | **No.** The game must not look like a learning app for small children (the 18–34 audience would find it odd). |
+
+**Paper-board elements to review for the rating in Step 1c** (candidates, to be replaced with neutral stories): Prison (30), Police (97), "Go in prison again" (148), Robbery (95), Bank robbed (101), Car stolen (183), Hospital (50), Lottery (85), the word "punishment" (60, 113, 128).
+
 ## 10. Open questions for the paper board (now design decisions for the rebuild)
 
 | # | Question |
