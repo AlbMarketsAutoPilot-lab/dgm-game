@@ -1,6 +1,6 @@
 # Don't Get Mad! — Game Concept Document (GCD) v2
 
-> **Status:** v2. **Game rules R1–R21 FROZEN (14 Oct 2026, owner).** **Story approved (§9, step I-4, 14 Oct 2026).** Still open: the short board (I-5).
+> **Status:** v2. **Game rules R1–R21 FROZEN (14 Oct 2026, owner).** **Story approved (§9, step I-4, 14 Oct 2026).** **Short board approved (§10, step I-5, 14 Oct 2026).** Next: the final freeze (I-7).
 > When frozen, this document is the contract for coding: anything not written here is not built.
 > **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
 > **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements are in `docs/analysis/SIM_REPORT_v0.md` and `docs/analysis/sim-v0-paper-engine-results.md`. The market research is in `docs/analysis/MARKET_REPORT.md`.
@@ -163,6 +163,13 @@ The board is **one continuous neutral journey**. Each square is the next moment 
 | **Long, "The Grand Journey"** | Start + 202 + END | **The base**, the original creation. Designed and tuned first. |
 | **Short, "The Quick Trip"** | Start + 100 + END | Built **from the best-working events of the long board**: thinned out, not compressed. It must pass the same measurements. |
 
+### 10.1 The short board ✅ (owner, step I-5, 14 Oct 2026)
+- **File:** `data/board-short.json` (same fields as `data/board-long.json`: `story` and `icon` per square, and the `story` block).
+- **Events:** 23 of the long board's 41 (chosen by the ablation `docs/analysis/ablation-long.md`; all signature events kept). Each sits at about half its long-board square and jumps to about half its long-board destination, so it stays in the same region and goes to the same story place: 7 puddle · 10 → 16 lift · **15 the Bog** · 17 → 33 hay cart · 20 → 51 balloon · 30 Bonus card · 32 next good square · 37 swap with the leader · 40 → 67 cable car · 45 Bog boots · 49 → Bog · 54 → 67 weekend off · 61 throw 3 times · 66 → 55 booking · 69 → 97 Snake Leader · 72 others double · 74 → Bog · 79 → 24 · 91 → 48 · 94 → 78 · 96 → 92 forgot keys · 99 → 92 keys AGAIN + wait 2 · 100 → 82 Snake Leader only.
+- **Rules:** R1–R21 unchanged. Only these numbers follow the shorter board: **crossroads 41** (roads meet at 48; Shortcut 6 squares, square 1 → 50, square 2 → the Bog) and **crossroads 80** (roads meet at 90; Shortcut 9 squares, square 1 → 92, square 3 → the Bog); the trap is square 15 (stepping stones 15 → 16). The fallen tree stays at 10 squares back, within 10 squares of the leader.
+- **Story:** the same journey and voice; every text and icon is reused from the long board. Regions: Home Town Start–9 · Countryside 10–24 · Forest 25–40 · River & Lake 41–53 · Mountains 54–68 · Seaside 69–79 · Big City 80–94 · Festival Road 95–100. Landmarks: Base Camp 55, Mountain Lodge 67, Central Station 92.
+- **Measured** 📊 (`docs/analysis/measure-short.md`, 100,000 games): seats 24.83–25.18%; every excitement measure better than the paper board (lead changes 6.8 vs 6.7, late overtakes 2.67 vs 1.76, close finishes 17.8% vs 10.3%, jackpots 7.53 vs 6.68, falls 5.8 vs 4.48); 0.7% of players wait 10+ turns; always-Shortcut player wins 25.45% (`tools/sim/shortcut.mjs`). About 31 rounds per game (long: 52). Working log: `docs/analysis/I-5_short_board_log.md`.
+
 Game duration is **not** a target ✅. It comes from luck, and the simulator only reports its spread.
 
 ## 11. Scientific basis: how the game is measured
@@ -210,9 +217,9 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 | I-2 ✅ | **Engine upgrade**: add the missing measures (late overtakes, close finishes, jackpots and falls per game, with-vs-without event runs) | `tools/sim/engine.mjs` + test that the paper board still gives the same numbers |
 | I-3 ✅ | **Long board, Chance Game** (done as: the paper squares kept + rules R17–R20, measured in I-6): place and size the events, start rule, end rule and waiting rules, tuned to the targets in §11.3 | `data/board-long.json` + measurement report |
 | I-4 ✅ | **Journey story** written over the tuned long board, square by square | Texts in `data/board-long.json` |
-| I-5 | **Short board** built from the best long-board events | `data/board-short.json` + measurement report |
+| I-5 ✅ | **Short board** built from the best long-board events | `data/board-short.json` + measurement report |
 | I-6 ✅ | **Logic Layer** designed under the rules in §7.1 and measured (14 Oct: rules R17–R21 frozen) | §8.2b + `docs/analysis/I-6_*` |
-| I-7 | **Freeze**: owner approval; GCD marked FROZEN (rules already frozen 14 Oct; story and short board remain) | Coding starts |
+| I-7 | **Freeze**: owner approval; GCD marked FROZEN (rules, story and short board approved 14 Oct; only the final freeze remains) | Coding starts |
 
 ## 14. Presentation (from the original brief) ✅
 - Hand-drawn paper look: off-white textured paper, purple-ink tiles, crayon-coloured event squares, colourful button tokens.

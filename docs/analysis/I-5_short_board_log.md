@@ -127,7 +127,7 @@ Jackpot / fall = a jump of at least 10% of the board (long 20 squares, short 10)
 
 **Result: every target is met, no change needed.** The Shortcut is 0.45 points above fair (the long board is at fair). That is far inside the ±1 point allowed for seats, so I recommend leaving it. The smallest change that lowers it would be to move a Shortcut jackpot target down one square. Lead changes pass with the smallest margin (6.8 vs 6.7).
 
-## I-5.3 Texts (waiting for the owner)
+## I-5.3 Texts ✅ (owner approved, 14 Oct 2026: reuse all texts)
 
 **Check.** Every kept event is in the same region on the short board as on the long board, and every jump lands in the same region as its long-board jump (checked square by square against `data/board-long.json` `story.regions`). So every approved text still tells the truth, and **all 23 texts and icons are reused unchanged. No square needs a new text.**
 
@@ -194,3 +194,9 @@ Jackpot / fall = a jump of at least 10% of the board (long 20 squares, short 10)
 **One thing to know:** the Forest (25–40) keeps no square that names the forest. Its forest-themed squares were the fog and the trains, and they were dropped in I-5.1. Its four squares (Bonus card, the local's shortcut, the swap, the cable car) fit anywhere on the trip, so the forest is carried by the drawing on the board. I recommend no change.
 
 **Question to the owner (I-5.3):** reuse all texts and icons as listed, with no new text?
+
+## I-5.4 Save ✅
+
+- `data/board-short.json` now carries `story` and `icon` on each of its 23 event squares (copied from the long-board square it came from, checked text by text) and a `story` block like the long board's: title **The Quick Trip**, the short-board regions, the Bog on 15 (stepping stones 15 → 16), the crossroads 41 and 80 with their Shortcut squares (1 and 2; 1 and 3), and the landmarks Base Camp 55, Mountain Lodge 67, Central Station 92.
+- **The story changes no number.** With `story`, `icon` and `description` removed, the file is identical to the measured board from I-5.2 (checked by comparing the JSON). `node tools/sim/test/rules.test.mjs`: ALL PASS. `node tools/sim/run.mjs data/board-short.json 100000` gives a report that is byte-for-byte identical to the one made without the story (`docs/analysis/measure-short.md`). `node tools/sim/shortcut.mjs data/board-short.json 100000`: still 25.45%.
+- GCD: status line, §10.1 (new), §13 (I-5 ✅, I-7) updated. `docs/PROJECT_PLAN.md`: I-5 ✅, I-7 next (with the Step 2 file names to fix there).
