@@ -28,7 +28,9 @@ Working log for step I-4 (`docs/prompts/I-4_journey_story.md`). Nothing here is 
 
 **Owner (14 Oct 2026): ✅ approved as written.**
 
-## I-4.2 Texts, squares 1–101 💡 (waiting for the owner)
+## I-4.2 Texts, squares 1–101: version A (family voice) ✅
+
+**Owner (14 Oct 2026): ✅ approved, but asked for a grown-up version B for comparison** ("this text is not really for 18–34; an 18–34 story can appeal to kids, but not the other way round").
 
 Every effect is unchanged; the text only tells it. Colour follows the paper category (reward / punishment).
 
@@ -85,3 +87,52 @@ Every effect is unchanged; the text only tells it. Colour follows the paper cate
 | Wild Trail, square 2 (→ 100) | Rope swing over the river! | rope swing |
 | Wild Trail, square 5 (→ trap 30) | Lost on the Wild Trail! Into the Sticky Swamp. | question mark / compass |
 | Roads meet (96) | The two roads meet again. | joining paths |
+
+## I-4.2 version B: grown-up voice (for comparison) 💡
+
+Same squares, same effects, same names and icons as version A. Only the voice changes: dry humour and moments every adult has lived (missed trains, "did I lock the door?"), still simple enough for a 6-year-old and still within C2.
+
+### Event squares
+
+| Sq | Version A (family) | Version B (grown-up) |
+|---|---|---|
+| Start | Home! Throw a 6 to step outside. | Bags packed. Roll a 6 to leave. |
+| 5 | Shoelace untied! Wait one turn. | Shoelace untied. Again. Wait one turn. |
+| 10 | Forgot your backpack! Run back home. | Wait… did you lock the door? Back home. |
+| 15 | Giant puddle! Next turn, tiptoe one step. | Ankle-deep puddle. Next turn: one careful step. |
+| 20 | A friendly tractor gives you a ride! | A farmer offers a lift. Don't overthink it. |
+| 25 | Sheep traffic jam! Wait one turn. | Sheep have right of way. Wait one turn. |
+| 30 | Sticky Swamp! Only a 6 pulls you out. | Sticky Swamp. Your shoes live here now. Roll a 6. |
+| 35 | Hop on a hay cart to the forest! | Hay cart to the forest. Not glamorous, but fast. |
+| 40 | Hot-air balloon! Float all the way to the river. | Hot-air balloon. See you at the river! |
+| 45 | Downhill on a bike! Throw twice, add them up. | It's all downhill from here. Throw twice, add up. |
+| 50 | Lost in thick fog. Wait three turns. | Fog rolls in. The map app gives up. Wait three turns. |
+| 55 | Forest Station: take the train to Hill Station! | Forest Station. A train that's actually on time! |
+| 60 | A friend gives you a Bonus card! | A kind stranger slips you a Bonus card. |
+| 65 | Follow a butterfly to the next good square! | A local knows a shortcut: next good square! |
+| 70 | Train breakdown! Walk back to Forest Station. | Train cancelled. Of course. Back to Forest Station. |
+| 75 | Secret path! Swap places with the leader. | Plot twist! Swap places with the leader. |
+| 80 | Cable car up to the Mountain Lodge! | Cable car to the Mountain Lodge. Window seat! |
+| 85 | A fisher's boat sails you to the Harbour! | Free boat ride to the Harbour. Best day ever. |
+| 90 | Swamp boots! Once, the swamp can't hold you. | Swamp boots. Mud? Never heard of it. |
+| 95 | Duck parade on the bridge! Wait one turn. | Ducks on the bridge. They're not moving. Wait one turn. |
+| 97 | Slippery riverbank! Slide into the Sticky Swamp. | Riverbank selfie. Slipped. Hello, Sticky Swamp. |
+| 101 | The boat left without you! Back to the Pier. | Missed the boat. Literally. Back to the Pier. |
+
+### Rule elements
+
+| Element | Version A (family) | Version B (grown-up) |
+|---|---|---|
+| Bonus card text | Use once: dodge your bad luck, or cancel someone's good luck. | Use once: dodge your bad luck, or spoil someone's good luck. |
+| Porch steps | No 6? Your porch gets one more step. | No 6? Still on the porch. One more step. |
+| Stepping stones | No 6? One more stepping stone out. | No 6? Another stone. The mud is patient. |
+| Lantern lost | No 6 in three throws: one lantern goes out. | Three throws, no 6. A lantern flickers out. |
+| Lantern won | Three 6s in a row! A new lantern lights up! | Three 6s in a row. Lantern back on! |
+| No lanterns left | Attention! You have no lanterns left… | Attention! You have no lanterns left… (owner's words, kept) |
+| Out | No light left: your journey ends here. | Lights out. Your journey ends here. |
+| Fallen tree | A tree fell on the road! Go back ten squares. | Fallen tree. Nobody's moving it. Back ten squares. |
+| 1st crossroads (82) | Crossroads! Easy Road or Wild Trail? | Crossroads. The sensible road, or the Wild Trail? |
+| Easy Road | The Easy Road: slow and steady. | The Easy Road. Boring, but it works. |
+| Wild Trail, square 2 (→ 100) | Rope swing over the river! | Rope swing over the river. Worth it! |
+| Wild Trail, square 5 (→ trap) | Lost on the Wild Trail! Into the Sticky Swamp. | The Wild Trail wins. Hello, Sticky Swamp. |
+| Roads meet (96) | The two roads meet again. | The two roads meet again. |
