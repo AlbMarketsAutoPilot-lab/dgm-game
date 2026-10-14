@@ -1,5 +1,5 @@
-// Generic game engine + Monte-Carlo runner for Don't Get Mad! boards (v1 schema, also runs v0).
-// Pure functions of (board, settings, seed) -> statistics. No randomness outside the seeded RNG.
+// Game engine + Monte-Carlo runner for Don't Get Mad! — implements the owner's core rules (docs/GCD.md §8.2a).
+// Pure function of (board, rules, games, seed). All randomness comes from the seeded RNG.
 
 export function rng(seed) {
   return () => {
@@ -12,308 +12,254 @@ export function rng(seed) {
 
 export const DEFAULTS = {
   players: 4,
-  startRule: "free",   // free | need6 (must roll 6, then move 6)
-  endRule: "overshoot",// overshoot = any roll reaching END finishes | exact = must hit END, else stay
-  thinker: false,      // optional mode: roll 2 dice, choose one
-  handLimit: 2,        // max cards held
-  policies: null,      // array of "casual" | "smart" per seat (default all casual)
-  catchUp: 0,
-  bigJump: null,       // a jump of at least this many squares counts as a jackpot (forward) or a fall (back); default 10% of the board          // "Tailwind": the traveller alone in last place adds this to every throw
+  entry: "six",          // R1: six = a 6 puts you on Start, then you throw again | free = everyone begins on Start
+  sixRule: "owner",      // R2: owner = after k sixes you get k throws (owner's example 6,6,1,5 = 18)
+                         //     standard = keep throwing while you throw 6 (6,6,1 = 13) | none = no extra throws
+  maxSixes: 3,           // R2: the third six ends the throwing
+  enterFaces: [6],       // option: die faces that let you enter (paper: only 6)
+  enterAfter: Infinity,  // option: after this many failed tries you enter anyway on your next turn (paper: never)
+  trapAfter: Infinity,   // option: after this many failed tries in the trap you get out anyway on your next turn (paper: never)
+  capture: true,         // R4: landing on an occupied square (by throw or jump) sends that player to Start
+  endRule: "exact",      // R8: exact = a total that passes END and you stay | overshoot = any total reaching END wins
+  bonusPolicy: "defend", // bonus card: defend = avoid own next punishment | attack = cancel the leader's next reward
+                         //             | first = whichever happens first | none = card never used
+  bigJump: null,         // a jump of at least this many squares is a jackpot (forward) / fall (back); default 10% of board
 };
 
-// Normalise a v0 (paper) tile into the v1 effect vocabulary.
-function normalise(tile) {
-  const t = { ...tile };
-  if (t.cat === "R") t.cat = "B";
-  if (t.cat === "P") t.cat = "S";
-  if (t.type === "prison") Object.assign(t, { type: "wait", min: 6, max: Infinity, pass: "jailPass" });
-  if (t.type === "hospital") t.type = "skip";
-  if (t.then === "prison") Object.assign(t, { then: { type: "wait", min: 6, max: Infinity, pass: "jailPass" } });
-  if (t.then === "hospital") Object.assign(t, { then: { type: "skip", turns: 3 } });
-  if (t.then === "skip2") Object.assign(t, { then: { type: "skip", turns: 2 } });
-  if (t.card === "skipPunishment") t.card = "umbrella";
-  return t;
-}
+const OFF = -1; // not yet on the board
 
-export function loadBoard(raw) {
-  const tiles = {};
-  for (const [k, v] of Object.entries(raw.tiles)) tiles[k] = normalise(v);
-  return { ...raw, tiles };
-}
-
-export function simulate(board, settings, games, seed) {
-  const s = { ...DEFAULTS, ...settings };
+export function simulate(board, rules, games, seed) {
+  const s = { ...DEFAULTS, ...rules };
   const rand = rng(seed);
-  const d6 = () => 1 + Math.floor(rand() * 6);
-  const T = board.tiles, END = board.endTile, MID = Math.floor(board.lastTile / 2);
-  const LATE = Math.ceil(board.lastTile * 0.75);           // the last quarter of the board
-  const BIG = s.bigJump ?? Math.round(board.lastTile * 0.1);
-  const policies = s.policies ?? Array(s.players).fill("casual");
-  const tileKeys = Object.keys(T);
+  // Test hooks: diceScript = fixed dice values; setup = starting state per player; turns = stop after N player turns.
+  const script = s.diceScript ? [...s.diceScript] : null;
+  const d6 = script ? () => { if (!script.length) throw new Error("dice script ran out"); return script.shift(); }
+                    : () => 1 + Math.floor(rand() * 6);
+  const T = board.tiles, END = board.endTile, LAST = board.lastTile;
+  const MID = Math.floor(LAST / 2), LATE = Math.ceil(LAST * 0.75);
+  const BIG = s.bigJump ?? Math.round(LAST * 0.1);
+  const keys = Object.keys(T);
+  const zero = () => Object.fromEntries(keys.map((k) => [k, 0]));
 
-  // Rough value (in squares) of landing on a tile — used by the "smart" policy only.
-  const LOST_TURN = 3.5;
-  const effectValue = (pos, e, p) => {
-    if (!e) return 0;
-    switch (e.type) {
-      case "jump": return (e.requires && !p?.leader ? 0 : e.to - pos + effectValue(e.to, e.then, p));
-      case "skip": return -LOST_TURN * e.turns;
-      case "wait": return -LOST_TURN * Math.min(e.max, 1 / ((7 - e.min) / 6) - 1);
-      case "slowNext": return -2.5;
-      case "rollSum": return 3.5 * e.dice;
-      case "extraRoll": return 3.5;
-      case "card": return 4;
-      case "tailwindOthers": case "doubleOthers": return -3.5;
-      case "swapAhead": return 5;
-      case "nearest": return 3;
-      case "gamble": { const pw = (7 - e.min) / 6; return pw * effectValue(pos, e.win, p) + (1 - pw) * effectValue(pos, e.lose, p); }
-      case "choice": return Math.max(...e.options.map((o) => effectValue(pos, o, p)));
-      default: return 0;
-    }
-  };
-  const tileValue = (pos, p) => {
-    const t = T[pos];
-    if (!t || (t.requires && !p.leader)) return 0;
-    return effectValue(pos, t, p);
-  };
-  const landValue = (p, roll) => {
-    let to = p.pos + roll;
-    if (to > END) return s.endRule === "exact" ? -LOST_TURN : 1000;
-    if (to === END) return 1000;
-    return roll + tileValue(to, p);
-  };
-  const avgFresh = (p) => { let a = 0; for (let r = 1; r <= 6; r++) a += landValue(p, r); return a / 6; };
-
-  const agg = {
-    wins: Array(s.players).fill(0), rounds: [], leadChanges: 0, comeback: 0,
-    midFirstWin: 0, midLastWin: 0, midN: 0,
-    lost: 0, boosts: 0, setbacks: 0, gained: 0, lostSq: 0, maxDry: 0, dry10: 0, playerGames: 0,
-    tileHits: Object.fromEntries(tileKeys.map((k) => [k, 0])),
-    tileHitWins: Object.fromEntries(tileKeys.map((k) => [k, 0])),
-    tileHitPlayers: Object.fromEntries(tileKeys.map((k) => [k, 0])),
-    // natural experiment: first time a player is within one die roll of tile k
-    oppLand: Object.fromEntries(tileKeys.map((k) => [k, 0])), oppLandWin: Object.fromEntries(tileKeys.map((k) => [k, 0])),
-    oppMiss: Object.fromEntries(tileKeys.map((k) => [k, 0])), oppMissWin: Object.fromEntries(tileKeys.map((k) => [k, 0])),
-    cardsUsed: 0, capped: 0,
-    // excitement measures (step I-2)
-    lateOvertakes: 0, gamesLateOvertake: 0, lateFirstN: 0, lateFirstWin: 0,
-    finishGap: 0, closeFinish: 0, jackpots: 0, falls: 0, gamesJackpot: 0, gamesFall: 0,
+  const A = {
+    wins: Array(s.players).fill(0), rounds: [], capped: 0, playerGames: 0,
+    lost: 0, waitEnter: 0, waitTrap: 0, maxDry: 0, dry10: 0,
+    rewards: 0, punish: 0, gained: 0, lostSq: 0,
+    leadChanges: 0, midN: 0, midFirstWin: 0, midLastWin: 0, comeback: 0,
+    lateOvertakes: 0, gamesLate: 0, lateFirstN: 0, lateFirstWin: 0, finishGap: 0, close: 0,
+    jackpots: 0, falls: 0, gamesJack: 0, gamesFall: 0,
+    captures: 0, capturesEarly: 0, capturesLate: 0, gamesCapture: 0, capturedPlayers: 0,
+    bonusDefend: 0, bonusAttack: 0, jailPassUsed: 0,
+    hit: zero(), hitWin: zero(), oppLand: zero(), oppLandWin: zero(), oppMiss: zero(), oppMissWin: zero(),
   };
 
   for (let g = 0; g < games; g++) {
-    const P = Array.from({ length: s.players }, (_, i) => ({
-      pos: 0, skip: 0, wait: null, slow: false, tail: false, leader: false,
-      cards: { umbrella: 0, compass: 0, jailPass: 0 }, smart: policies[i] === "smart",
-      lost: 0, boosts: 0, setbacks: 0, gained: 0, lostSq: 0, dry: 0, maxDry: 0, hit: new Set(), maxPos: 0, opp: new Map(), land: -1,
+    const P = Array.from({ length: s.players }, () => ({
+      pos: s.entry === "six" ? OFF : 0, skip: 0, trapped: false, slow: false, dbl: false, leader: false,
+      bonus: 0, jailPass: 0, captured: 0, tries: 0,
+      lost: 0, waitEnter: 0, waitTrap: 0, dry: 0, maxDry: 0, rewards: 0, punish: 0, gained: 0, lostSq: 0,
+      hits: new Set(), opp: new Map(),
     }));
-    const hand = (p) => p.cards.umbrella + p.cards.compass + p.cards.jailPass;
+    if (s.setup) s.setup.forEach((st, i) => Object.assign(P[i], st));
+    let turnCount = 0;
+    let gJack = 0, gFall = 0, gLate = 0, gCap = 0, lateFirst = -1;
+    const leaderIdx = () => { let li = 0; P.forEach((q, i) => { if (q.pos > P[li].pos) li = i; }); return li; };
 
-    let gJack = 0, gFall = 0, gLate = 0, lateFirst = -1;
-    const jumpTo = (p, to) => {
-      const d = to - p.pos;
+    const capture = (pi, sq) => {
+      if (!s.capture || sq <= 0 || sq >= END) return;
+      P.forEach((q, i) => {
+        if (i === pi || q.pos !== sq) return;
+        q.pos = 0; q.trapped = false; q.skip = 0; q.tries = 0; q.captured++; // back to Start; the token leaves its trap / waiting
+        gCap++; A.captures++;
+        if (sq <= 20) A.capturesEarly++;
+        if (sq >= LATE) A.capturesLate++;
+      });
+    };
+    const trap = (p) => { if (p.jailPass > 0) { p.jailPass--; A.jailPassUsed++; } else p.trapped = true; };
+    // Moved by an event: no chaining (the destination square's own event does not trigger), but capture applies.
+    const jumpTo = (pi, to) => {
+      const p = P[pi], d = to - p.pos;
       if (d >= 0) p.gained += d; else p.lostSq -= d;
       if (d >= BIG) gJack++; else if (-d >= BIG) gFall++;
       p.pos = to;
-    };
-    const startWait = (p, e) => {
-      if (e.pass && p.cards[e.pass] > 0) { p.cards[e.pass]--; agg.cardsUsed++; return; }
-      p.wait = { min: e.min, left: e.max };
+      capture(pi, to);
     };
 
-    // Apply an effect object (a tile, a "then", a choice option...).
-    const apply = (pi, e, depth) => {
+    const effect = (pi, t, depth) => {
       const p = P[pi];
-      if (!e || depth > 6) return;
-      switch (e.type) {
-        case "skip": p.skip += e.turns; break;
-        case "wait": startWait(p, e); break;
+      switch (t.type) {
+        case "skip": case "hospital": p.skip += t.turns; break;
+        case "prison": trap(p); break;
         case "slowNext": p.slow = true; break;
-        case "card": if (hand(p) < s.handLimit) p.cards[e.card]++; break;
-        case "tailwindOthers": case "doubleOthers": P.forEach((q, i) => { if (i !== pi) q.tail = true; }); break;
-        case "extraRoll": moveBy(pi, d6(), depth + 1); break;
-        case "rollSum": { let sum = 0; for (let i = 0; i < e.dice; i++) sum += d6(); moveBy(pi, sum, depth + 1); break; }
+        case "card": p[t.card] += 1; break;
+        case "doubleOthers": P.forEach((q, i) => { if (i !== pi) q.dbl = true; }); break;
+        case "extraRoll": moveBy(pi, throwSequence(0), depth + 1); break;
+        case "rollSum": { let n = 0; for (let i = 0; i < t.dice; i++) n += d6(); moveBy(pi, n, depth + 1); break; }
         case "jump":
-          jumpTo(p, e.to);
-          if (e.grant === "snakeLeader") p.leader = true;
-          if (e.then) apply(pi, e.then, depth + 1);
+          jumpTo(pi, t.to);
+          if (t.grant === "snakeLeader") p.leader = true;
+          if (t.then === "prison") trap(p);
+          if (t.then === "hospital") p.skip += 3;
+          if (t.then === "skip2") p.skip += 2;
           break;
-        case "nearest": {
-          const want = e.target === "R" ? "B" : e.target === "P" ? "S" : e.target;
+        case "nearest": { // R11: forward only, then "do it"
           let k = p.pos + 1;
-          while (k < END && !(T[k] && T[k].cat === want && !T[k].requires)) k++;
-          if (k < END) { jumpTo(p, k); applyTile(pi, depth + 1, true); }
+          while (k < END && !(T[k] && T[k].cat === t.target && !T[k].requires)) k++;
+          if (k < END) { jumpTo(pi, k); applyTile(pi, depth + 1); }
           break;
         }
-        case "swapAhead": {
+        case "swapLeader": { // R10: change place with the player closest to END
           let best = -1;
-          P.forEach((q, i) => { if (q.pos > p.pos && q.pos < END && (best < 0 || q.pos < P[best].pos)) best = i; });
-          if (best >= 0) { const q = P[best]; const a = p.pos; jumpTo(p, q.pos); q.pos = a; }
-          break;
-        }
-        case "gamble": apply(pi, d6() >= e.min ? e.win : e.lose, depth + 1); break;
-        case "choice": {
-          let idx;
-          if (p.smart) {
-            let bv = -Infinity;
-            e.options.forEach((o, i) => { const v = effectValue(p.pos, o, p); if (v > bv) { bv = v; idx = i; } });
-          } else idx = Math.floor(rand() * e.options.length);
-          apply(pi, e.options[idx], depth + 1);
+          P.forEach((q, i) => { if (i !== pi && q.pos > p.pos && q.pos < END && (best < 0 || q.pos > P[best].pos)) best = i; });
+          if (best >= 0) { const q = P[best], a = p.pos; jumpTo(pi, q.pos); q.pos = a; }
           break;
         }
       }
     };
 
-    const applyTile = (pi, depth, forced = false) => {
-      const p = P[pi];
-      const t = T[p.pos];
-      if (!t || (t.requires && !p.leader)) return;
-      if (t.cat === "S" && p.cards.umbrella > 0) {
-        // casual: always shields; smart: shields only real setbacks (worth more than a lost turn)
-        const v = effectValue(p.pos, t, p);
-        if (!p.smart || v <= -LOST_TURN) { p.cards.umbrella--; agg.cardsUsed++; return; }
+    const applyTile = (pi, depth = 0) => {
+      const p = P[pi], t = T[p.pos];
+      if (!t || depth > 6 || (t.requires === "snakeLeader" && !p.leader)) return;
+      if (t.cat === "P" && p.bonus > 0 && (s.bonusPolicy === "defend" || s.bonusPolicy === "first")) {
+        p.bonus--; A.bonusDefend++; return;
       }
-      p.hit.add(String(p.pos));
-      if (t.cat === "S") p.setbacks++; else if (t.cat === "B") p.boosts++;
-      apply(pi, t, depth);
+      if (t.cat === "R" && pi === leaderIdx() && (s.bonusPolicy === "attack" || s.bonusPolicy === "first")) {
+        const h = P.findIndex((q, i) => i !== pi && q.bonus > 0);
+        if (h >= 0) { P[h].bonus--; A.bonusAttack++; return; }
+      }
+      p.hits.add(String(p.pos));
+      if (t.cat === "P") p.punish++; else if (t.cat === "R") p.rewards++;
+      effect(pi, t, depth);
     };
 
     const moveBy = (pi, n, depth = 0) => {
       const p = P[pi];
+      if (n <= 0) return;
       let to = p.pos + n;
       if (to > END) { if (s.endRule === "exact") { p.lost++; return; } to = END; }
       p.pos = to;
-      if (depth === 0) p.land = to;
       if (to === END) return;
+      capture(pi, to);
       applyTile(pi, depth);
     };
 
-    const throwFor = (p) => {
-      let roll = d6();
-      if (s.thinker) {
-        const r2 = d6();
-        roll = p.smart ? (landValue(p, r2) > landValue(p, roll) ? r2 : roll) : (rand() < 0.5 ? roll : r2);
+    // R2: number of squares to move. k0 = sixes already thrown this turn to enter / leave the trap (no points).
+    function throwSequence(k0) {
+      if (s.sixRule === "none") return d6();
+      let k = k0, total = 0;
+      if (s.sixRule === "standard") {
+        for (;;) { const r = d6(); total += r; if (r !== 6 || ++k >= s.maxSixes) return total; }
       }
-      // Compass card: re-roll once.
-      if (p.cards.compass > 0 && !p.wait && !(p.pos === 0 && s.startRule === "need6")) {
-        const use = p.smart ? landValue(p, roll) < avgFresh(p) - 2 : roll === 1;
-        if (use) { p.cards.compass--; agg.cardsUsed++; roll = d6(); }
+      // owner: throw while 6; after k sixes you have k throws in total after them (the chain-ending one included);
+      // a 6 among those throws counts as another six and gives one more throw.
+      for (;;) {
+        const r = d6(); total += r;
+        if (r !== 6) break;
+        if (++k >= s.maxSixes) return total;
       }
-      if (s.catchUp && P.every((q) => q === p || q.pos > p.pos)) roll += s.catchUp;
-      if (p.tail) { roll *= 2; p.tail = false; }
-      if (p.slow) { roll = 1; p.slow = false; }
-      return roll;
-    };
+      let owed = Math.max(0, k - 1);
+      while (owed > 0) {
+        const r = d6(); owed--; total += r;
+        if (r === 6) { if (++k >= s.maxSixes) return total; owed++; }
+      }
+      return total;
+    }
 
     let winner = -1, round = 0, leader = -1, mid = null;
-    while (winner < 0 && round < 5000) {
+    while (winner < 0 && round < 3000) {
       round++;
       for (let pi = 0; pi < s.players && winner < 0; pi++) {
-        const p = P[pi];
-        const before = p.pos;
+        const p = P[pi], before = p.pos;
         if (p.skip > 0) { p.skip--; p.lost++; }
-        else {
-          const roll = throwFor(p);
-          if (p.pos === 0 && s.startRule === "need6") { if (roll === 6) moveBy(pi, 6); else p.lost++; }
-          else if (p.wait) {
-            if (roll >= p.wait.min) { p.wait = null; moveBy(pi, roll); }
-            else { p.lost++; if (--p.wait.left <= 0) p.wait = null; }
+        else if (p.pos === OFF || p.trapped) { // R1 / R6: only a 6 lets you in / out; that 6 gives the extra throw
+          const off = p.pos === OFF, limit = off ? s.enterAfter : s.trapAfter;
+          if (p.tries >= limit) { // option: released after too many failed tries -> a normal turn
+            p.tries = 0; if (off) p.pos = 0; else p.trapped = false;
+            let n = p.slow ? 1 : throwSequence(0); p.slow = false; if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n);
           } else {
-            const from = p.pos; p.land = -1;
-            moveBy(pi, roll);
-            for (let k = from + 1; k <= from + 6 && k < END; k++)
-              if (T[k] && !p.opp.has(k)) p.opp.set(k, p.land === k);
+            const r = d6();
+            if (off ? s.enterFaces.includes(r) : r === 6) {
+              p.tries = 0;
+              if (off) p.pos = 0; else p.trapped = false;
+              if (r !== 6) { /* entered without a 6: no extra throw, move next turn */ }
+              else if (p.slow) { p.slow = false; moveBy(pi, 1); }
+              else { let n = throwSequence(1); if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n); }
+            } else { p.tries++; p.lost++; if (off) p.waitEnter++; else p.waitTrap++; }
           }
+        } else if (p.slow) { p.slow = false; p.dbl = false; moveBy(pi, 1); } // R9: move exactly 1
+        else {
+          const from = p.pos;
+          let n = throwSequence(0);
+          const single = n <= 5 && !p.dbl; // a single non-six throw: which square you reach is decided by the die alone
+          if (p.dbl) { n *= 2; p.dbl = false; }
+          moveBy(pi, n);
+          if (single) for (let k = from + 1; k <= from + 5 && k < END; k++) if (T[k] && !p.opp.has(k)) p.opp.set(k, from + n === k);
         }
-        if (p.pos > p.maxPos) p.maxPos = p.pos;
-        if (p.pos !== before) p.dry = 0; else { p.dry++; if (p.dry > p.maxDry) p.maxDry = p.dry; }
+        if (p.pos !== before) p.dry = 0; else if (++p.dry > p.maxDry) p.maxDry = p.dry;
         if (p.pos >= END) winner = pi;
+        if (s.turns && ++turnCount >= s.turns) return { players: P.map(({ hits, opp, ...rest }) => rest), diceLeft: script?.length };
       }
-      let li = 0; P.forEach((q, i) => { if (q.pos > P[li].pos) li = i; });
-      if (leader >= 0 && li !== leader) { agg.leadChanges++; if (P[li].pos >= LATE) gLate++; }
-      if (lateFirst < 0 && P[li].pos >= LATE) lateFirst = li;
+      const li = leaderIdx();
+      if (leader >= 0 && li !== leader) { A.leadChanges++; if (P[li].pos >= LATE) gLate++; }
       leader = li;
+      if (lateFirst < 0 && P[li].pos >= LATE) lateFirst = li;
       if (!mid && P[li].pos >= MID) {
         const order = P.map((q, i) => [q.pos, i]).sort((a, b) => b[0] - a[0]);
         mid = { first: order[0][1], last: order[order.length - 1][1] };
       }
     }
-    if (winner < 0) { agg.capped++; continue; }
-    agg.wins[winner]++; agg.rounds.push(round);
-    agg.jackpots += gJack; agg.falls += gFall; if (gJack) agg.gamesJackpot++; if (gFall) agg.gamesFall++;
-    agg.lateOvertakes += gLate; if (gLate) agg.gamesLateOvertake++;
-    if (lateFirst >= 0) { agg.lateFirstN++; if (lateFirst === winner) agg.lateFirstWin++; }
+    if (winner < 0) { A.capped++; continue; }
+    A.wins[winner]++; A.rounds.push(round);
+    A.jackpots += gJack; A.falls += gFall; if (gJack) A.gamesJack++; if (gFall) A.gamesFall++;
+    A.lateOvertakes += gLate; if (gLate) A.gamesLate++; if (gCap) A.gamesCapture++;
+    if (lateFirst >= 0) { A.lateFirstN++; if (lateFirst === winner) A.lateFirstWin++; }
+    if (mid) { A.midN++; if (mid.first === winner) A.midFirstWin++; else A.comeback++; if (mid.last === winner) A.midLastWin++; }
     const runnerUp = Math.max(...P.filter((_, i) => i !== winner).map((q) => q.pos));
-    agg.finishGap += END - runnerUp; if (END - runnerUp <= 6) agg.closeFinish++;
-    if (mid) {
-      agg.midN++;
-      if (mid.first === winner) agg.midFirstWin++; else agg.comeback++;
-      if (mid.last === winner) agg.midLastWin++;
-    }
+    A.finishGap += END - runnerUp; if (END - runnerUp <= 6) A.close++;
     P.forEach((p, i) => {
-      agg.playerGames++;
-      agg.lost += p.lost; agg.boosts += p.boosts; agg.setbacks += p.setbacks;
-      agg.gained += p.gained; agg.lostSq += p.lostSq; agg.maxDry += p.maxDry; if (p.maxDry >= 10) agg.dry10++;
-      for (const k of p.hit) { agg.tileHitPlayers[k]++; if (i === winner) agg.tileHitWins[k]++; }
+      A.playerGames++;
+      A.lost += p.lost; A.waitEnter += p.waitEnter; A.waitTrap += p.waitTrap;
+      A.maxDry += p.maxDry; if (p.maxDry >= 10) A.dry10++;
+      A.rewards += p.rewards; A.punish += p.punish; A.gained += p.gained; A.lostSq += p.lostSq;
+      if (p.captured) A.capturedPlayers++;
+      for (const k of p.hits) { A.hit[k]++; if (i === winner) A.hitWin[k]++; }
       for (const [k, landed] of p.opp) {
-        if (landed) { agg.oppLand[k]++; if (i === winner) agg.oppLandWin[k]++; }
-        else { agg.oppMiss[k]++; if (i === winner) agg.oppMissWin[k]++; }
+        if (landed) { A.oppLand[k]++; if (i === winner) A.oppLandWin[k]++; } else { A.oppMiss[k]++; if (i === winner) A.oppMissWin[k]++; }
       }
     });
   }
-  return summarize(board, s, agg);
+  return summarize(board, s, A, BIG);
 }
 
-function summarize(board, s, agg) {
-  const n = agg.rounds.length, pg = agg.playerGames;
-  const r = [...agg.rounds].sort((a, b) => a - b);
-  const q = (x) => r[Math.min(n - 1, Math.floor(x * n))];
-  const fair = 1 / s.players;
-  const tiles = Object.keys(board.tiles).map((k) => {
-    const hp = agg.tileHitPlayers[k];
-    const t = board.tiles[k];
-    return {
-      tile: +k, cat: t.cat ?? "-", type: t.type,
-      hitPct: +(100 * hp / pg).toFixed(1),
-      winPctIfHit: hp ? +(100 * agg.tileHitWins[k] / hp).toFixed(1) : null,
-      // impact = win% when the die put you on this tile minus win% when the die made you just miss it
-      // (first time each player came within one roll of it — a natural experiment decided only by the die)
-      impactPts: agg.oppLand[k] > 200 && agg.oppMiss[k] > 200
-        ? +(100 * (agg.oppLandWin[k] / agg.oppLand[k] - agg.oppMissWin[k] / agg.oppMiss[k])).toFixed(1) : null,
-    };
-  }).sort((a, b) => a.tile - b.tile);
+function summarize(board, s, A, BIG) {
+  const n = A.rounds.length, pg = A.playerGames, fair = 1 / s.players;
+  const r = [...A.rounds].sort((a, b) => a - b), q = (x) => r[Math.min(n - 1, Math.floor(x * n))];
+  const f = (x, d = 1) => +x.toFixed(d);
   return {
-    settings: { ...s, policies: s.policies ? s.policies.join(",") : "all casual" },
-    games: n, capped: agg.capped,
-    seatWinPct: agg.wins.map((w) => +(100 * w / n).toFixed(2)),
-    seatCI95: +(196 * Math.sqrt(fair * (1 - fair) / n)).toFixed(2),
-    rounds: { mean: +(r.reduce((a, b) => a + b, 0) / n).toFixed(1), p10: q(0.1), median: q(0.5), p90: q(0.9), max: r[n - 1] },
-    perPlayer: {
-      turnsLost: +(agg.lost / pg).toFixed(1),
-      boostsHit: +(agg.boosts / pg).toFixed(2),
-      setbacksHit: +(agg.setbacks / pg).toFixed(2),
-      squaresGained: +(agg.gained / pg).toFixed(1),
-      squaresLost: +(agg.lostSq / pg).toFixed(1),
-      longestNoMove: +(agg.maxDry / pg).toFixed(1),
-      pctNoMove10: +(100 * agg.dry10 / pg).toFixed(1),
-    },
-    resilience: {
-      leadChanges: +(agg.leadChanges / n).toFixed(1),
-      winIfLeadingAtMid: +(100 * agg.midFirstWin / agg.midN).toFixed(1),
-      winIfLastAtMid: +(100 * agg.midLastWin / agg.midN).toFixed(1),
-      comebackPct: +(100 * agg.comeback / agg.midN).toFixed(1),
-    },
+    rules: s, games: n, capped: A.capped,
+    fairness: { seatWinPct: A.wins.map((w) => f(100 * w / n, 2)), ci95: f(196 * Math.sqrt(fair * (1 - fair) / n), 2) },
+    length: { mean: f(r.reduce((a, b) => a + b, 0) / n), p10: q(0.1), median: q(0.5), p90: q(0.9) },
     excitement: {
-      bigJumpSquares: s.bigJump ?? Math.round(board.lastTile * 0.1),
-      jackpotsPerGame: +(agg.jackpots / n).toFixed(2),
-      fallsPerGame: +(agg.falls / n).toFixed(2),
-      pctGamesWithJackpot: +(100 * agg.gamesJackpot / n).toFixed(1),
-      pctGamesWithFall: +(100 * agg.gamesFall / n).toFixed(1),
-      lateOvertakesPerGame: +(agg.lateOvertakes / n).toFixed(2),
-      pctGamesWithLateOvertake: +(100 * agg.gamesLateOvertake / n).toFixed(1),
-      winIfFirstIntoLastQuarter: +(100 * agg.lateFirstWin / agg.lateFirstN).toFixed(1),
-      avgFinishGap: +(agg.finishGap / n).toFixed(1),
-      pctCloseFinish: +(100 * agg.closeFinish / n).toFixed(1),
+      leadChanges: f(A.leadChanges / n), winIfLeadingAtHalf: f(100 * A.midFirstWin / A.midN), winIfLastAtHalf: f(100 * A.midLastWin / A.midN),
+      comebackPct: f(100 * A.comeback / A.midN), lateOvertakes: f(A.lateOvertakes / n, 2), pctGamesLateOvertake: f(100 * A.gamesLate / n),
+      winIfFirstIntoLastQuarter: f(100 * A.lateFirstWin / A.lateFirstN), avgFinishGap: f(A.finishGap / n), pctCloseFinish: f(100 * A.close / n),
+      bigJump: BIG, jackpots: f(A.jackpots / n, 2), falls: f(A.falls / n, 2), pctGamesJackpot: f(100 * A.gamesJack / n), pctGamesFall: f(100 * A.gamesFall / n),
+      captures: f(A.captures / n, 2), capturesEarly: f(A.capturesEarly / n, 2), capturesLate: f(A.capturesLate / n, 2),
+      pctGamesCapture: f(100 * A.gamesCapture / n), pctPlayersCaptured: f(100 * A.capturedPlayers / pg),
     },
-    tiles,
+    boredom: {
+      turnsLost: f(A.lost / pg), waitingToEnter: f(A.waitEnter / pg), waitingInTrap: f(A.waitTrap / pg),
+      longestNoMove: f(A.maxDry / pg), pctNoMove10: f(100 * A.dry10 / pg),
+    },
+    events: {
+      rewardsHit: f(A.rewards / pg, 2), punishmentsHit: f(A.punish / pg, 2), squaresGained: f(A.gained / pg), squaresLost: f(A.lostSq / pg),
+      bonusDefendPerGame: f(A.bonusDefend / n, 2), bonusAttackPerGame: f(A.bonusAttack / n, 2), jailPassPerGame: f(A.jailPassUsed / n, 2),
+    },
+    tiles: Object.keys(board.tiles).map((k) => ({
+      tile: +k, cat: board.tiles[k].cat, title: board.tiles[k].text,
+      landedPct: f(100 * A.hit[k] / pg),
+      winIfLanded: A.hit[k] ? f(100 * A.hitWin[k] / A.hit[k]) : null,
+      impact: A.oppLand[k] > 300 && A.oppMiss[k] > 300 ? f(100 * (A.oppLandWin[k] / A.oppLand[k] - A.oppMissWin[k] / A.oppMiss[k])) : null,
+    })).sort((a, b) => a.tile - b.tile),
   };
 }

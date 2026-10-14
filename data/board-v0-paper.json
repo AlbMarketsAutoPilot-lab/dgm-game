@@ -1,6 +1,6 @@
 {
  "id": "v0-paper",
- "description": "Literal transcription of the hand-drawn paper board (docs/GCD.md section 6). Category R = reward, P = punishment (classification is a simulation setting, see docs/analysis/SIM_REPORT_v0.md).",
+ "description": "Literal transcription of the hand-drawn paper board. Rules in 'rules' follow the owner's answers (docs/GCD.md 8.2a). cat R = reward, P = punishment.",
  "lastTile": 202,
  "endTile": 203,
  "tiles": {
@@ -71,8 +71,8 @@
   "60": {
    "cat": "R",
    "type": "card",
-   "card": "skipPunishment",
-   "text": "You can skip a punishment"
+   "card": "bonus",
+   "text": "Bonus card: once, whenever you like - avoid one of your punishments OR cancel a reward of another player (board says 60; owner said 66 - to confirm)"
   },
   "65": {
    "cat": "R",
@@ -88,8 +88,8 @@
   },
   "75": {
    "cat": "R",
-   "type": "swapAhead",
-   "text": "Change place with the one in front"
+   "type": "swapLeader",
+   "text": "Change place with the player closest to END"
   },
   "80": {
    "cat": "R",
@@ -217,7 +217,7 @@
    "cat": "P",
    "type": "jump",
    "to": 167,
-   "text": "Forgot invitation, go back to 167 (Q2 unconfirmed)"
+   "text": "Forgot invitation, go back to 167"
   },
   "183": {
    "cat": "P",
@@ -253,9 +253,11 @@
   }
  },
  "rules": {
-  "startRule": "need6",
+  "entry": "six",
+  "sixRule": "owner",
+  "maxSixes": 3,
+  "capture": true,
   "endRule": "exact",
-  "catchUp": 0,
-  "handLimit": 99
+  "bonusPolicy": "defend"
  }
 }

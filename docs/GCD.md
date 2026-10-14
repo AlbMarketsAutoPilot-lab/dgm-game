@@ -97,7 +97,10 @@ These are the paper game's real rules. Any change to them must be small, measure
 | R12 | 2–4 players, one token each. |
 | R13 | **Content:** the trap mechanic stays. Only its name and story change (e.g. "prison" → a neutral journey trap) to protect the family rating. |
 
-Still open: **Q17**, the two cards (photo 5, pink; photo 21, purple). R1 by analogy with R6: the entering 6 counts as the first of the three 6s — *to confirm*.
+| R14 | **Bonus card** (photos 5 and 21 are the same card): received on the "skip a punishment" square. Used **once, whenever you like**: either avoid one of your own punishments, or cancel a reward of another player of your choice. |
+| R15 | The 6 used to enter or to leave the trap counts as a 6 (first of the three) but gives no points. |
+
+Still open: bonus card square, **60** (written on the board) or **66** (owner's answer)?
 
 **All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, ablation). They will be redone with the corrected engine.
 
@@ -121,8 +124,8 @@ All events belong to a few families. The exact squares, sizes and amounts are de
 - 💡 "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey.
 - 💡 An event square about every 5 squares, as on paper.
 
-### 8.5 Things the paper board did that may need to change
-To be re-measured with the corrected rules (§8.2a). Earlier numbers are invalid.
+### 8.5 Measurements of the paper game with the real rules
+See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Excitement is high (captures, late overtakes). Boredom fails the target (21% of players wait 10+ turns, mostly waiting to enter and in the trap). Small options are measured there and wait for the owner's decision.
 
 ## 9. Story: "The Journey" (P4)
 
