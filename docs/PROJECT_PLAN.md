@@ -23,13 +23,13 @@
 | I-6 ✅ | Wed 14 | Logic Layer + luck proposals: rules R17–R21 added, **all game rules frozen** (GCD §8.2b) | `docs/analysis/I-6_*`, `lifelines-*` | High | – ✅ |
 | I-4 ✅ | Wed 14 | **Journey story** square by square over the frozen board (grown-up voice, GCD §9.2) — prompt: `docs/prompts/I-4_journey_story.md` | `data/board-long.json` (texts), `docs/analysis/I-4_story_log.md` | Medium | – ✅ |
 | I-5 ✅ | Wed 14 | **Short board** "The Quick Trip": 23 long-board events, measured (all §11.3 targets met), with the story (GCD §10.1) — prompt: `docs/prompts/I-5_short_board.md` | `data/board-short.json`, `docs/analysis/measure-short.md`, `docs/analysis/I-5_short_board_log.md` | High | – ✅ |
-| **I-7 (next)** | Thu 15 | **Final freeze** of the GCD (owner approval); also fix Step 2 below to read `data/board-long.json` and `data/board-short.json` instead of the archived `data/board-v1-*.json` | `docs/GCD.md` | Low | **Yes** |
+| I-7 ✅ | Wed 14 | **Final freeze**: GCD marked FROZEN (owner); Step 2 below now reads the final board files | `docs/GCD.md`, `docs/analysis/I-7_freeze_log.md` | Low | – ✅ |
 | I-1…I-7 | Wed 14 → | **Ideation restart: GCD v2 steps I-1 to I-7 (see `docs/GCD.md` §13). Coding (Step 2+) starts only after I-7 FREEZE.** | `docs/GCD.md`, `data/board-*.json`, reports | High | per step |
-| 2 | Thu 15 | Project skeleton (Vite + TypeScript + Vitest) + rules engine in TypeScript, ported from `tools/sim/engine.mjs`, reading `data/board-long.json` and `data/board-short.json` (GCD §10, §15) + unit tests for every tile type | `src/engine/*`, tests | **High** | **Yes** |
+| **2 (next)** | Thu 15 | Project skeleton (Vite + TypeScript + Vitest) + rules engine in TypeScript, ported from `tools/sim/engine.mjs`, reading `data/board-long.json` and `data/board-short.json` (GCD §10, §15) + unit tests for every tile type | `src/engine/*`, tests | **High** | **Yes** |
 | 3 | Thu 15 | Board rendering on Canvas: paper texture, purple wobbly tiles, crayon colours, icons, ladders, snakes, layout: long board follows the paper path (GCD §8.4); short board layout to be designed | `src/render/*` | **Medium** | Yes |
 | 4 | Fri 16 | Token animation step-by-step + ladders/snakes paths + camera follow / pan / zoom | `src/render/animation*`, `camera*` | **Medium** | Yes |
-| 5 | Fri 16 | UI: player setup (2–4), dice, turn flow, card inventory + "use card?" prompts, win screen, accessibility (read-aloud, high contrast, reduced motion) | `src/ui/*` | **Medium** | Yes |
-| 6 | Sat 17 | Simple computer players (optional) | `src/ai/*` | **Low** | Yes |
+| 5 | Fri 16 | UI: player setup (2–4), dice, turn flow, card inventory + "use card?" prompts, win screen, accessibility as in GCD §14 (colour + icon, big buttons, high contrast, reduced motion, no timers; no read-aloud) | `src/ui/*` | **Medium** | Yes |
+| 6 | Sat 17 | Computer players as in GCD §8.6 (the measured simple player; optional) | `src/ai/*` | **Low** | Yes |
 | 7 | Sat 17 | PWA (offline) + free deploy to GitHub Pages via GitHub Actions | `.github/workflows/pages.yml`, manifest | **Low** | Yes |
 | 8 | Sat 17 | Android app with Capacitor, built by GitHub Actions, uploaded to Google Play with the owner's existing account (cost 0) | `android/`, workflow | **Medium** | Yes |
 | 9 | Sun 18 | Family playtest → bug list → fixes | fixes | **Low/Medium** | Yes |
