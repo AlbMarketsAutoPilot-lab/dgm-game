@@ -1,8 +1,8 @@
 # Don't Get Mad! — Game Concept Document (GCD)
 
-> **Status:** Draft v0.1 — transcribed from 25 photos of the hand-drawn paper board and cards.
+> **Status:** Draft v0.2 — transcribed from 25 photos of the hand-drawn paper board and cards.
 > **Rule for all future work:** this file (and later `src/data/board.json`) is the single source of truth.
-> Nothing may be invented. Anything marked ⚠️ is **not confirmed** and must be answered in §9 before it is coded.
+> Nothing may be invented. Anything marked ⚠️ is **not confirmed** (see §10). The paper board is the inspiration for a rebuilt, simulation-balanced rule set (§9).
 
 ---
 
@@ -36,13 +36,13 @@ It keeps the look and spirit of the original: off-white paper, purple-ink tiles,
 4. If it ends on a special tile, that tile's rule is applied (§6).
 5. First player to reach **END** wins.
 
-Details not written on the board (exact roll for END, capturing, extra throw on 6, etc.) are open questions in §9.
+Details not written on the board (exact roll for END, capturing, extra throw on 6, etc.) are listed in §10.
 
 ## 6. Tile catalogue (all special tiles)
 
 Every tile 1–202 that is **not** listed below is a normal tile with no rule.
 Colour = crayon colour on the paper. Source = photo number(s) where the text is readable.
-✅ = text clearly readable · ⚠️ = needs confirmation (see §9).
+✅ = text clearly readable · ⚠️ = needs confirmation (see §10).
 
 | Tile | Colour | Text on board (as written) | Effect (literal) | Target | Status | Source |
 |---|---|---|---|---|---|---|
@@ -60,7 +60,7 @@ Colour = crayon colour on the paper. Source = photo number(s) where the text is 
 | 55 | purple | "Fly to Airport 71" | Jump to 71 | 71 | ✅ | 11, 15 |
 | 60 | orange | "You can skip a punishment" | Receive **Skip Punishment** card | – | ⚠️ Q5 | 11, 15, 24 |
 | 65 | orange-red | "Go to nearest reward and do it" | Move to nearest reward tile, apply it | nearest reward | ⚠️ Q6 | 11, 12, 24 |
-| 70 | orange | "(Lost) your flight is broke(n), go back to 55" | Jump back to 55 | 55 | ⚠️ Q4 | 7, 12 |
+| 70 | orange | "(Lost) your flight is broke(n), go back to 55" | Jump back to 55 (55's flight does **not** trigger) | 55 | ✅ Q4 answer | 7, 12 |
 | 71 | – | "AIRPORT" | Label only | – | ✅ | 7, 12 |
 | 75 | green | "Change place with the one in front" | Swap position with the player ahead | player ahead | ⚠️ Q18 | 7, 12 |
 | 80 | brown | "Go downstairs" + ladder | Ladder | 135 (Hotel) | ✅ | 6, 11, 12 |
@@ -92,9 +92,9 @@ Colour = crayon colour on the paper. Source = photo number(s) where the text is 
 | 184 | – | "WORK" | Label only | – | ✅ | 3, 9 |
 | 188 | blue | "Go downstairs" + ladder | Ladder down | 157 | ✅ | 2, 20, 23 |
 | 193 | orange | "Forgot keys! Back to work!" | Jump back to Work | 184 | ✅ | 2, 18 |
-| 195 | – | "!SNAKE LEADER!" (end of snake from 138) | Become **Snake Leader** (green card, photo 4) | – | ⚠️ Q22 | 2, 4, 18 |
+| 195 | – | "!SNAKE LEADER!" (end of snake from 138) | Become **Snake Leader**: receive the green badge card (photo 4) | – | ✅ Q1 answer | 2, 4, 18 |
 | 198 | purple | "Forgot keys again!!! Back to work 184 and skip two turns" | Jump to 184 + skip 2 turns | 184 | ✅ | 2, 3, 25 |
-| 202 | – | "Sorry, follow the snake if snake brought you to 195" | Snake down, **only** for a player who came via the 138 snake | 165 (board) / 162 (card) | ⚠️ Q1 | 2, 4, 20, 23 |
+| 202 | – | "Sorry, follow the snake if snake brought you to 195" | Snake down, **only** for the Snake Leader (badge holder) | 165 | ✅ Q1 answer | 2, 4, 20, 23 |
 | END | – | "END" | Finish | – | ✅ | 2, 11 |
 
 ### 6.1 Ladders & snakes summary
@@ -107,7 +107,7 @@ Colour = crayon colour on the paper. Source = photo number(s) where the text is 
 | Ladder "Go downstairs" | 188 → 157 | backward |
 | Snake | 138 → 195 | forward |
 | Snake | 158 → 48 | backward |
-| Snake (conditional) | 202 → 165 ⚠️ | backward |
+| Snake (Snake Leader only) | 202 → 165 | backward |
 
 ### 6.2 Places (story labels)
 
@@ -122,7 +122,7 @@ Transcribed from the paper cards. All upside-down in the photos; read as best as
 | **Free Jail Pass** | "Get out of jail free. You landed in 90, you get a free jail pass." / "You landed on square 90 you get free jail pass." | Tile 90 | Avoid / leave Prison | ✅ text · ⚠️ Q10 usage |
 | **Skip Punishment** | "You can skip a punishment until you landed in 6? and you can skip a punishment … other person has … reward … skip a" (photo 5, partly unreadable) | Tile 60 | Ignore one punishment tile | ⚠️ Q5 |
 | **Skip a Reward / others skip a punishment** | "You have skip a reward and others have skip a punishment" (photo 21) | ⚠️ unknown | ⚠️ unknown | ⚠️ Q5 |
-| **Snake Leader** | "You are Snake Leader. If 202 go to 162" (photo 4) | Tile 195 | Applies the 202 rule | ⚠️ Q1, Q22 |
+| **Snake Leader** (badge) | "You are Snake Leader. If 202 go to 165" (photo 4; owner confirmed 165) | Tile 138 → 195 | Only for the badge holder: landing on 202 sends them back to 165 | ✅ |
 
 ## 8. Digital design
 
@@ -177,16 +177,23 @@ Transcribed from the paper cards. All upside-down in the photos; read as best as
 - Rules engine = pure TypeScript functions + `board.json` data, covered by unit tests (**Vitest**).
 - **PWA** (offline) hosted on **GitHub Pages** (free).
 - **Android** via **Capacitor** (free), APK built by **GitHub Actions** (free for this use).
-- ⚠️ Q21: Google Play Store has a one-time **$25** developer fee — this breaks C1. Free options: APK download from GitHub Releases, F-Droid, or "Install app" from the PWA.
+- **Google Play**: publish with the owner's existing developer account (already paid, so no new cost — C1 respected). PWA stays available as well.
 
-## 9. Open questions (must be answered before coding the rule)
+## 9. Answers received (14 Oct 2026)
+
+| # | Answer from the owner |
+|---|---|
+| Q1 | Card says **165**. Landing on 138 → snake to 195 → you become **Snake Leader** and get the green badge. Only the badge holder must follow the 202 snake back to 165. |
+| Q4 | **No chaining.** Landing on 55 flies you to 71, but being sent to 55 by tile 70 ends there. |
+| Q21 | Owner already has a Google Play developer account → publish on Google Play at no extra cost. |
+| Direction | The paper rules were "just for fun". The digital game gets a **rebuilt story and rule set**, designed with simulation so every player has equal opportunities, with measured resilience and reward-vs-punishment balance. Remaining questions below now become **design decisions** for that rebuild (see `docs/analysis/SIM_REPORT_v0.md`). |
+
+## 10. Open questions for the paper board (now design decisions for the rebuild)
 
 | # | Question |
 |---|---|
-| Q1 | Tile 202: the board snake ends at **165**, the green card says **162**. Which one? And if a player reaches 202 *without* coming via the 138 snake, does nothing happen? |
 | Q2 | Tile 178 "go back to 16?": is it **167** or **168**? (168 would then send the player to Party 179.) |
 | Q3 | Tile 35: is the target **66**? |
-| Q4 | **Chained rules:** after a jump, does the new tile's rule also apply? Example: 70 → 55 → would 55 then fly you to 71? |
 | Q5 | Pink card (photo 5) and purple card (photo 21): what exactly do they say/do, and which tiles give them? Can a Skip Punishment card be kept and used later? |
 | Q6 | Which tiles are **rewards** and which are **punishments**? (Needed for 65, 128 and the Skip Punishment card.) "Nearest" = forward, backward or either? |
 | Q7 | Tile 143 "others double what they throw": for their next throw only, or longer? |
@@ -203,5 +210,3 @@ Transcribed from the paper cards. All upside-down in the photos; read as best as
 | Q18 | Tile 75 "change place with the one in front": the nearest player ahead on the board? If nobody is ahead? |
 | Q19 | Tile 183: go to 97 but the police "go in prison" does **not** apply — correct? |
 | Q20 | Which UI languages? |
-| Q21 | Android distribution: free APK/PWA only, or pay $25 for Google Play? |
-| Q22 | Snake Leader (195): anything else besides the 202 rule? |
