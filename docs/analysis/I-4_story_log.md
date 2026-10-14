@@ -88,7 +88,7 @@ Every effect is unchanged; the text only tells it. Colour follows the paper cate
 | Wild Trail, square 5 (→ trap 30) | Lost on the Wild Trail! Into the Sticky Swamp. | question mark / compass |
 | Roads meet (96) | The two roads meet again. | joining paths |
 
-## I-4.2 version B: grown-up voice (for comparison) 💡
+## I-4.2 version B: grown-up voice ✅ (chosen by the owner, 14 Oct 2026)
 
 Same squares, same effects, same names and icons as version A. Only the voice changes: dry humour and moments every adult has lived (missed trains, "did I lock the door?"), still simple enough for a 6-year-old and still within C2.
 
@@ -136,3 +136,73 @@ Same squares, same effects, same names and icons as version A. Only the voice ch
 | Wild Trail, square 2 (→ 100) | Rope swing over the river! | Rope swing over the river. Worth it! |
 | Wild Trail, square 5 (→ trap) | Lost on the Wild Trail! Into the Sticky Swamp. | The Wild Trail wins. Hello, Sticky Swamp. |
 | Roads meet (96) | The two roads meet again. | The two roads meet again. |
+
+## Name review for the grown-up voice 💡 (owner asked for new names)
+
+| Element | Approved name (I-4.1) | New name | Why |
+|---|---|---|---|
+| Trap (30) | Sticky Swamp | **The Bog** | Short and plain; "bogged down" makes adults smile, kids still picture mud |
+| Free pass (90) | Swamp boots | **Bog boots** | Follows the trap's name |
+| Two roads | Easy Road · Wild Trail | **Main Road · the Shortcut** | Everyone knows a shortcut that went wrong; it says "risky but fast" without explanation |
+| Hotel 109 (paper: two hotels, 109 and 135) | Mountain Lodge | **Base Camp** (109) · **Mountain Lodge** (135) | Two separate places, foot and top of the mountain |
+| Kept | Lanterns, Fallen tree, Porch steps, stepping stones, Festival of Lights, Snake Leader, Bonus card, the stations, River Pier, Harbour, the Fair | — | Already work for adults |
+
+Version B lines that change with the new names:
+
+| Sq / element | Version B with new names |
+|---|---|
+| 30 | The Bog. Your shoes live here now. Roll a 6. |
+| 90 | Bog boots. Mud? Never heard of it. |
+| 97 | Riverbank selfie. Slipped. Straight into the Bog. |
+| 1st crossroads (82) | Crossroads. Main Road, or the Shortcut? |
+| Main Road (83–95) | The Main Road. Boring, but it works. |
+| Shortcut, square 2 (→ 100) | Rope swing over the river. Worth it! |
+| Shortcut, square 5 (→ trap) | Shortcuts never work. Into the Bog. |
+
+## I-4.3 Texts, squares 102–203 (grown-up voice, new names) 💡 (waiting for the owner)
+
+### Event squares
+
+| Sq | Paper text | New text | Icon |
+|---|---|---|---|
+| 108 | Get some vacation, go to hotel (→ 135) | Spontaneous weekend off. Straight to the Mountain Lodge. | suitcase |
+| 113 | Go downstairs, do punishment (hospital) (→ 50, wait 3) | Wrong turn. Back down into the fog, wait three turns. | fog |
+| 118 | Advance to 124 | Free ski lift. Every little helps. | ski lift |
+| 123 | Throw 3 times, move the total | Sledge run! Throw three times, add them all up. | sledge |
+| 128 | Go to nearest punishment and do it (→ 133) | You trust the map app again. Next bad square. | phone map |
+| 133 | Hotel reservation cancelled, go to 109 | Lodge booking? What booking? Back to Base Camp. | crossed-out bed |
+| 138 | Follow the snake - become Snake Leader (→ 195) | A sea snake gives you a lift. Snake Leader! | snake with crown |
+| 143 | The other players double what they throw | Ice cream break. Everyone else doubles their next throw. | ice cream |
+| 148 | Go in prison again (→ 30, trap) | Wrong ferry. All the way back to the Bog. | ferry |
+| 153 | Skip one turn | Waiting for the tide. Wait one turn. | waves |
+| 158 | Follow the snake (→ 48) | Wrong snake. This one goes all the way back. | snake down |
+| 163 | Throw one more time | Green lights all the way. Throw again. | traffic light |
+| 168 | Invited to a party, go to 179 | Friends saved you a spot at the Fair! | tent / bunting |
+| 173 | Got new car, go fast to work 184 | Last e-scooter in town. Zoom to Central Station! | scooter |
+| 178 | Forgot invitation, go back to 167 | Forgot your Fair ticket. Go back for it. | ticket |
+| 183 | Car was stolen, go to police 97 - no prison | Fell asleep on the train. Woke up at the river. | sleeping face |
+| 188 | Go downstairs (ladder) (→ 157) | Missed your stop. Back to the seaside. | train going back |
+| 193 | Forgot keys, back to work (→ 184) | Forgot your keys! Back to Central Station. | key |
+| 198 | Forgot keys again, back to work 184 and skip two turns | Forgot your keys AGAIN!!! Back to Central Station, wait two turns. | two keys |
+| 202 | Snake Leader only: follow the snake back to 165 | Snake Leader? The snake wants its ride back. Down you go. | snake down |
+| END 203 | END | Festival of Lights! You made it. Light your lanterns! | lanterns |
+
+### Landmarks
+
+| Sq | Paper | New name | Icon |
+|---|---|---|---|
+| 109 | Hotel | Base Camp | tent |
+| 135 | Hotel | Mountain Lodge | cabin |
+| 179 | Party | The Fair | bunting |
+| 184 | Work | Central Station | big clock |
+
+### Rule elements
+
+| Element | New text | Icon / picture idea |
+|---|---|---|
+| Snake Leader badge (138 → 195) | Snake Leader: you rode the snake. It remembers. | snake with a crown on your token |
+| 2nd crossroads (160) | City crossroads. Main Road, or the Shortcut? | signpost |
+| Main Road (161–179) | The Main Road. Boring, but it works. | flat path |
+| Shortcut, square 3 (→ 185) | Through the park. Wait, it actually worked! | park bench |
+| Shortcut, square 7 (→ trap 30) | Lost in the alleys. Somehow, the Bog. | maze |
+| Roads meet (180) | The two roads meet again. | joining paths |
