@@ -100,7 +100,9 @@ These are the paper game's real rules. Any change to them must be small, measure
 | R14 | **Bonus card** (photos 5 and 21 are the same card): received on the "skip a punishment" square. Used **once, whenever you like**: either avoid one of your own punishments, or cancel a reward of another player of your choice. |
 | R15 | The 6 used to enter or to leave the trap counts as a 6 (first of the three) but gives no points. |
 
-Still open: bonus card square, **60** (written on the board) or **66** (owner's answer)?
+| R16 | ✅ Owner decision (14 Oct, after measurement): **enter with a 6, or automatically after 3 failed tries**; **trap: out with a 6, or automatically after 3 failed tries**. (`docs/analysis/MEASURE_REPORT_v0.md` §4) |
+
+Bonus card square confirmed: **60**. None of these rules is final until the luck rules are frozen.
 
 **All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, ablation). They will be redone with the corrected engine.
 

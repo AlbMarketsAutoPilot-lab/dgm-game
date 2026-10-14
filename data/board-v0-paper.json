@@ -72,7 +72,7 @@
    "cat": "R",
    "type": "card",
    "card": "bonus",
-   "text": "Bonus card: once, whenever you like - avoid one of your punishments OR cancel a reward of another player (board says 60; owner said 66 - to confirm)"
+   "text": "Bonus card: once, whenever you like - avoid one of your punishments OR cancel a reward of another player"
   },
   "65": {
    "cat": "R",
@@ -258,6 +258,8 @@
   "maxSixes": 3,
   "capture": true,
   "endRule": "exact",
-  "bonusPolicy": "defend"
+  "bonusPolicy": "defend",
+  "enterAfter": 3,
+  "trapAfter": 3
  }
 }
