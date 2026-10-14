@@ -20,6 +20,8 @@
 | 1a | Wed 14 | Answers recorded + game simulator + baseline report of the paper board ✅ | `tools/sim/`, `data/board-v0-paper.json`, `docs/analysis/SIM_REPORT_v0.md` | High | – ✅ |
 | 1b | Wed 14 | Market & audience report: target categories, social & intellectual niches, how to make the game appealing (web research) ✅ | `docs/analysis/MARKET_REPORT.md` | **Medium** | Yes |
 | 1c | Wed 14 | Rebuild attempt v1 — **archived** (capped swings; not the concept) | `docs/archive/SIM_REPORT_v1_exploration.md` | High | – |
+| I-6 ✅ | Wed 14 | Logic Layer + luck proposals: rules R17–R21 added, **all game rules frozen** (GCD §8.2b) | `docs/analysis/I-6_*`, `lifelines-*` | High | – ✅ |
+| **I-4 (next)** | Thu 15 | **Journey story** square by square over the frozen board — prompt: `docs/prompts/I-4_journey_story.md` | `data/board-long.json` (texts) | **Medium** | **Yes** |
 | I-1…I-7 | Wed 14 → | **Ideation restart: GCD v2 steps I-1 to I-7 (see `docs/GCD.md` §13). Coding (Step 2+) starts only after I-7 FREEZE.** | `docs/GCD.md`, `data/board-*.json`, reports | High | per step |
 | 2 | Thu 15 | Project skeleton (Vite + TypeScript + Vitest) + rules engine in TypeScript, ported from `tools/sim/engine.mjs`, reading `data/board-v1-*.json` (GCD §11) + unit tests for every tile type | `src/engine/*`, tests | **High** | **Yes** |
 | 3 | Thu 15 | Board rendering on Canvas: paper texture, purple wobbly tiles, crayon colours, icons, ladders, snakes, layout: long board follows the paper path (GCD §8.4); short board layout to be designed | `src/render/*` | **Medium** | Yes |

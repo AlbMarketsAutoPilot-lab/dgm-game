@@ -17,7 +17,7 @@ md += `A turn counts here when the player throws the die (also at Start and in t
 
 const rows = [];
 for (const players of [2, 3, 4]) {
-  const r = simulate(board, { ...board.rules, ...APPROVED, players, perGame: true }, N, 4242 + players);
+  const r = simulate(board, { ...(board.rulesR1R16 ?? board.rules), ...APPROVED, players, perGame: true }, N, 4242 + players);
   const recs = [...r.records].sort((a, b) => a.rounds - b.rounds), q = Math.floor(recs.length / 4);
   const groups = [["All games", recs], ["Short game", recs.slice(0, q)], ["Long game", recs.slice(-q)]];
   for (const [name, g] of groups) {

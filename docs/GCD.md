@@ -1,6 +1,6 @@
 # Don't Get Mad! — Game Concept Document (GCD) v2
 
-> **Status:** v2 — I-1 approved except the story (§16). **Not frozen.**
+> **Status:** v2. **Game rules R1–R21 FROZEN (14 Oct 2026, owner).** Still open: the story (§9, step I-4) and the short board (I-5).
 > When frozen, this document is the contract for coding: anything not written here is not built.
 > **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
 > **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements are in `docs/analysis/SIM_REPORT_v0.md` and `docs/analysis/sim-v0-paper-engine-results.md`. The market research is in `docs/analysis/MARKET_REPORT.md`.
@@ -100,11 +100,23 @@ These are the paper game's real rules. Any change to them must be small, measure
 | R14 | **Bonus card** (photos 5 and 21 are the same card): received on the "skip a punishment" square. Used **once, whenever you like**: either avoid one of your own punishments, or cancel a reward of another player of your choice. |
 | R15 | The 6 used to enter or to leave the trap counts as a 6 (first of the three) but gives no points. |
 
-| R16 | ✅ Owner decision (14 Oct, after measurement): **enter with a 6, or automatically after 3 failed tries**; **trap: out with a 6, or automatically after 3 failed tries**. (`docs/analysis/MEASURE_REPORT_v0.md` §4) |
+| R16 | ~~Enter with a 6, or automatically after 3 failed tries; trap: out with a 6, or automatically after 3 failed tries.~~ **Replaced by R17** (owner, step I-6). |
 
-Bonus card square confirmed: **60**.
+Bonus card square confirmed: **60**. Bonus card use: **avoid your own next punishment** (the paper's "defend" use; this is how it is measured).
 
-**Status (14 Oct 2026): luck rules R1–R16 with the paper squares are FROZEN AS BASELINE, NOT FINAL.** Proposals to add or replace luck rules, and the Logic Layer, are worked in step I-6 (`docs/prompts/I-6_logic_and_luck_proposals.md`). The bonus card's *use* (defend or attack) moves to the Logic Layer.
+### 8.2b Rules added in step I-6 ✅ (owner, 14 Oct 2026)
+
+| # | Rule |
+|---|---|
+| R17 | **Waiting stairs** (replaces R16). At Start (not yet on the board) or in the trap, every throw that is not a 6 adds one stair step on top of the next square (Start → square 1: 1, 1/1, 1/2; trap 30 → square 31: 31, 31/1, 31/2). **On the 3rd throw you move anyway**, walking the stair steps first: 2 failed throws, then a 5 → 31, 31/1, 31/2, 32, 33 (slowed by 2 squares). A 6 on throw 1 or 2 frees you as in R1/R6 (the 6 does not move you; you throw again), and you still walk any stair steps already built. A 6 on the 3rd throw is a normal moving 6 (6 + the extra throws, R2), and you walk the 2 steps. Stair steps belong only to the waiting player: no events and no capture on them; other players walk 31 → 32 normally; if you stop on a step you continue from it next turn. |
+| R18 | **Lifelines.** Every player starts with **3**. You **lose 1** each time you make 3 throws without a 6 at Start or in the trap (R17): "You did not get a 6 in three throws, so you lose a lifeline." You **win 1 only by throwing three 6s in a row** in one turn (the 6 that enters or leaves the trap counts as the first). No upper limit. Captures and punishment squares never touch lifelines. When you lose your 3rd lifeline you play on: "**Attention! You have no lifelines left…**". The next loss (the 4th) = **out**. With 3–4 players the game goes on without that player; the last player left wins. |
+| R19 | **Roadblock** (a game event, nobody decides). At the start of each round, if no roadblock is on the board, the game puts one on a random free plain square 1–10 squares in front of the leader (not an event square, not occupied, not a crossroads). The first player to land on it, by a throw or any jump, goes **back 10 squares** (no chaining; capture applies). It is then removed and placed again at the start of the next round (if the leader is on a wild road, it waits until the leader is back on the main road). Passing over it does nothing (R3). |
+| R20 | **Two roads.** Two crossroads: **82** (roads meet again at **96**) and **160** (meet again at **180**). Every token moving by a throw **stops at the crossroads**, even with squares left to move (a jump by an event that passes the crossroads does not stop), and on its next turn the player chooses before throwing: **safe road** = the normal paper squares, or **wild road** = 13 squares (first fork) / 19 squares (second fork) with a **jackpot** on wild square 2 → **100** (first) / wild square 3 → **185** (second) and a **fall** on wild square 5 (first) / 7 (second) → **into the trap (30)**. A move past the end of the wild road continues on the main road from the meeting square. The crossroads holds several players (no capture there). Simple choice: safe road. Tuned so that always taking the wild road wins 25.1% (fair). |
+| R21 | **Who decides what (the Logic Layer as frozen).** The only player choices are the **bonus card** (R14) and the **road** (R20). Both have a price or a risk (§7.1). Nothing a player chooses can cost or win a lifeline. |
+
+**Status (14 Oct 2026): rules R1–R21 are FROZEN (owner).** Board: the paper squares (`data/board-v0-paper.json`, `rules`). Measurements of the frozen game: `docs/analysis/measure-frozen.md`, `docs/analysis/lifelines-final.md`, `docs/analysis/lifelines-compare.md` (version A = R18), `docs/analysis/sixes-and-captures.md`.
+
+**Logic Layer result (honest):** the thinking target (a thoughtful player wins 27–32% against 3 simple players) is **not met**. With the bonus card and the road choice, a thoughtful player wins **25.2–25.5%** (`docs/analysis/I-6_measurements.md`). Ideas that met it (spending lifelines) were rejected because lifelines are too scarce to risk (owner rule: no logic choice may put a lifeline at risk, and luck squares and lifelines are never mixed). The game is a chance game with two small choices. History of every proposal and decision: `docs/analysis/I-6_owner_decisions.md`.
 
 **All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, ablation). They will be redone with the corrected engine.
 
@@ -128,7 +140,7 @@ All events belong to a few families. The exact squares, sizes and amounts are de
 - 💡 "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey.
 - 💡 An event square about every 5 squares, as on paper.
 
-### 8.5 Measurements of the paper game with the real rules
+### 8.5 Measurements of the paper game with the real rules (before I-6)
 See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Excitement is high (captures, late overtakes). Boredom fails the target (21% of players wait 10+ turns, mostly waiting to enter and in the trap). Small options are measured there and wait for the owner's decision.
 
 ## 9. Story: "The Journey" (P4)
@@ -194,11 +206,11 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 |---|---|---|
 | I-1 | **Approve this GCD v2**: vision, pillars, stages, event families, measurement principle, proposals (💡) | Owner decisions written into this file |
 | I-2 ✅ | **Engine upgrade**: add the missing measures (late overtakes, close finishes, jackpots and falls per game, with-vs-without event runs) | `tools/sim/engine.mjs` + test that the paper board still gives the same numbers |
-| I-3 | **Long board, Chance Game**: place and size the events, start rule, end rule and waiting rules, tuned to the targets in §11.3 | `data/board-long.json` + measurement report |
+| I-3 ✅ | **Long board, Chance Game** (done as: the paper squares kept + rules R17–R20, measured in I-6): place and size the events, start rule, end rule and waiting rules, tuned to the targets in §11.3 | `data/board-long.json` + measurement report |
 | I-4 | **Journey story** written over the tuned long board, square by square | Texts in `data/board-long.json` |
 | I-5 | **Short board** built from the best long-board events | `data/board-short.json` + measurement report |
-| I-6 | **Logic Layer** designed under the rules in §7.1 and measured | Logic Layer section + report |
-| I-7 | **Freeze**: owner approval; GCD marked FROZEN | Coding starts |
+| I-6 ✅ | **Logic Layer** designed under the rules in §7.1 and measured (14 Oct: rules R17–R21 frozen) | §8.2b + `docs/analysis/I-6_*` |
+| I-7 | **Freeze**: owner approval; GCD marked FROZEN (rules already frozen 14 Oct; story and short board remain) | Coding starts |
 
 ## 14. Presentation (from the original brief) ✅
 - Hand-drawn paper look: off-white textured paper, purple-ink tiles, crayon-coloured event squares, colourful button tokens.

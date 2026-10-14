@@ -15,7 +15,7 @@ md += `Rules: frozen luck rules + waiting stairs, roadblock, two roads; 3 lifeli
 md += `"Short game" = fastest 25% of games, "long game" = slowest 25% (in rounds).\n\n`;
 md += `| Players | Game | Players kicked out | Games where someone is kicked out | Lifelines left at the end (players still in) | Middle half of players ends with | Won from 6s | Lost at Start / trap | Lost to captures |\n|---|---|---|---|---|---|---|---|---|\n`;
 for (const players of [2, 3, 4]) {
-  const r = simulate(board, { ...board.rules, ...RULES, players, perGame: true }, N, 5151 + players);
+  const r = simulate(board, { ...(board.rulesR1R16 ?? board.rules), ...RULES, players, perGame: true }, N, 5151 + players);
   const recs = [...r.records].sort((a, b) => a.rounds - b.rounds), q = Math.floor(recs.length / 4);
   for (const [name, g] of [["All games", recs], ["Short game", recs.slice(0, q)], ["Long game", recs.slice(-q)]]) {
     const ps = g.flatMap((x) => x.players), n = ps.length, avg = (k) => ps.reduce((a, p) => a + p[k], 0) / n;

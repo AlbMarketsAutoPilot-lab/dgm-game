@@ -5,7 +5,7 @@ import { simulate } from "./engine.mjs";
 import { APPROVED } from "./i6-setup.mjs";
 
 const [, , path, gamesArg = "100000", out] = process.argv;
-const board = JSON.parse(readFileSync(path, "utf8")), base = board.rules ?? {}, N = Number(gamesArg);
+const board = JSON.parse(readFileSync(path, "utf8")), base = board.rulesR1R16 ?? board.rules ?? {}, N = Number(gamesArg);
 const all = (t) => [t, t, t, t];
 const sets = [
   ["0. Baseline (frozen R1–R16)", {}],

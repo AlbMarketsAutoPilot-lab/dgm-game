@@ -7,7 +7,7 @@ import { APPROVED } from "./i6-setup.mjs";
 const [, , path, gamesArg = "100000", out] = process.argv;
 const board = JSON.parse(readFileSync(path, "utf8")), N = Number(gamesArg);
 const pc = (x) => (100 * x).toFixed(1) + "%", f1 = (x) => x.toFixed(1), f2 = (x) => x.toFixed(2);
-const common = { ...board.rules, ...APPROVED, lifeOnTriple: false, outAfterZero: true };
+const common = { ...(board.rulesR1R16 ?? board.rules), ...APPROVED, lifeOnTriple: false, outAfterZero: true };
 const VERSIONS = [
   ["A", "−1 no 6 at Start/trap · +1 three 6s in a row", { ...common, lifeOnTriple: true }],
   ["B", "−1 no 6 at Start/trap · +1 a 6 that gets you out · −1 sent back to Start (captured or square 10)", { ...common, lifeOnEscape6: true, lifeOnCapture: true, lifeOnBackToStart: true }],
@@ -33,7 +33,7 @@ for (const [key, , rules] of VERSIONS) for (const players of [2, 3, 4]) {
   }
 }
 md += `\n## 2. The whole game, 4 players\n\n| Version | Seats (win %) | Lead changes | Late overtakes | Close finishes | Captures | 10+ turns without moving |\n|---|---|---|---|---|---|---|\n`;
-for (const [key, x] of [["Frozen baseline", simulate(board, { ...board.rules }, N, 7100)], ...whole]) {
+for (const [key, x] of [["Frozen baseline", simulate(board, { ...(board.rulesR1R16 ?? board.rules) }, N, 7100)], ...whole]) {
   const e = x.excitement, w = x.fairness.seatWinPct;
   md += `| ${key} | ${Math.min(...w)}–${Math.max(...w)} | ${e.leadChanges} | ${e.lateOvertakes} | ${e.pctCloseFinish}% | ${e.captures} | ${x.boredom.pctNoMove10}% |\n`;
 }
