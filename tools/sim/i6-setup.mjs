@@ -6,6 +6,6 @@ export const FORKS = [
   { at: 160, merge: 180, len: 19, tiles: { 3: { cat: "R", type: "jump", to: 185, text: "Wild road: shortcut over the hill" }, 7: { cat: "P", type: "jump", to: 30, then: "prison", text: "Wild road: lost, into the trap" } } },
 ];
 
-// The rules the owner approved in I-6 (14 Oct 2026): waiting stairs, 3 lifelines, spend a lifeline on a big punishment,
-// the roadblock as a game event and the two roads.
-export const APPROVED = { stairs: true, lifelines: 3, lifeSpend: true, roadblock: { back: 10, range: 10 }, forks: FORKS };
+// The rules the owner approved in I-6 (14 Oct 2026): waiting stairs, 3 lifelines, the roadblock as a game event and the two roads.
+// ("Spend a lifeline" was rejected by the owner after I-6.4.)
+export const APPROVED = { stairs: true, lifelines: 3, roadblock: { back: 10, range: 10 }, forks: FORKS };

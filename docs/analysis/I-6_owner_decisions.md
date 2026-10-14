@@ -60,3 +60,15 @@ Measured in step I-6.3: `docs/analysis/I-6_measurements.md`.
 Candidates for winning a lifeline back by a choice, measured in I-6.4 (`docs/analysis/I-6_combination.md`):
 - **Rest:** instead of throwing, rest; 3 turns of rest in a row = 1 lifeline (also measured: 2 turns).
 - **Refuse a big reward:** when a reward would move you 20+ squares forward, you may refuse it and take a lifeline instead.
+
+## I-6.4: owner answers (14 Oct 2026)
+
+| Topic | Owner decision |
+|---|---|
+| Spend a lifeline to cancel a punishment | ❌ Rejected. It mixes luck (punishment squares) with the logic lifelines. Lifelines are already lost through luck at Start and in the trap, so a player cannot afford to spend them. |
+| Rest 3 turns = 1 lifeline | ❌ Rejected: not real logic. |
+| Refuse a reward = 1 lifeline | ❌ (measured: does not help) |
+| Still approved | Waiting stairs, 3 lifelines (lost only at Start / in the trap), roadblock (game event), two roads. |
+| Open | How to win a lifeline back through logic, not easily. Asked: brain challenge / mind duel / planning on the board → owner: no preference. |
+
+Engine options `lifeSpend`, `lifeRest`, `lifeRefuse`, `lifeSpendMax`, `lifeSpendUntil` stay in the code, switched off (they are not part of any approved set).
