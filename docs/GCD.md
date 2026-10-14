@@ -102,7 +102,9 @@ These are the paper game's real rules. Any change to them must be small, measure
 
 | R16 | ✅ Owner decision (14 Oct, after measurement): **enter with a 6, or automatically after 3 failed tries**; **trap: out with a 6, or automatically after 3 failed tries**. (`docs/analysis/MEASURE_REPORT_v0.md` §4) |
 
-Bonus card square confirmed: **60**. None of these rules is final until the luck rules are frozen.
+Bonus card square confirmed: **60**.
+
+**Status (14 Oct 2026): luck rules R1–R16 with the paper squares are FROZEN AS BASELINE, NOT FINAL.** Proposals to add or replace luck rules, and the Logic Layer, are worked in step I-6 (`docs/prompts/I-6_logic_and_luck_proposals.md`). The bonus card's *use* (defend or attack) moves to the Logic Layer.
 
 **All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, ablation). They will be redone with the corrected engine.
 
