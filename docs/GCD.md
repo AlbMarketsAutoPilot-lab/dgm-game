@@ -1,9 +1,9 @@
-# Don't Get Mad! — Game Concept Document (GCD) v2
+# Don't Get Mad! — Game Concept Document (GCD) v2 — FROZEN
 
-> **Status:** v2. **Game rules R1–R21 FROZEN (14 Oct 2026, owner).** **Story approved (§9, step I-4, 14 Oct 2026).** **Short board approved (§10, step I-5, 14 Oct 2026).** Next: the final freeze (I-7).
-> When frozen, this document is the contract for coding: anything not written here is not built.
+> **Status: FROZEN (v2, 14 Oct 2026, owner, step I-7).** Game rules R1–R21 (§8.2a, §8.2b), the story (§9), both boards (§10) and the computer players (§8.6) are final.
+> This document is the contract for coding: anything not written here is not built. Any change after the freeze needs the owner's approval and, for a rule or a board, a new measurement.
 > **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
-> **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements are in `docs/analysis/SIM_REPORT_v0.md` and `docs/analysis/sim-v0-paper-engine-results.md`. The market research is in `docs/analysis/MARKET_REPORT.md`.
+> **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements with the real rules are in `docs/analysis/MEASURE_REPORT_v0.md` and `docs/analysis/measure-v0-paper.md` (the older `SIM_REPORT_v0.md` and `sim-v0-paper-engine-results.md` are marked INVALID). The market research is in `docs/analysis/MARKET_REPORT.md`.
 
 ---
 
@@ -47,7 +47,7 @@ Every rule, tile and screen must serve these. If something fails a pillar, it is
 
 ## 6. Player experience: what a game should feel like
 
-💡 The intended emotional curve of one game, which the rules must produce and the simulator must check:
+✅ The intended emotional curve of one game, which the rules must produce and the simulator must check:
 
 1. **Start:** a quick, easy start, with everyone moving straight away (P3).
 2. **Early game:** small events; players learn the board and the story.
@@ -114,14 +114,14 @@ Bonus card square confirmed: **60**. Bonus card use: **avoid your own next punis
 | R20 | **Two roads.** Two crossroads: **82** (roads meet again at **96**) and **160** (meet again at **180**). Every token moving by a throw **stops at the crossroads**, even with squares left to move (a jump by an event that passes the crossroads does not stop), and on its next turn the player chooses before throwing: **safe road** = the normal paper squares, or **wild road** = 13 squares (first fork) / 19 squares (second fork) with a **jackpot** on wild square 2 → **100** (first) / wild square 3 → **185** (second) and a **fall** on wild square 5 (first) / 7 (second) → **into the trap (30)**. A move past the end of the wild road continues on the main road from the meeting square. The crossroads holds several players (no capture there). Simple choice: safe road. Tuned so that always taking the wild road wins 25.1% (fair). |
 | R21 | **Who decides what (the Logic Layer as frozen).** The only player choices are the **bonus card** (R14) and the **road** (R20). Both have a price or a risk (§7.1). Nothing a player chooses can cost or win a lifeline. |
 
-**Status (14 Oct 2026): rules R1–R21 are FROZEN (owner).** Board: the paper squares (`data/board-v0-paper.json`, `rules`). Measurements of the frozen game: `docs/analysis/measure-frozen.md`, `docs/analysis/lifelines-final.md`, `docs/analysis/lifelines-compare.md` (version A = R18), `docs/analysis/sixes-and-captures.md`.
+**Status (14 Oct 2026): rules R1–R21 are FROZEN (owner).** Boards: the long board `data/board-long.json` (the paper squares; its `rules` are identical to `data/board-v0-paper.json`) and the short board `data/board-short.json` (§10.1). **Square numbers in R6–R11 and R20 are long-board squares;** the short board's own squares (trap 15, crossroads 41 and 80, …) are in §10.1 and in its file. Measurements of the frozen game: `docs/analysis/measure-frozen.md`, `docs/analysis/lifelines-final.md`, `docs/analysis/lifelines-compare.md` (version A = R18), `docs/analysis/sixes-and-captures.md`.
 
 **Logic Layer result (honest):** the thinking target (a thoughtful player wins 27–32% against 3 simple players) is **not met**. With the bonus card and the road choice, a thoughtful player wins **25.2–25.5%** (`docs/analysis/I-6_measurements.md`). Ideas that met it (spending lifelines) were rejected because lifelines are too scarce to risk (owner rule: no logic choice may put a lifeline at risk, and luck squares and lifelines are never mixed). The game is a chance game with two small choices. History of every proposal and decision: `docs/analysis/I-6_owner_decisions.md`.
 
-**All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, ablation). They will be redone with the corrected engine.
+**All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, the old ablations). They were redone with the corrected engine: `measure-v0-paper.md`, `measure-frozen.md`, `measure-long.md`, `measure-short.md`, `ablation-long.md`.
 
 ### 8.3 Event families
-All events belong to a few families. The exact squares, sizes and amounts are decided in the tuning step (§13), with the simulator.
+All events belong to a few families. The exact squares, sizes and amounts were decided with the simulator (steps I-3 to I-6 for the long board, I-5 for the short board) and are in the board files.
 
 | Family | What happens | Paper-board origin | Purpose |
 |---|---|---|---|
@@ -134,14 +134,21 @@ All events belong to a few families. The exact squares, sizes and amounts are de
 | **Badge** | Special status with a duty | **Snake Leader** (138 → 195; the badge holder must take the 202 snake back to 165) | Family signature, late drama |
 | **Landmark** | A named place, no event | Airport, Bank, Hotel, Work, Party | Story anchors |
 
-### 8.4 Heritage that stays ✅ / 💡
+### 8.4 Heritage that stays ✅
 - ✅ Long board of 202 squares + END (203); short board of 100 + END (101).
 - ✅ Snake Leader: landing on 138 → slide to 195 and get the badge; only the badge holder landing on 202 follows the snake back to 165. Its exact numbers will be confirmed by measurement (§11), not by signature.
-- 💡 "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey.
-- 💡 An event square about every 5 squares, as on paper.
+- ✅ "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey (I-4, both boards).
+- ✅ An event square about every 5 squares, as on paper (long: 41 on 202; short: 23 on 100).
 
 ### 8.5 Measurements of the paper game with the real rules (before I-6)
 See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Excitement is high (captures, late overtakes). Boredom fails the target (21% of players wait 10+ turns, mostly waiting to enter and in the trap). Small options are measured there and wait for the owner's decision.
+
+### 8.6 Computer players ✅ (owner, step I-7)
+- Any seat can be a computer player. It plays as the **simple player** the simulator measured (`types: "simple"` in `tools/sim/engine.mjs`), so every fairness and excitement number in this document holds for it:
+  - at a crossroads it always takes the **Main Road** (R20);
+  - it uses its **Bonus card** on its own next punishment (R14, the "defend" use);
+  - Bog boots work by themselves, as for every player.
+- It has no other choice to make: everything else is the dice (R21).
 
 ## 9. Story: "The Journey" (P4)
 
@@ -190,14 +197,14 @@ For every event square, the simulator reports:
 
 **Key principle ✅ (from the owner's feedback):** a big event is **not unfair**, because every player has the same chance to land on it. Fairness is judged only by group A. A big event is judged by whether it adds excitement (B) without adding boredom (C).
 
-### 11.3 Targets 💡 (proposed, owner to confirm before tuning)
+### 11.3 Targets ✅ (owner, I-1 §16 item 5)
 | Group | Target |
 |---|---|
 | A | Every seat within ±1 point of a fair share (25% with 4 players), at 100,000 games |
-| B | Better than the paper board on every excitement measure (paper values in `docs/analysis/sim-v0-paper-engine-results.md`) |
-| C | Fewer than 5% of players with 10+ turns without moving (paper: 27–29%) |
+| B | At least as good as the paper board on every excitement measure, within the measurement margin (owner, I-7; paper values with the real rules in `docs/analysis/measure-v0-paper.md`) |
+| C | Fewer than 5% of players with 10+ turns without moving (paper with the real rules: 21%) |
 
-## 12. "One more game" — replay pull (P5) 💡
+## 12. "One more game" — replay pull (P5) ✅ (owner, I-1 §16 item 6: all)
 
 No accounts and no data leave the device (C1). Everything below lives on the device only.
 
@@ -213,22 +220,22 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 
 | # | Step | Output |
 |---|---|---|
-| I-1 | **Approve this GCD v2**: vision, pillars, stages, event families, measurement principle, proposals (💡) | Owner decisions written into this file |
+| I-1 ✅ | **Approve this GCD v2**: vision, pillars, stages, event families, measurement principle, proposals (💡) | Owner decisions written into this file |
 | I-2 ✅ | **Engine upgrade**: add the missing measures (late overtakes, close finishes, jackpots and falls per game, with-vs-without event runs) | `tools/sim/engine.mjs` + test that the paper board still gives the same numbers |
 | I-3 ✅ | **Long board, Chance Game** (done as: the paper squares kept + rules R17–R20, measured in I-6): place and size the events, start rule, end rule and waiting rules, tuned to the targets in §11.3 | `data/board-long.json` + measurement report |
 | I-4 ✅ | **Journey story** written over the tuned long board, square by square | Texts in `data/board-long.json` |
 | I-5 ✅ | **Short board** built from the best long-board events | `data/board-short.json` + measurement report |
 | I-6 ✅ | **Logic Layer** designed under the rules in §7.1 and measured (14 Oct: rules R17–R21 frozen) | §8.2b + `docs/analysis/I-6_*` |
-| I-7 | **Freeze**: owner approval; GCD marked FROZEN (rules, story and short board approved 14 Oct; only the final freeze remains) | Coding starts |
+| I-7 ✅ | **Freeze**: owner approval; GCD marked FROZEN (14 Oct 2026) | Coding starts (`docs/PROJECT_PLAN.md` Step 2) |
 
 ## 14. Presentation (from the original brief) ✅
 - Hand-drawn paper look: off-white textured paper, purple-ink tiles, crayon-coloured event squares, colourful button tokens.
 - Tokens move **square by square** (no teleporting); jumps follow their ladder or snake drawing; the camera follows smoothly, with pan and zoom.
 - Card inventory visible for each player.
-- Inclusive: every event has a colour **and** an icon; big buttons; one-tap play; high contrast; reduced motion; no timers.
+- Inclusive: every event has a colour **and** an icon; big buttons; one-tap play; high contrast; reduced motion; no timers. **No read-aloud** (owner, I-7; C3).
 
 ## 15. Technology ✅ (all free)
-TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Google Play. The rules engine reads the frozen board files and is covered by tests that reproduce the simulator's numbers.
+TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Google Play. The rules engine reads the frozen board files (`data/board-long.json`, `data/board-short.json`) and is covered by tests that reproduce the simulator's numbers.
 
 ## 16. Owner decisions on I-1 (14 Oct 2026)
 
@@ -240,6 +247,15 @@ TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Go
 | 4 | Story (§9.2) | ✅ **Approved in step I-4 (14 Oct 2026)** after seeing it square by square: the Grand Journey to the Festival of Lights, grown-up voice (version B), with the new names in §9.2. |
 | 5 | Measurement targets (§11.3) | ✅ Agreed |
 | 6 | Replay pull ideas (§12) | ✅ Agreed (all) |
+
+### Owner decisions on I-7 (14 Oct 2026)
+
+| # | Topic | Decision |
+|---|---|---|
+| 1 | Target B (§11.3) | ✅ "At least as good as the paper board, within the measurement margin" (the long board's close finishes, 10.2% vs 10.3%, are a tie at ±0.19) |
+| 2 | Computer players | ✅ Added as the measured simple player (§8.6) |
+| 3 | Read-aloud | ✅ Dropped (C3, §14) |
+| 4 | Freeze | ✅ GCD FROZEN |
 
 ### Original questions (I-1)
 1. Vision and pillars (§2, §5): agree, or change?
