@@ -137,7 +137,7 @@ Same squares, same effects, same names and icons as version A. Only the voice ch
 | Wild Trail, square 5 (→ trap) | Lost on the Wild Trail! Into the Sticky Swamp. | The Wild Trail wins. Hello, Sticky Swamp. |
 | Roads meet (96) | The two roads meet again. | The two roads meet again. |
 
-## Name review for the grown-up voice 💡 (owner asked for new names)
+## Name review for the grown-up voice ✅ (owner approved, 14 Oct 2026)
 
 | Element | Approved name (I-4.1) | New name | Why |
 |---|---|---|---|
@@ -159,7 +159,7 @@ Version B lines that change with the new names:
 | Shortcut, square 2 (→ 100) | Rope swing over the river. Worth it! |
 | Shortcut, square 5 (→ trap) | Shortcuts never work. Into the Bog. |
 
-## I-4.3 Texts, squares 102–203 (grown-up voice, new names) 💡 (waiting for the owner)
+## I-4.3 Texts, squares 102–203 (grown-up voice, new names) ✅ (owner approved, 14 Oct 2026)
 
 ### Event squares
 
@@ -206,3 +206,10 @@ Version B lines that change with the new names:
 | Shortcut, square 3 (→ 185) | Through the park. Wait, it actually worked! | park bench |
 | Shortcut, square 7 (→ trap 30) | Lost in the alleys. Somehow, the Bog. | maze |
 | Roads meet (180) | The two roads meet again. | joining paths |
+
+## I-4.4 Save ✅
+
+- `data/board-long.json` = `data/board-v0-paper.json` + `story` / `icon` on each of the 41 event squares + a `story` block (regions, Start, END, the Bog, stairs, Lanterns, Fallen tree, roads and both crossroads, cards, Snake Leader badge, landmarks). `rules`, `rulesR1R16`, every tile field, `lastTile` and `endTile` are identical to the paper board (checked by a field-by-field comparison).
+- `node tools/sim/test/rules.test.mjs`: ALL PASS.
+- `node tools/sim/run.mjs data/board-long.json 100000`: every table identical to `docs/analysis/measure-frozen.md` (saved as `docs/analysis/measure-long.md`; only the header line naming the board differs).
+- GCD §9.2, §13 (I-4) and §16 item 4 updated.

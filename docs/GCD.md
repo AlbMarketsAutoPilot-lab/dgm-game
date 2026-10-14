@@ -1,6 +1,6 @@
 # Don't Get Mad! — Game Concept Document (GCD) v2
 
-> **Status:** v2. **Game rules R1–R21 FROZEN (14 Oct 2026, owner).** Still open: the story (§9, step I-4) and the short board (I-5).
+> **Status:** v2. **Game rules R1–R21 FROZEN (14 Oct 2026, owner).** **Story approved (§9, step I-4, 14 Oct 2026).** Still open: the short board (I-5).
 > When frozen, this document is the contract for coding: anything not written here is not built.
 > **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
 > **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements are in `docs/analysis/SIM_REPORT_v0.md` and `docs/analysis/sim-v0-paper-engine-results.md`. The market research is in `docs/analysis/MARKET_REPORT.md`.
@@ -148,11 +148,13 @@ See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Exciteme
 ### 9.1 Principle ✅
 The board is **one continuous neutral journey**. Each square is the next moment of the same trip, not a collection of unrelated events. Every event is a travel moment: transport, weather, forgetting things, friendly help, shortcuts, getting lost.
 
-### 9.2 Proposal 💡
-- **From Home to a big celebration at the destination** (e.g. a Festival of Lights).
-- The board passes through **regions in order** (e.g. Home Town → Countryside → Forest → River & Lake → Mountains → Seaside → Big City → Festival Road), so the landscape changes as you advance and players feel the progress.
-- Paper landmarks become journey landmarks (Airport → Station, Hotel → Mountain Lodge, Party → Fair, Work → Central Station). The prison, police, robbery, stolen car, hospital and lottery are replaced with neutral travel moments.
-- Event texts are short and funny, written so a 6-year-old understands them and a 25-year-old smiles.
+### 9.2 The Grand Journey ✅ (owner, step I-4, 14 Oct 2026)
+- **Destination:** the **Festival of Lights** (END). Every player travels from Home to the festival, carrying lanterns.
+- **Voice:** grown-up (owner's choice: "an 18–34 story can appeal to kids, but not the other way round"). Dry humour from moments every adult has lived (missed trains, "did I lock the door?"), still simple enough for a 6-year-old and within C2. At most one short sentence per square, plus an icon.
+- **Regions in order:** Home Town (Start–19) → Countryside (20–49) → Forest (50–81) → River & Lake (82–107) → Mountains (108–137) → Seaside (138–159) → Big City (160–189) → Festival Road (190–202).
+- **Names:** trap (paper "prison") = **The Bog**; waiting stairs (R17) = **porch steps** at Start and **stepping stones** in the Bog; lifelines (R18) = **Lanterns**; roadblock (R19) = **Fallen tree**; two roads (R20) = **Main Road** (safe) and **the Shortcut** (wild); free pass (90) = **Bog boots**; the **Bonus card** and the **Snake Leader** keep their names.
+- **Landmarks:** Forest Station 55 and Hill Station 71 (paper Airport), River Pier 86 and Harbour 102 (Bank), Base Camp 109 and Mountain Lodge 135 (Hotel), The Fair 179 (Party), Central Station 184 (Work).
+- **The texts**, square by square, are in `data/board-long.json` (`story` and `icon` per square, and the `story` block for the rule elements). The paper's own words stay in `text`. Every rule field is identical to `data/board-v0-paper.json`, and the measurement is unchanged (`docs/analysis/measure-long.md` = `docs/analysis/measure-frozen.md`). Working log with every version and decision: `docs/analysis/I-4_story_log.md`.
 
 ## 10. Boards ✅
 
@@ -207,7 +209,7 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 | I-1 | **Approve this GCD v2**: vision, pillars, stages, event families, measurement principle, proposals (💡) | Owner decisions written into this file |
 | I-2 ✅ | **Engine upgrade**: add the missing measures (late overtakes, close finishes, jackpots and falls per game, with-vs-without event runs) | `tools/sim/engine.mjs` + test that the paper board still gives the same numbers |
 | I-3 ✅ | **Long board, Chance Game** (done as: the paper squares kept + rules R17–R20, measured in I-6): place and size the events, start rule, end rule and waiting rules, tuned to the targets in §11.3 | `data/board-long.json` + measurement report |
-| I-4 | **Journey story** written over the tuned long board, square by square | Texts in `data/board-long.json` |
+| I-4 ✅ | **Journey story** written over the tuned long board, square by square | Texts in `data/board-long.json` |
 | I-5 | **Short board** built from the best long-board events | `data/board-short.json` + measurement report |
 | I-6 ✅ | **Logic Layer** designed under the rules in §7.1 and measured (14 Oct: rules R17–R21 frozen) | §8.2b + `docs/analysis/I-6_*` |
 | I-7 | **Freeze**: owner approval; GCD marked FROZEN (rules already frozen 14 Oct; story and short board remain) | Coding starts |
@@ -228,7 +230,7 @@ TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Go
 | 1 | Vision & pillars (§2, §5) | ✅ Agreed |
 | 2 | Emotional curve (§6) | ✅ Agreed |
 | 3 | Event families (§8.3) | ✅ Agreed |
-| 4 | Story (§9.2) | ⏸ **Not decided.** The owner will judge it only after seeing the full story written square by square, showing how it fits all ages and every event (step I-4). |
+| 4 | Story (§9.2) | ✅ **Approved in step I-4 (14 Oct 2026)** after seeing it square by square: the Grand Journey to the Festival of Lights, grown-up voice (version B), with the new names in §9.2. |
 | 5 | Measurement targets (§11.3) | ✅ Agreed |
 | 6 | Replay pull ideas (§12) | ✅ Agreed (all) |
 

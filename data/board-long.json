@@ -1,0 +1,594 @@
+{
+ "id": "long",
+ "description": "The Grand Journey: the paper board (data/board-v0-paper.json) with the approved story (step I-4, grown-up voice) as 'story' and 'icon' per square and in 'story' for the rule elements. Every rule field is identical to the paper board; 'text' keeps the paper's original words.",
+ "lastTile": 202,
+ "endTile": 203,
+ "tiles": {
+  "5": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Skip 1 turn",
+   "story": "Shoelace untied. Again. Wait one turn.",
+   "icon": "shoelace"
+  },
+  "10": {
+   "cat": "P",
+   "type": "jump",
+   "to": 0,
+   "text": "Back to start",
+   "story": "Wait… did you lock the door? Back home.",
+   "icon": "door-key"
+  },
+  "15": {
+   "cat": "P",
+   "type": "slowNext",
+   "text": "Next time advance just 1 square",
+   "story": "Ankle-deep puddle. Next turn: one careful step.",
+   "icon": "puddle"
+  },
+  "20": {
+   "cat": "R",
+   "type": "jump",
+   "to": 33,
+   "text": "Go to 33",
+   "story": "A farmer offers a lift. Don't overthink it.",
+   "icon": "tractor"
+  },
+  "25": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Skip a turn",
+   "story": "Sheep have right of way. Wait one turn.",
+   "icon": "sheep"
+  },
+  "30": {
+   "cat": "P",
+   "type": "prison",
+   "text": "Prison - get out with 6",
+   "story": "The Bog. Your shoes live here now. Roll a 6.",
+   "icon": "boot-in-mud"
+  },
+  "35": {
+   "cat": "R",
+   "type": "jump",
+   "to": 66,
+   "text": "Go to 66",
+   "story": "Hay cart to the forest. Not glamorous, but fast.",
+   "icon": "hay-cart"
+  },
+  "40": {
+   "cat": "R",
+   "type": "jump",
+   "to": 103,
+   "text": "Go upstairs (ladder)",
+   "story": "Hot-air balloon. See you at the river!",
+   "icon": "balloon"
+  },
+  "45": {
+   "cat": "R",
+   "type": "rollSum",
+   "dice": 2,
+   "text": "Throw two times",
+   "story": "It's all downhill from here. Throw twice, add up.",
+   "icon": "bicycle"
+  },
+  "50": {
+   "cat": "P",
+   "type": "hospital",
+   "turns": 3,
+   "text": "Hospital - stay here 3 times",
+   "story": "Fog rolls in. The map app gives up. Wait three turns.",
+   "icon": "fog"
+  },
+  "55": {
+   "cat": "R",
+   "type": "jump",
+   "to": 71,
+   "text": "Fly to airport 71",
+   "story": "Forest Station. A train that's actually on time!",
+   "icon": "train"
+  },
+  "60": {
+   "cat": "R",
+   "type": "card",
+   "card": "bonus",
+   "text": "Bonus card: once, whenever you like - avoid one of your punishments OR cancel a reward of another player",
+   "story": "A kind stranger slips you a Bonus card.",
+   "icon": "card"
+  },
+  "65": {
+   "cat": "R",
+   "type": "nearest",
+   "target": "R",
+   "text": "Go to nearest reward and do it",
+   "story": "A local knows a shortcut: next good square!",
+   "icon": "signpost"
+  },
+  "70": {
+   "cat": "P",
+   "type": "jump",
+   "to": 55,
+   "text": "Your flight is broken, go back to 55",
+   "story": "Train cancelled. Of course. Back to Forest Station.",
+   "icon": "broken-train"
+  },
+  "75": {
+   "cat": "R",
+   "type": "swapLeader",
+   "text": "Change place with the player closest to END",
+   "story": "Plot twist! Swap places with the leader.",
+   "icon": "swap-arrows"
+  },
+  "80": {
+   "cat": "R",
+   "type": "jump",
+   "to": 135,
+   "text": "Go downstairs (ladder) to hotel",
+   "story": "Cable car to the Mountain Lodge. Window seat!",
+   "icon": "cable-car"
+  },
+  "85": {
+   "cat": "R",
+   "type": "jump",
+   "to": 102,
+   "text": "You won lottery, go to bank",
+   "story": "Free boat ride to the Harbour. Best day ever.",
+   "icon": "sailboat"
+  },
+  "90": {
+   "cat": "R",
+   "type": "card",
+   "card": "jailPass",
+   "text": "Free jail pass",
+   "story": "Bog boots. Mud? Never heard of it.",
+   "icon": "boots"
+  },
+  "95": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Robbery! Wait 1 turn here",
+   "story": "Ducks on the bridge. They're not moving. Wait one turn.",
+   "icon": "duck"
+  },
+  "97": {
+   "cat": "P",
+   "type": "jump",
+   "to": 30,
+   "then": "prison",
+   "text": "Police - go in prison",
+   "story": "Riverbank selfie. Slipped. Straight into the Bog.",
+   "icon": "slide-mud"
+  },
+  "101": {
+   "cat": "P",
+   "type": "jump",
+   "to": 86,
+   "text": "Bank was robbed, go to 86",
+   "story": "Missed the boat. Literally. Back to the Pier.",
+   "icon": "boat-leaving"
+  },
+  "108": {
+   "cat": "R",
+   "type": "jump",
+   "to": 135,
+   "text": "Get some vacation, go to hotel",
+   "story": "Spontaneous weekend off. Straight to the Mountain Lodge.",
+   "icon": "suitcase"
+  },
+  "113": {
+   "cat": "P",
+   "type": "jump",
+   "to": 50,
+   "then": "hospital",
+   "text": "Go downstairs, do punishment (hospital)",
+   "story": "Wrong turn. Back down into the fog, wait three turns.",
+   "icon": "fog"
+  },
+  "118": {
+   "cat": "R",
+   "type": "jump",
+   "to": 124,
+   "text": "Advance to 124",
+   "story": "Free ski lift. Every little helps.",
+   "icon": "ski-lift"
+  },
+  "123": {
+   "cat": "R",
+   "type": "rollSum",
+   "dice": 3,
+   "text": "Throw 3 times, move the total",
+   "story": "Sledge run! Throw three times, add them all up.",
+   "icon": "sledge"
+  },
+  "128": {
+   "cat": "P",
+   "type": "nearest",
+   "target": "P",
+   "text": "Go to nearest punishment and do it",
+   "story": "You trust the map app again. Next bad square.",
+   "icon": "phone-map"
+  },
+  "133": {
+   "cat": "P",
+   "type": "jump",
+   "to": 109,
+   "text": "Hotel reservation cancelled, go to 109",
+   "story": "Lodge booking? What booking? Back to Base Camp.",
+   "icon": "crossed-bed"
+  },
+  "138": {
+   "cat": "R",
+   "type": "jump",
+   "to": 195,
+   "grant": "snakeLeader",
+   "text": "Follow the snake - become Snake Leader",
+   "story": "A sea snake gives you a lift. Snake Leader!",
+   "icon": "snake-crown"
+  },
+  "143": {
+   "cat": "P",
+   "type": "doubleOthers",
+   "text": "The other players double what they throw",
+   "story": "Ice cream break. Everyone else doubles their next throw.",
+   "icon": "ice-cream"
+  },
+  "148": {
+   "cat": "P",
+   "type": "jump",
+   "to": 30,
+   "then": "prison",
+   "text": "Go in prison again",
+   "story": "Wrong ferry. All the way back to the Bog.",
+   "icon": "ferry"
+  },
+  "153": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Skip one turn",
+   "story": "Waiting for the tide. Wait one turn.",
+   "icon": "waves"
+  },
+  "158": {
+   "cat": "P",
+   "type": "jump",
+   "to": 48,
+   "text": "Follow the snake",
+   "story": "Wrong snake. This one goes all the way back.",
+   "icon": "snake-down"
+  },
+  "163": {
+   "cat": "R",
+   "type": "extraRoll",
+   "text": "Throw one more time",
+   "story": "Green lights all the way. Throw again.",
+   "icon": "traffic-light"
+  },
+  "168": {
+   "cat": "R",
+   "type": "jump",
+   "to": 179,
+   "text": "Invited to a party, go to 179",
+   "story": "Friends saved you a spot at the Fair!",
+   "icon": "bunting"
+  },
+  "173": {
+   "cat": "R",
+   "type": "jump",
+   "to": 184,
+   "text": "Got new car, go fast to work 184",
+   "story": "Last e-scooter in town. Zoom to Central Station!",
+   "icon": "scooter"
+  },
+  "178": {
+   "cat": "P",
+   "type": "jump",
+   "to": 167,
+   "text": "Forgot invitation, go back to 167",
+   "story": "Forgot your Fair ticket. Go back for it.",
+   "icon": "ticket"
+  },
+  "183": {
+   "cat": "P",
+   "type": "jump",
+   "to": 97,
+   "text": "Car was stolen, go to police 97 - no prison",
+   "story": "Fell asleep on the train. Woke up at the river.",
+   "icon": "sleeping-face"
+  },
+  "188": {
+   "cat": "P",
+   "type": "jump",
+   "to": 157,
+   "text": "Go downstairs (ladder)",
+   "story": "Missed your stop. Back to the seaside.",
+   "icon": "train-back"
+  },
+  "193": {
+   "cat": "P",
+   "type": "jump",
+   "to": 184,
+   "text": "Forgot keys, back to work",
+   "story": "Forgot your keys! Back to Central Station.",
+   "icon": "key"
+  },
+  "198": {
+   "cat": "P",
+   "type": "jump",
+   "to": 184,
+   "then": "skip2",
+   "text": "Forgot keys again, back to work 184 and skip two turns",
+   "story": "Forgot your keys AGAIN!!! Back to Central Station, wait two turns.",
+   "icon": "two-keys"
+  },
+  "202": {
+   "cat": "P",
+   "type": "jump",
+   "to": 165,
+   "requires": "snakeLeader",
+   "text": "Snake Leader only: follow the snake back to 165",
+   "story": "Snake Leader? The snake wants its ride back. Down you go.",
+   "icon": "snake-down"
+  }
+ },
+ "rules": {
+  "entry": "six",
+  "sixRule": "owner",
+  "maxSixes": 3,
+  "capture": true,
+  "endRule": "exact",
+  "bonusPolicy": "defend",
+  "enterAfter": 3,
+  "trapAfter": 3,
+  "stairs": true,
+  "lifelines": 3,
+  "lifeOnTriple": true,
+  "outAfterZero": true,
+  "roadblock": {
+   "back": 10,
+   "range": 10
+  },
+  "forks": [
+   {
+    "at": 82,
+    "merge": 96,
+    "len": 13,
+    "tiles": {
+     "2": {
+      "cat": "R",
+      "type": "jump",
+      "to": 100,
+      "text": "Wild road: shortcut over the hill"
+     },
+     "5": {
+      "cat": "P",
+      "type": "jump",
+      "to": 30,
+      "then": "prison",
+      "text": "Wild road: lost, into the trap"
+     }
+    }
+   },
+   {
+    "at": 160,
+    "merge": 180,
+    "len": 19,
+    "tiles": {
+     "3": {
+      "cat": "R",
+      "type": "jump",
+      "to": 185,
+      "text": "Wild road: shortcut over the hill"
+     },
+     "7": {
+      "cat": "P",
+      "type": "jump",
+      "to": 30,
+      "then": "prison",
+      "text": "Wild road: lost, into the trap"
+     }
+    }
+   }
+  ]
+ },
+ "rulesR1R16": {
+  "entry": "six",
+  "sixRule": "owner",
+  "maxSixes": 3,
+  "capture": true,
+  "endRule": "exact",
+  "bonusPolicy": "defend",
+  "enterAfter": 3,
+  "trapAfter": 3
+ },
+ "rulesNote": "rules = FROZEN set (14 Oct 2026, GCD R1-R21). rulesR1R16 = the earlier baseline, kept so older reports can be reproduced. R16 (enterAfter/trapAfter) is replaced by R17 waiting stairs.",
+ "story": {
+  "title": "The Grand Journey",
+  "destination": "Festival of Lights",
+  "regions": [
+   {
+    "name": "Home Town",
+    "from": 0,
+    "to": 19
+   },
+   {
+    "name": "Countryside",
+    "from": 20,
+    "to": 49
+   },
+   {
+    "name": "Forest",
+    "from": 50,
+    "to": 81
+   },
+   {
+    "name": "River & Lake",
+    "from": 82,
+    "to": 107
+   },
+   {
+    "name": "Mountains",
+    "from": 108,
+    "to": 137
+   },
+   {
+    "name": "Seaside",
+    "from": 138,
+    "to": 159
+   },
+   {
+    "name": "Big City",
+    "from": 160,
+    "to": 189
+   },
+   {
+    "name": "Festival Road",
+    "from": 190,
+    "to": 202
+   }
+  ],
+  "start": {
+   "name": "Home",
+   "story": "Bags packed. Roll a 6 to leave.",
+   "icon": "house"
+  },
+  "end": {
+   "name": "Festival of Lights",
+   "story": "Festival of Lights! You made it. Light your lanterns!",
+   "icon": "lanterns"
+  },
+  "trap": {
+   "tile": 30,
+   "name": "The Bog",
+   "icon": "boot-in-mud"
+  },
+  "stairs": {
+   "start": {
+    "name": "Porch steps",
+    "story": "No 6? Still on the porch. One more step.",
+    "icon": "steps",
+    "picture": "wooden steps beside the front door, one added per failed throw"
+   },
+   "trap": {
+    "name": "Stepping stones",
+    "story": "No 6? Another stone. The mud is patient.",
+    "icon": "stones",
+    "picture": "stones in the mud from 30 towards 31, one added per failed throw"
+   }
+  },
+  "lifelines": {
+   "name": "Lanterns",
+   "icon": "lantern",
+   "lose": "Three throws, no 6. A lantern flickers out.",
+   "win": "Three 6s in a row. Lantern back on!",
+   "none": "Attention! You have no lanterns left…",
+   "out": "Lights out. Your journey ends here."
+  },
+  "roadblock": {
+   "name": "Fallen tree",
+   "story": "Fallen tree. Nobody's moving it. Back ten squares.",
+   "icon": "fallen-tree"
+  },
+  "roads": {
+   "safe": {
+    "name": "Main Road",
+    "story": "The Main Road. Boring, but it works.",
+    "icon": "flat-path"
+   },
+   "wild": {
+    "name": "The Shortcut",
+    "icon": "signpost"
+   },
+   "merge": {
+    "story": "The two roads meet again.",
+    "icon": "joining-paths"
+   },
+   "forks": [
+    {
+     "at": 82,
+     "crossroads": "Crossroads. Main Road, or the Shortcut?",
+     "tiles": {
+      "2": {
+       "story": "Rope swing over the river. Worth it!",
+       "icon": "rope-swing"
+      },
+      "5": {
+       "story": "Shortcuts never work. Into the Bog.",
+       "icon": "compass"
+      }
+     }
+    },
+    {
+     "at": 160,
+     "crossroads": "City crossroads. Main Road, or the Shortcut?",
+     "tiles": {
+      "3": {
+       "story": "Through the park. Wait, it actually worked!",
+       "icon": "park-bench"
+      },
+      "7": {
+       "story": "Lost in the alleys. Somehow, the Bog.",
+       "icon": "maze"
+      }
+     }
+    }
+   ]
+  },
+  "cards": {
+   "bonus": {
+    "name": "Bonus card",
+    "story": "Use once: dodge your bad luck, or spoil someone's good luck.",
+    "icon": "card"
+   },
+   "jailPass": {
+    "name": "Bog boots",
+    "story": "Bog boots. Mud? Never heard of it.",
+    "icon": "boots"
+   }
+  },
+  "badges": {
+   "snakeLeader": {
+    "name": "Snake Leader",
+    "story": "Snake Leader: you rode the snake. It remembers.",
+    "icon": "snake-crown"
+   }
+  },
+  "landmarks": {
+   "55": {
+    "name": "Forest Station",
+    "icon": "station"
+   },
+   "71": {
+    "name": "Hill Station",
+    "icon": "station"
+   },
+   "86": {
+    "name": "River Pier",
+    "icon": "pier"
+   },
+   "102": {
+    "name": "Harbour",
+    "icon": "anchor"
+   },
+   "109": {
+    "name": "Base Camp",
+    "icon": "tent"
+   },
+   "135": {
+    "name": "Mountain Lodge",
+    "icon": "cabin"
+   },
+   "179": {
+    "name": "The Fair",
+    "icon": "bunting"
+   },
+   "184": {
+    "name": "Central Station",
+    "icon": "big-clock"
+   }
+  }
+ }
+}
