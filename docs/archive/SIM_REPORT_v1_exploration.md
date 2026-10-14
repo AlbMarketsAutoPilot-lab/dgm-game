@@ -1,3 +1,5 @@
+> **ARCHIVED (14 Oct 2026) — exploration only, NOT the game concept.** It capped every swing at ±12 points, which removed the surprises the game needs. Its rule set and the boards `data/board-v1-*.json` are superseded by `docs/GCD.md` v2. The engine (`tools/sim/engine.mjs`) and the measurements stay valid.
+
 # Simulation Report v1 — "The Great Journey" (rebuilt story + rules)
 
 **Step 1c** · 14 Oct 2026

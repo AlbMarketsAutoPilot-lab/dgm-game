@@ -1,236 +1,190 @@
-# Don't Get Mad! — Game Concept Document (GCD)
+# Don't Get Mad! — Game Concept Document (GCD) v2
 
-> **Status:** v1.0 — rebuilt story & rules in §11 (supersede the paper rules for the game). — transcribed from 25 photos of the hand-drawn paper board and cards.
-> **Rule for all future work:** this file (and later `src/data/board.json`) is the single source of truth.
-> Nothing may be invented. Anything marked ⚠️ is **not confirmed** (see §10). The paper board is the inspiration for a rebuilt, simulation-balanced rule set (§9).
+> **Status:** v2 draft — ideation restarted 14 Oct 2026. **Not frozen.**
+> When frozen, this document is the contract for coding: anything not written here is not built.
+> **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
+> **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements are in `docs/analysis/SIM_REPORT_v0.md` and `docs/analysis/sim-v0-paper-engine-results.md`. The market research is in `docs/analysis/MARKET_REPORT.md`.
 
 ---
 
-## 1. Vision
+## 1. Origin
 
-A digital version of a family board game drawn by hand on paper by a parent and their daughter.
-It keeps the look and spirit of the original: off-white paper, purple-ink tiles, crayon-coloured special squares, ladders, snakes and little hand-written stories ("Forgot keys again!!!", "You won lottery, go to bank").
+A parent and their daughter drew a board game on paper: 202 numbered squares, ladders, snakes, a Snake Leader, and little stories ("Forgot keys again!!!"). They had so much fun playing it that they decided to share it with everyone as a free game for phone and browser.
+**The paper board is the creation.** The digital game keeps its soul (a long, surprising race full of ups and downs and small stories) and makes it fair, measurable and safe for everyone.
 
-## 2. Hard conditions
+## 2. Vision (one sentence)
 
-| # | Condition | What it means for the design |
-|---|-----------|------------------------------|
-| C1 | **Cost 0, always** | Free tools only. No paid hosting, no paid APIs, no ads, no in-app purchases, no accounts/servers. Runs fully offline in the browser. |
-| C2 | **For all ages, as inclusive as possible** | Large touch targets, readable font, colour **plus** shape/icon on every special tile and token, optional read-aloud of tile texts, reduced-motion option, no reading required to play (icons + audio), no violence, no timers that pressure players. |
+**A free, beautifully hand-drawn race game where anything can happen until the very last square: equal for everyone at the start, full of surprises during play, and so much fun that you want to play again right away.**
 
-## 3. Platforms
+## 3. Hard conditions ✅
 
-1. **Web browser** (desktop + mobile), installable as a PWA, works offline.
-2. **Android app**, built from the same web code (wrapper). See §8 for the cost-0 distribution question.
+| # | Condition |
+|---|---|
+| C1 | **Cost 0, always.** No ads, no in-app purchases, no accounts, no online play, no chat, no data collected. Works offline. |
+| C2 | **For all ages, as inclusive as possible**, while keeping a **family / kids-safe store rating**: no violence, crime, alcohol, gambling references or other risky content. |
+| C3 | **Not childish.** It must not look like a learning app (no numbers read aloud). Young adults 18–34 must enjoy it as much as children. |
+| C4 | **Platforms:** web browser + Android (Google Play, owner's existing account). |
+| C5 | **Scientific basis:** every rule is checked in the simulator before it is frozen. No rule is based on a guess. |
 
-## 4. Components (from photo 22)
+## 4. Audience ✅
 
-- **1 standard six-sided die** (1–6).
-- **Player tokens = buttons**: black, yellow, light-blue flower-shaped, white. → 4 players. Digital tokens will be colourful buttons with different shapes/holes so they are distinguishable without colour.
+- **Core:** families with young children.
+- **Strongly wanted:** young adults 18–34, playing with friends, siblings or parents.
+- **What brings them together:** in a chance game a child can beat an adult, so everyone sits at the table as an equal. Market evidence: `docs/analysis/MARKET_REPORT.md`. The biggest digital race game, *Ludo King*, reports most of its players are 18–34. That figure comes from the company itself, so it is weak evidence.
 
-## 5. Core game loop (confirmed from board)
+## 5. Design pillars
 
-1. Players take turns rolling one die.
-2. All tokens begin on **Start**. Text on Start: **"You need 6"** to leave.
-3. The token moves forward tile by tile (Start → 1 → 2 … → 202 → END).
-4. If it ends on a special tile, that tile's rule is applied (§6).
-5. First player to reach **END** wins.
+Every rule, tile and screen must serve these. If something fails a pillar, it is cut.
 
-Details not written on the board (exact roll for END, capturing, extra throw on 6, etc.) are listed in §10.
-
-## 6. Tile catalogue (all special tiles)
-
-Every tile 1–202 that is **not** listed below is a normal tile with no rule.
-Colour = crayon colour on the paper. Source = photo number(s) where the text is readable.
-✅ = text clearly readable · ⚠️ = needs confirmation (see §10).
-
-| Tile | Colour | Text on board (as written) | Effect (literal) | Target | Status | Source |
-|---|---|---|---|---|---|---|
-| Start | – | "You need 6" | Need a 6 to leave Start | – | ✅ | 7, 12 |
-| 5 | teal | "Skip 1 turn" | Skip 1 turn | – | ✅ | 7, 11 |
-| 10 | purple | "Back to start" | Go back to Start | Start | ✅ | 6, 8 |
-| 15 | light blue | "Next time advance just 1 square" | Next turn move only 1 square | – | ✅ | 6, 8 |
-| 20 | blue | "Go to 33" | Jump to 33 | 33 | ✅ | 6, 8 |
-| 25 | yellow-green | "Skip a turn" | Skip 1 turn | – | ✅ | 8 |
-| 30 | grey-brown | "PRISON — Get out with 6" | Prison; leave only with a 6 | – | ✅ | 9, 11 |
-| 35 | yellow | "Go to 66" | Jump to 66 | 66 | ⚠️ Q3 | 10, 11 |
-| 40 | red | "Go upstairs" + ladder | Ladder | 103 | ✅ | 10, 11 |
-| 45 | grey | "Throw two times" | Throw two times | – | ⚠️ Q17 | 1, 10 |
-| 50 | grey-purple | "HOSPITAL — Stay here 3 night (times)" | Stay 3 turns | – | ⚠️ Q11 | 1, 11 |
-| 55 | purple | "Fly to Airport 71" | Jump to 71 | 71 | ✅ | 11, 15 |
-| 60 | orange | "You can skip a punishment" | Receive **Skip Punishment** card | – | ⚠️ Q5 | 11, 15, 24 |
-| 65 | orange-red | "Go to nearest reward and do it" | Move to nearest reward tile, apply it | nearest reward | ⚠️ Q6 | 11, 12, 24 |
-| 70 | orange | "(Lost) your flight is broke(n), go back to 55" | Jump back to 55 (55's flight does **not** trigger) | 55 | ✅ Q4 answer | 7, 12 |
-| 71 | – | "AIRPORT" | Label only | – | ✅ | 7, 12 |
-| 75 | green | "Change place with the one in front" | Swap position with the player ahead | player ahead | ⚠️ Q18 | 7, 12 |
-| 80 | brown | "Go downstairs" + ladder | Ladder | 135 (Hotel) | ✅ | 6, 11, 12 |
-| 85 | yellow | "You won lottery. Go to bank" | Jump to Bank | 102 | ✅ | 6, 8 |
-| 90 | teal | "Free jail pass" | Receive **Free Jail Pass** card (also cards in photos 16, 17) | – | ✅ | 6, 16, 17 |
-| 95 | orange | "There is a robbery! Wait 1 turn here" | Skip 1 turn | – | ⚠️ Q12 | 9, 13 |
-| 97 | dark red | "POLICE — Go in prison" (arrow to 30) | Jump to Prison | 30 | ✅ | 9, 11 |
-| 101 | pink-brown | "Bank was robbed, go to 86" | Jump to 86 | 86 | ✅ | 10, 11 |
-| 102 | – | "BANK $" | Label only | – | ✅ | 10 |
-| 103 | – | (top of ladder from 40) | Ladder end | – | ✅ | 10 |
-| 108 | yellow | "Get some vacation. Go to hotel" | Jump to Hotel | 135 | ✅ | 1, 10 |
-| 113 | orange | "Go downstairs, do punishment" + ladder | Ladder down to Hospital | 50 | ✅ | 1, 14, 19 |
-| 118 | green | "Advance to 124" | Jump to 124 | 124 | ✅ | 11, 15, 24 |
-| 123 | teal | "Throw 3 times in a row and move at the total of all throws" | Roll 3×, move the sum | – | ⚠️ Q16 | 15, 24 |
-| 128 | purple | "Go to nearest punishment and do it" | Move to nearest punishment tile, apply it | nearest punishment | ⚠️ Q6 | 7, 12 |
-| 133 | orange | "Your hotel reservation is cancelled. Go to 109" | Jump back to 109 | 109 | ✅ | 7, 12 |
-| 135 | – | "HOTEL" | Label only | – | ✅ | 6, 12 |
-| 138 | orange | "Follow the snake" | Snake (goes **forward**) | 195 | ✅ | 6, 18, 25 |
-| 143 | yellow | "The other players double what they throw!" | Other players' throws ×2 | – | ⚠️ Q7 | 6, 25 |
-| 148 | yellow | "Go in prison again" (arrow) | Jump to Prison | 30 | ✅ | 9, 20 |
-| 153 | brown | "Skip one turn" | Skip 1 turn | – | ✅ | 1, 10 |
-| 158 | yellow | "Follow the snake" | Snake down | 48 | ✅ | 1, 19 |
-| 163 | yellow | "Throw one more time!!" | Extra throw | – | ✅ | 14, 23 |
-| 168 | pink | "You are invited to a party. Go to 179" | Jump to Party | 179 | ✅ | 12, 18 |
-| 173 | blue | "Got new car. Go fast to work 184" | Jump to Work | 184 | ✅ | 12, 18 |
-| 178 | grey | "You forgot invitation. Go back to 16?" (last digit overwritten) | Jump back | 167 or 168 | ⚠️ Q2 | 6, 25 |
-| 179 | – | "PARTY" (stars) | Label only | – | ✅ | 6, 18 |
-| 183 | brown | "Car was stolen! Go to police 97 — No prison" | Jump to 97, **without** the prison effect | 97 | ⚠️ Q19 | 3, 9 |
-| 184 | – | "WORK" | Label only | – | ✅ | 3, 9 |
-| 188 | blue | "Go downstairs" + ladder | Ladder down | 157 | ✅ | 2, 20, 23 |
-| 193 | orange | "Forgot keys! Back to work!" | Jump back to Work | 184 | ✅ | 2, 18 |
-| 195 | – | "!SNAKE LEADER!" (end of snake from 138) | Become **Snake Leader**: receive the green badge card (photo 4) | – | ✅ Q1 answer | 2, 4, 18 |
-| 198 | purple | "Forgot keys again!!! Back to work 184 and skip two turns" | Jump to 184 + skip 2 turns | 184 | ✅ | 2, 3, 25 |
-| 202 | – | "Sorry, follow the snake if snake brought you to 195" | Snake down, **only** for the Snake Leader (badge holder) | 165 | ✅ Q1 answer | 2, 4, 20, 23 |
-| END | – | "END" | Finish | – | ✅ | 2, 11 |
-
-### 6.1 Ladders & snakes summary
-
-| Kind | From → To | Direction |
+| # | Pillar | What it means |
 |---|---|---|
-| Ladder "Go upstairs" | 40 → 103 | forward |
-| Ladder "Go downstairs" | 80 → 135 | forward |
-| Ladder "Go downstairs, do punishment" | 113 → 50 | backward |
-| Ladder "Go downstairs" | 188 → 157 | backward |
-| Snake | 138 → 195 | forward |
-| Snake | 158 → 48 | backward |
-| Snake (Snake Leader only) | 202 → 165 | backward |
+| P1 | **Fair at the start** | Before the first throw, every player has exactly the same chance to win: same rules, same tiles, same probabilities. Turn order must not matter. |
+| P2 | **Anything can happen** | Big swings are wanted: jackpots that fly you forward, falls that send you back, overtakes near the end. Nobody is safe and nobody is lost. |
+| P3 | **Never bored** | Nobody waits many turns doing nothing. Every turn has something to watch or hope for. |
+| P4 | **One journey** | The whole board is one continuous, neutral story, a trip where each square is the next moment of the same adventure. |
+| P5 | **"One more game!"** | The end of a game makes you want to start another one. |
+| P6 | **Hand-made soul** | It looks and feels like the original paper board: paper texture, purple ink, crayon colours, button tokens. |
 
-### 6.2 Places (story labels)
+## 6. Player experience: what a game should feel like
 
-Start · Prison (30) · Police (97) · Hospital (50) · Airport (71) · Bank (102) · Hotel (135) · Party (179) · Work (184) · Snake Leader (195) · END.
+💡 The intended emotional curve of one game, which the rules must produce and the simulator must check:
 
-## 7. Cards (inventory)
+1. **Start:** a quick, easy start, with everyone moving straight away (P3).
+2. **Early game:** small events; players learn the board and the story.
+3. **Middle:** the first big jackpots and falls, with leaders changing (P2).
+4. **Late game:** the biggest drama. Someone close to the finish can still fall, and someone behind can still fly forward (P2, P5).
+5. **Finish:** a close, exciting end more often than an easy walk-over.
+6. **After the game:** "Rematch!", one tap to play again (P5).
 
-Transcribed from the paper cards. All upside-down in the photos; read as best as possible.
+## 7. The two stages of the game ✅
 
-| Card | Text (as written) | Given by | Use | Status |
-|---|---|---|---|---|
-| **Free Jail Pass** | "Get out of jail free. You landed in 90, you get a free jail pass." / "You landed on square 90 you get free jail pass." | Tile 90 | Avoid / leave Prison | ✅ text · ⚠️ Q10 usage |
-| **Skip Punishment** | "You can skip a punishment until you landed in 6? and you can skip a punishment … other person has … reward … skip a" (photo 5, partly unreadable) | Tile 60 | Ignore one punishment tile | ⚠️ Q5 |
-| **Skip a Reward / others skip a punishment** | "You have skip a reward and others have skip a punishment" (photo 21) | ⚠️ unknown | ⚠️ unknown | ⚠️ Q5 |
-| **Snake Leader** (badge) | "You are Snake Leader. If 202 go to 165" (photo 4; owner confirmed 165) | Tile 138 → 195 | Only for the badge holder: landing on 202 sends them back to 165 | ✅ |
-
-## 8. Digital design
-
-### 8.1 Look & feel
-- Off-white textured paper background, fold lines, purple ink tile borders with slightly wobbly hand-drawn corners.
-- Special tiles filled with crayon-style hatching in their real colours (§6).
-- Ladders and snakes drawn as on paper (the 138 snake is orange/purple, the 158 snake blue/purple, the 202 snake dark blue line).
-- Tokens: four colourful buttons (black, yellow, light-blue flower, white) — each with a distinct shape/hole pattern.
-- Board layout follows the paper path (§8.4) so it feels like the real board.
-
-### 8.2 Required features (from the brief)
-- All tiles Start…202…END with the rules in §6.
-- Step-by-step token animation (tile by tile, not teleport). Ladders/snakes animate along their drawing.
-- Smooth camera: follow active token, pinch/scroll zoom, drag to pan.
-- Card inventory per player; when landing on a penalty tile the player is asked whether to use a card.
-- Local "pass-and-play" for 2–4 players; optional simple computer players.
-
-### 8.3 Inclusivity (C2)
-- Every special tile has an icon (prison bars, plane, bank $, hotel, party star, car, key, snake, ladder, hospital cross).
-- Read-aloud of the tile text using the browser's built-in speech (free, offline on most devices).
-- Big "Roll" button, large font, high-contrast mode, reduced-motion mode (shorter animations).
-- UI languages: English first; others via a translation file (⚠️ Q20 which languages).
-- No timers, no losing lives, no ads, no data collected.
-
-### 8.4 Board path layout (as drawn — used to place tiles on screen)
-
-| Segment | Tiles | Direction on paper |
+| Stage | Content | When |
 |---|---|---|
-| Top row | Start, 1 → 19 | left → right |
-| Right column | 20 → 36 | top → bottom |
-| Bottom row | 37 → 55 | right → left |
-| Left column | 56 → 70 | bottom → top |
-| Row 2 | 71 → 88 | left → right |
-| Column | 89 → 101 | top → bottom |
-| Row | 102 → 116 | right → left |
-| Column | 117 → 127 | bottom → top |
-| Row 4 | 128 → 141 | left → right |
-| Column | 142 → 150 | top → bottom |
-| Row | 151 → 161 | right → left |
-| Column | 162 → 168 | bottom → top |
-| Row | 169 → 178 | left → right |
-| Column | 179 → 183 | top → bottom |
-| Row | 184 → 187 (Work) → 188 → 190 | right → left |
-| Column | 191 → 193 | bottom → top |
-| Row | 194 → 198 | left → right |
-| Column | 199 → 200 | top → bottom |
-| Row | 201 → 202 | right → left |
-| END | above 202 | – |
+| **Stage 1: the Chance Game** | Dice, board and events only. Pure probability, frozen first. | Now |
+| **Stage 2: the Logic Layer** | Decisions that add thinking on top of the chance game. | Designed only after Stage 1 is frozen |
 
-### 8.5 Technology (all free)
-- **TypeScript + Vite**, HTML5 **Canvas** for the board, plain DOM for menus.
-- Rules engine = pure TypeScript functions + `board.json` data, covered by unit tests (**Vitest**).
-- **PWA** (offline) hosted on **GitHub Pages** (free).
-- **Android** via **Capacitor** (free), APK built by **GitHub Actions** (free for this use).
-- **Google Play**: publish with the owner's existing developer account (already paid, so no new cost — C1 respected). PWA stays available as well.
+### 7.1 Rules any Logic Layer must respect ✅ (from the owner's feedback)
+- A decision must **never** let a player escape the dice's risks for free, or move faster for free. Example of what is **forbidden**: "throw 2 dice and pick one". It lets a player advance faster *and* dodge setbacks.
+- Every decision must have a **price or a risk** (e.g. gain now, lose later).
+- Every decision must be **measured in the simulator**, so a smart choice helps a little but never guarantees a win, and Stage 1's fairness stays intact.
 
-## 9. Answers received (14 Oct 2026)
+## 8. Stage 1: the Chance Game
 
-| # | Answer from the owner |
+### 8.1 Components ✅ (from the paper game)
+- 1 die (1–6), 2–4 players, 1 token each. The tokens are buttons, each with its own shape and colour.
+
+### 8.2 Core loop ✅
+Throw the die → move forward square by square → if you land on an event square, the event happens → next player. The first to reach **END** wins.
+**No chaining** ✅ (owner, Q4): arriving on a square because of an event does not trigger that square's event, unless the event says so.
+
+### 8.3 Event families
+All events belong to a few families. The exact squares, sizes and amounts are decided in the tuning step (§13), with the simulator.
+
+| Family | What happens | Paper-board origin | Purpose |
+|---|---|---|---|
+| **Jackpot** | Big jump forward | Ladders "upstairs", 138 → 195 snake | P2 surprise, joy |
+| **Boost** | Small jump forward, or throw again | 20 → 33, "throw one more time" | Steady good moments |
+| **Fall** | Big jump back | Snakes, ladders "downstairs" | P2 drama, "Don't get mad!" |
+| **Setback** | Small step back, or wait 1 turn | "skip one turn", "forgot keys" | Light tension |
+| **Interaction** | Changes another player's fortune (swap with the player ahead, others double their next throw) | 75, 143 | Social fun at the table |
+| **Card** | Keep an item and use it later (protects from one setback) | "Free jail pass", "Skip a punishment" | Hope, collecting |
+| **Badge** | Special status with a duty | **Snake Leader** (138 → 195; the badge holder must take the 202 snake back to 165) | Family signature, late drama |
+| **Landmark** | A named place, no event | Airport, Bank, Hotel, Work, Party | Story anchors |
+
+### 8.4 Heritage that stays ✅ / 💡
+- ✅ Long board of 202 squares + END (203); short board of 100 + END (101).
+- ✅ Snake Leader: landing on 138 → slide to 195 and get the badge; only the badge holder landing on 202 follows the snake back to 165. Its exact numbers will be confirmed by measurement (§11), not by signature.
+- 💡 "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey.
+- 💡 An event square about every 5 squares, as on paper.
+
+### 8.5 Things the paper board did that must change 📊
+Measured on the paper board (`docs/analysis/SIM_REPORT_v0.md`):
+- Waiting at Start for a 6 cost about **6.7 turns per player**, and **29%** of players had a run of 10+ turns without moving. This breaks P3.
+- Prison ("only out with a 6") and Hospital (3 turns) add more long waits. This breaks P3.
+- The rules on which waits stay (and in what form) are decided by measurement in §13.
+
+## 9. Story: "The Journey" (P4)
+
+### 9.1 Principle ✅
+The board is **one continuous neutral journey**. Each square is the next moment of the same trip, not a collection of unrelated events. Every event is a travel moment: transport, weather, forgetting things, friendly help, shortcuts, getting lost.
+
+### 9.2 Proposal 💡
+- **From Home to a big celebration at the destination** (e.g. a Festival of Lights).
+- The board passes through **regions in order** (e.g. Home Town → Countryside → Forest → River & Lake → Mountains → Seaside → Big City → Festival Road), so the landscape changes as you advance and players feel the progress.
+- Paper landmarks become journey landmarks (Airport → Station, Hotel → Mountain Lodge, Party → Fair, Work → Central Station). The prison, police, robbery, stolen car, hospital and lottery are replaced with neutral travel moments.
+- Event texts are short and funny, written so a 6-year-old understands them and a 25-year-old smiles.
+
+## 10. Boards ✅
+
+| Board | Size | Role |
+|---|---|---|
+| **Long, "The Grand Journey"** | Start + 202 + END | **The base**, the original creation. Designed and tuned first. |
+| **Short, "The Quick Trip"** | Start + 100 + END | Built **from the best-working events of the long board**: thinned out, not compressed. It must pass the same measurements. |
+
+Game duration is **not** a target ✅. It comes from luck, and the simulator only reports its spread.
+
+## 11. Scientific basis: how the game is measured
+
+### 11.1 The three groups of measures ✅ (agreed principle) / 📊 (engine)
+
+| Group | Question | Measures | Status in code (`tools/sim/engine.mjs`) |
+|---|---|---|---|
+| **A. Fairness** (before the game) | Does every player start with the same chance? | Win % by seat (turn order), with 95% confidence interval | 📊 exists |
+| **B. Excitement** (during the game) | Is it full of swings and surprises until the end? | Lead changes per game; win % of the player leading at halfway (lower = more open); win % of the player last at halfway (higher = more hope); **late overtakes**; **close finishes**; **jackpots and falls per game**; % of games where someone hits a jackpot | 📊 first four exist · late overtakes, close finishes and jackpot counts **to be added** |
+| **C. Boredom** | Does anyone wait too long? | Turns lost per player; % of players with 10+ turns without moving; longest no-move run | 📊 exists |
+
+### 11.2 How a single event is judged
+For every event square, the simulator reports:
+- **Landing chance:** % of players who land on it in a game (📊 exists).
+- **Win % if landed vs not landed** (📊 exists).
+- **Effect on the game:** how much it raises the excitement measures (group B) and the boredom measures (group C) when it is present compared with removed (**to be added**: "with vs without" runs).
+
+**Key principle ✅ (from the owner's feedback):** a big event is **not unfair**, because every player has the same chance to land on it. Fairness is judged only by group A. A big event is judged by whether it adds excitement (B) without adding boredom (C).
+
+### 11.3 Targets 💡 (proposed, owner to confirm before tuning)
+| Group | Target |
 |---|---|
-| Q1 | Card says **165**. Landing on 138 → snake to 195 → you become **Snake Leader** and get the green badge. Only the badge holder must follow the 202 snake back to 165. |
-| Q4 | **No chaining.** Landing on 55 flies you to 71, but being sent to 55 by tile 70 ends there. |
-| Q21 | Owner already has a Google Play developer account → publish on Google Play at no extra cost. |
-| Direction | The paper rules were "just for fun". The digital game gets a **rebuilt story and rule set**, designed with simulation so every player has equal opportunities, with measured resilience and reward-vs-punishment balance. Remaining questions below now become **design decisions** for that rebuild (see `docs/analysis/SIM_REPORT_v0.md`). |
+| A | Every seat within ±1 point of a fair share (25% with 4 players), at 100,000 games |
+| B | Better than the paper board on every excitement measure (paper values in `docs/analysis/sim-v0-paper-engine-results.md`) |
+| C | Fewer than 5% of players with 10+ turns without moving (paper: 27–29%) |
 
-### 9.1 Owner decisions after the market report (14 Oct 2026)
+## 12. "One more game" — replay pull (P5) 💡
 
-| Topic | Decision |
-|---|---|
-| Target audience | **Families with young children** (core) **and young adults 18–34** (strongly wanted). |
-| Content rating | Must keep a **family / kids-safe Google Play age rating**. No violence, crime, alcohol, gambling-style or other risky references. Story elements that could put the rating at risk must be **replaced** in the rebuild (Step 1c). |
-| Online | **No online play, no chat, no ads, no accounts, no data collected.** |
-| Board length | Two boards: **Long = 203 tiles**, **Short = 101 tiles**. Game duration is **not** a target. It comes from luck (dice + rewards/punishments met), and the simulator only reports the resulting distribution. |
-| Numbers read aloud | **No.** The game must not look like a learning app for small children (the 18–34 audience would find it odd). |
+No accounts and no data leave the device (C1). Everything below lives on the device only.
 
-**Paper-board elements to review for the rating in Step 1c** (candidates, to be replaced with neutral stories): Prison (30), Police (97), "Go in prison again" (148), Robbery (95), Bank robbed (101), Car stolen (183), Hospital (50), Lottery (85), the word "punishment" (60, 113, 128).
+| Idea | Why it pulls players back | Cost / risk |
+|---|---|---|
+| **Rematch button** on the win screen | Zero effort to play again | None |
+| **Jackpot and fall moments celebrated** (animation, sound) | Big moments get remembered and retold | None |
+| **Journey postcards:** one postcard per region or special event, collected over many games ("Snake Leader", "Forgot keys AGAIN!!!") | A collection you want to complete; it rewards playing again, not winning | Stored only on the device |
+| **Near-miss visible:** the board shows the jackpot you just missed by one square | "So close! Next time…" | None |
+| **Short board** for a quick game | Easy to say "just one more" | None |
 
-## 10. Open questions for the paper board (now design decisions for the rebuild)
+## 13. Ideation steps before freezing (each one stops for the owner's approval)
 
-| # | Question |
-|---|---|
-| Q2 | Tile 178 "go back to 16?": is it **167** or **168**? (168 would then send the player to Party 179.) |
-| Q3 | Tile 35: is the target **66**? |
-| Q5 | Pink card (photo 5) and purple card (photo 21): what exactly do they say/do, and which tiles give them? Can a Skip Punishment card be kept and used later? |
-| Q6 | Which tiles are **rewards** and which are **punishments**? (Needed for 65, 128 and the Skip Punishment card.) "Nearest" = forward, backward or either? |
-| Q7 | Tile 143 "others double what they throw": for their next throw only, or longer? |
-| Q8 | Tile 15 "next time advance just 1 square": next turn moves exactly 1, whatever the die shows? |
-| Q9 | Start: after rolling a 6, does the token move 6 squares, or just go to tile 1? Does a 6 give an extra throw anywhere? |
-| Q10 | Prison 30: landing on 30 by a normal roll also means prison? After a 6 do you move 6 from 30? Is the Free Jail Pass used automatically or by choice? |
-| Q11 | Hospital 50: "stay 3 times" = skip 3 turns? Also when landing there by a normal roll? |
-| Q12 | Tile 95 "wait 1 turn here" = same as skip 1 turn? |
-| Q13 | END: exact roll needed? If the roll is too big, bounce back, stay, or just finish? |
-| Q14 | Two tokens on the same tile: share it, or does one get sent back (classic "Don't Get Mad" capture)? |
-| Q15 | Players: 2–4? One token per player? |
-| Q16 | Tile 123: after moving the total, does the tile you land on apply? |
-| Q17 | Tile 45 "throw two times": one move with the sum, or two separate moves? |
-| Q18 | Tile 75 "change place with the one in front": the nearest player ahead on the board? If nobody is ahead? |
-| Q19 | Tile 183: go to 97 but the police "go in prison" does **not** apply — correct? |
-| Q20 | Which UI languages? |
+| # | Step | Output |
+|---|---|---|
+| I-1 | **Approve this GCD v2**: vision, pillars, stages, event families, measurement principle, proposals (💡) | Owner decisions written into this file |
+| I-2 | **Engine upgrade**: add the missing measures (late overtakes, close finishes, jackpots and falls per game, with-vs-without event runs) | `tools/sim/engine.mjs` + test that the paper board still gives the same numbers |
+| I-3 | **Long board, Chance Game**: place and size the events, start rule, end rule and waiting rules, tuned to the targets in §11.3 | `data/board-long.json` + measurement report |
+| I-4 | **Journey story** written over the tuned long board, square by square | Texts in `data/board-long.json` |
+| I-5 | **Short board** built from the best long-board events | `data/board-short.json` + measurement report |
+| I-6 | **Logic Layer** designed under the rules in §7.1 and measured | Logic Layer section + report |
+| I-7 | **Freeze**: owner approval; GCD marked FROZEN | Coding starts |
 
-## 11. Game v1 — "The Great Journey" (rebuilt story & rules, Step 1c)
+## 14. Presentation (from the original brief) ✅
+- Hand-drawn paper look: off-white textured paper, purple-ink tiles, crayon-coloured event squares, colourful button tokens.
+- Tokens move **square by square** (no teleporting); jumps follow their ladder or snake drawing; the camera follows smoothly, with pan and zoom.
+- Card inventory visible for each player.
+- Inclusive: every event has a colour **and** an icon; big buttons; one-tap play; high contrast; reduced motion; no timers.
 
-**Sections 4–7 describe the paper original. The game is built from this section.**
+## 15. Technology ✅ (all free)
+TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Google Play. The rules engine reads the frozen board files and is covered by tests that reproduce the simulator's numbers.
 
-- **Story:** one continuous journey from **Home** to the **Festival of Lights**, through 8 regions (Home Town, Countryside, Forest, River & Lake, Mountains, Seaside, Big City, Festival Road). Family-safe: no crime, violence, alcohol, gambling or hospital themes.
-- **Boards (data = source of truth):** `data/board-v1-long.json` (Start + 1–202 + END) and `data/board-v1-short.json` (Start + 1–100 + END, generated by `tools/sim/make-short.mjs`).
-- **Rules:** see `docs/analysis/SIM_REPORT_v1.md` §2. Rule settings are stored in each board file's `rules` field: `startRule: free`, `endRule: exact`, `catchUp: 2` (Tailwind), `handLimit: 2`.
-- **Categories:** B = boost, S = setback, C = choice, place = landmark. Cards: Umbrella (ignore one setback), Compass (throw again once). Badge: Snake Leader.
-- **Modes:** Family (default) · Thinker (2 dice, pick one — only when all players choose it).
-- **Balance evidence:** `docs/analysis/SIM_REPORT_v1.md` §3–4.
-- **Open owner decisions:** `docs/analysis/SIM_REPORT_v1.md` §5.
+## 16. Open decisions for the owner (I-1)
+1. Vision and pillars (§2, §5): agree, or change?
+2. Emotional curve (§6): is this the experience you want?
+3. Event families (§8.3): anything missing or unwanted?
+4. Story proposal (§9.2): the journey Home → Festival through regions, or another destination or theme?
+5. Measurement targets (§11.3): agree?
+6. Replay pull ideas (§12): which ones?
