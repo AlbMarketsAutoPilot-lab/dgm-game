@@ -1,0 +1,208 @@
+{
+ "id": "short",
+ "description": "The Quick Trip: Start + squares 1-100 + END (101), built from the best-working events of the long board (data/board-long.json), thinned out, not compressed (step I-5, owner approved the event list and numbers in I-5.1). Every rule field is identical to the long board except the forks (crossroads 41 and 80, halved Shortcuts). 'text' keeps the paper's original words; destinations are the short-board squares.",
+ "lastTile": 100,
+ "endTile": 101,
+ "tiles": {
+  "7": {
+   "cat": "P",
+   "type": "slowNext",
+   "text": "Next time advance just 1 square"
+  },
+  "10": {
+   "cat": "R",
+   "type": "jump",
+   "to": 16,
+   "text": "Go to 33"
+  },
+  "15": {
+   "cat": "P",
+   "type": "prison",
+   "text": "Prison - get out with 6"
+  },
+  "17": {
+   "cat": "R",
+   "type": "jump",
+   "to": 33,
+   "text": "Go to 66"
+  },
+  "20": {
+   "cat": "R",
+   "type": "jump",
+   "to": 51,
+   "text": "Go upstairs (ladder)"
+  },
+  "30": {
+   "cat": "R",
+   "type": "card",
+   "card": "bonus",
+   "text": "Bonus card: once, whenever you like - avoid one of your punishments OR cancel a reward of another player"
+  },
+  "32": {
+   "cat": "R",
+   "type": "nearest",
+   "target": "R",
+   "text": "Go to nearest reward and do it"
+  },
+  "37": {
+   "cat": "R",
+   "type": "swapLeader",
+   "text": "Change place with the player closest to END"
+  },
+  "40": {
+   "cat": "R",
+   "type": "jump",
+   "to": 67,
+   "text": "Go downstairs (ladder) to hotel"
+  },
+  "45": {
+   "cat": "R",
+   "type": "card",
+   "card": "jailPass",
+   "text": "Free jail pass"
+  },
+  "49": {
+   "cat": "P",
+   "type": "jump",
+   "to": 15,
+   "then": "prison",
+   "text": "Police - go in prison"
+  },
+  "54": {
+   "cat": "R",
+   "type": "jump",
+   "to": 67,
+   "text": "Get some vacation, go to hotel"
+  },
+  "61": {
+   "cat": "R",
+   "type": "rollSum",
+   "dice": 3,
+   "text": "Throw 3 times, move the total"
+  },
+  "66": {
+   "cat": "P",
+   "type": "jump",
+   "to": 55,
+   "text": "Hotel reservation cancelled, go to 109"
+  },
+  "69": {
+   "cat": "R",
+   "type": "jump",
+   "to": 97,
+   "grant": "snakeLeader",
+   "text": "Follow the snake - become Snake Leader"
+  },
+  "72": {
+   "cat": "P",
+   "type": "doubleOthers",
+   "text": "The other players double what they throw"
+  },
+  "74": {
+   "cat": "P",
+   "type": "jump",
+   "to": 15,
+   "then": "prison",
+   "text": "Go in prison again"
+  },
+  "79": {
+   "cat": "P",
+   "type": "jump",
+   "to": 24,
+   "text": "Follow the snake"
+  },
+  "91": {
+   "cat": "P",
+   "type": "jump",
+   "to": 48,
+   "text": "Car was stolen, go to police 97 - no prison"
+  },
+  "94": {
+   "cat": "P",
+   "type": "jump",
+   "to": 78,
+   "text": "Go downstairs (ladder)"
+  },
+  "96": {
+   "cat": "P",
+   "type": "jump",
+   "to": 92,
+   "text": "Forgot keys, back to work"
+  },
+  "99": {
+   "cat": "P",
+   "type": "jump",
+   "to": 92,
+   "then": "skip2",
+   "text": "Forgot keys again, back to work 184 and skip two turns"
+  },
+  "100": {
+   "cat": "P",
+   "type": "jump",
+   "to": 82,
+   "requires": "snakeLeader",
+   "text": "Snake Leader only: follow the snake back to 165"
+  }
+ },
+ "rules": {
+  "entry": "six",
+  "sixRule": "owner",
+  "maxSixes": 3,
+  "capture": true,
+  "endRule": "exact",
+  "bonusPolicy": "defend",
+  "enterAfter": 3,
+  "trapAfter": 3,
+  "stairs": true,
+  "lifelines": 3,
+  "lifeOnTriple": true,
+  "outAfterZero": true,
+  "roadblock": {
+   "back": 10,
+   "range": 10
+  },
+  "forks": [
+   {
+    "at": 41,
+    "merge": 48,
+    "len": 6,
+    "tiles": {
+     "1": {
+      "cat": "R",
+      "type": "jump",
+      "to": 50,
+      "text": "Wild road: shortcut over the hill"
+     },
+     "2": {
+      "cat": "P",
+      "type": "jump",
+      "to": 15,
+      "then": "prison",
+      "text": "Wild road: lost, into the trap"
+     }
+    }
+   },
+   {
+    "at": 80,
+    "merge": 90,
+    "len": 9,
+    "tiles": {
+     "1": {
+      "cat": "R",
+      "type": "jump",
+      "to": 92,
+      "text": "Wild road: shortcut over the hill"
+     },
+     "3": {
+      "cat": "P",
+      "type": "jump",
+      "to": 15,
+      "then": "prison",
+      "text": "Wild road: lost, into the trap"
+     }
+    }
+   }
+  ]
+ },
+ "rulesNote": "rules = FROZEN set (GCD R1-R21) as on the long board. Changed for the half-length board (owner, I-5.1): forks (crossroads 41 -> roads meet at 48, Shortcut 6 squares, square 1 -> 50, square 2 -> Bog 15; crossroads 80 -> roads meet at 90, Shortcut 9 squares, square 1 -> 92, square 3 -> Bog 15). Fallen tree unchanged (back 10, range 10)."
+}

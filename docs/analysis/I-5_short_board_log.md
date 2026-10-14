@@ -2,7 +2,7 @@
 
 Working log for step I-5 (`docs/prompts/I-5_short_board.md`). Nothing here is final until it is written into `docs/GCD.md` §10 in step I-5.4. Rules R1–R21 are frozen: the short board changes only **where** events are and **how far** they jump.
 
-## I-5.1 Which events to keep (proposal, waiting for the owner)
+## I-5.1 Which events to keep ✅ (owner approved all four answers, 14 Oct 2026)
 
 **Method.**
 1. Ablation of the long board with the frozen rules (`node tools/sim/ablate.mjs data/board-long.json 100000`, report `docs/analysis/ablation-long.md`). It removes one event at a time; the noise row is ≤ 0.3 points.
@@ -92,8 +92,37 @@ Note: the thoughtful computer player counts a loss of 20+ squares as "big" (`big
 
 The average finish gap is counted in squares (paper 57.5, short 23.9), so it shrinks with the board and is not compared.
 
-**Questions to the owner (I-5.1):**
+**Questions to the owner (I-5.1), all answered yes:**
 1. The list of 23 events (keep / drop): agree?
 2. Fallen tree unchanged (10 back, range 10): agree?
 3. Both crossroads, with the halved Shortcuts (#3, #4): agree?
 4. Snake Leader 69 → 97 and back 100 → 82: agree?
+
+## I-5.2 Build and measure ✅ (waiting for the owner)
+
+`data/board-short.json` is built from the approved list (the same mapping as `tools/sim/i5-draft.mjs`). It has 23 event squares; destinations are short-board squares. Its `rules` are identical to the long board's except `forks` (crossroads 41 and 80, halved Shortcuts). The fallen tree is unchanged (back 10, range 10). `text` keeps the paper's original words, so a few of them still name long-board numbers (e.g. 10 "Go to 33" now goes to 16); the real destination is `to`, and the story texts (I-5.3) replace these words on screen.
+
+Commands: `node tools/sim/test/rules.test.mjs` (ALL PASS) · `node tools/sim/run.mjs data/board-short.json 100000` (report `docs/analysis/measure-short.md`) · `node tools/sim/shortcut.mjs data/board-short.json 100000` (Shortcut check).
+
+| Target (§11.3) | Paper board | Long board | **Short board** | Pass? |
+|---|---|---|---|---|
+| A. Every seat within ±1 point (4 players) | – | 25.15 / 24.78 / 25.05 / 25.02 | **24.95 / 25.18 / 24.83 / 25.04** | ✅ |
+| A. 3 players / 2 players | – | 33.25–33.45 / 49.73–50.27 | **33.13–33.47 / 49.78–50.22** | ✅ |
+| B. Lead changes / game ↑ | 6.7 | 7.6 | **6.8** | ✅ (narrowly) |
+| B. Win % leader at half ↓ | 29.6% | 28.7% | **27.5%** | ✅ |
+| B. Win % last at half ↑ | 21.6% | 22.6% | **23.4%** | ✅ |
+| B. Comeback wins ↑ | 70.4% | 71.3% | **72.5%** | ✅ |
+| B. Late overtakes / game ↑ | 1.76 | 1.9 | **2.67** | ✅ |
+| B. Games with a late overtake ↑ | 73.3% | 75.4% | **83%** | ✅ |
+| B. Win % first into last quarter ↓ | 38.7% | 37.3% | **34.2%** | ✅ |
+| B. Close finishes (≤ 6 squares) ↑ | 10.3% | 10.2% | **17.8%** | ✅ |
+| B. Jackpots / game ↑ | 6.68 | 6.96 | **7.53** | ✅ |
+| B. Falls / game ↑ | 4.48 | 4.59 | **5.8** | ✅ |
+| B. Captures / game (information) | 5.44 | 7.47 | **6.94** | – |
+| C. 10+ turns without moving < 5% | 21% | 1.2% | **0.7%** (3p 1.3%, 2p 2.5%) | ✅ |
+| R20. Always-Shortcut player wins ≈ 25% | – | 24.96% (same check) | **25.45%** (±0.19) | ✅ |
+| Game length (reported only) | 51.9 rounds | 52 rounds | **30.9 rounds** (median 28; 10% of games ≤ 16, 10% ≥ 49) | – |
+
+Jackpot / fall = a jump of at least 10% of the board (long 20 squares, short 10). Average finish gap is in squares, so it is not compared (paper 57.5, short 24.1).
+
+**Result: every target is met, no change needed.** The Shortcut is 0.45 points above fair (the long board is at fair). That is far inside the ±1 point allowed for seats, so I recommend leaving it. The smallest change that lowers it would be to move a Shortcut jackpot target down one square. Lead changes pass with the smallest margin (6.8 vs 6.7).
