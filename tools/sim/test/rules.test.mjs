@@ -60,5 +60,53 @@ play("Snake: 138 -> 195 and badge", { tiles: snake, dice: [3], setup: [{ pos: 13
 play("Snake Leader on 202 -> 165", { tiles: snake, dice: [2], setup: [{ pos: 200, leader: true }], turns: 1, players: 1 }, (P) => eq(P[0].pos, 165, "pos"));
 play("Non-leader on 202 stays", { tiles: snake, dice: [2], setup: [{ pos: 200 }], turns: 1, players: 1 }, (P) => eq(P[0].pos, 202, "pos"));
 
+// ---- Step I-6 options ----
+const both = (...r) => r.find((x) => x !== true) ?? true;
+// L1 waiting stairs (owner's example: trapped on 30, two failed throws, third throw 5 -> 31, 31/1, 31/2, 32, 33)
+const ST = { stairs: true };
+play("L1 stairs: 2 failed throws, 3rd throw 5 -> 33 (slowed by 2)", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 33, "pos"));
+play("L1 stairs: 3rd throw 3 -> stands on stair step 31/2", { tiles: trapTiles, dice: [3, 2, 3], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => both(eq(P[0].pos, 31, "pos"), eq(P[0].onStair, true, "on stair"), eq(P[0].stairLeft, 0, "steps left")));
+play("L1 stairs: from stair 31/1, next throw 4 -> 1 step + 3 squares = 34", { tiles: trapTiles, dice: [3, 2, 2, 4], setup: [{ pos: 30, trapped: true }], turns: 4, players: 1, rules: ST }, (P) => eq(P[0].pos, 34, "pos"));
+play("L1 stairs: 3rd throw 1 -> lands on 31 itself, both steps still to climb", { tiles: trapTiles, dice: [3, 2, 1], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => both(eq(P[0].pos, 31, "pos"), eq(P[0].stairLeft, 2, "steps left"), eq(P[0].onStair, false, "on the real square")));
+play("L1 stairs: a 6 on throw 2 frees; the one step is still walked (6, 4 -> 31, 31/1, 32, 33)", { tiles: trapTiles, dice: [3, 6, 4], setup: [{ pos: 30, trapped: true }], turns: 2, players: 1, rules: ST }, (P) => eq(P[0].pos, 33, "pos"));
+play("L1 stairs: a 6 on throw 1 frees as today (6, 4 -> 34)", { tiles: trapTiles, dice: [6, 4], setup: [{ pos: 30, trapped: true }], turns: 1, players: 1, rules: ST }, (P) => eq(P[0].pos, 34, "pos"));
+play("L1 stairs at Start: 2 failed throws, 3rd throw 5 -> 1, 1/1, 1/2, 2, 3", { dice: [2, 3, 5], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 3, "pos"));
+play("L1 stairs: 3rd throw is a 6 -> moves like a normal 6 (6 + 3 = 9, 2 of them on the steps -> 37)", { tiles: trapTiles, dice: [3, 2, 6, 3], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 37, "pos"));
+play("L1 stairs: nobody is captured on a stair step", { dice: [1], setup: [{ pos: 30 }, { pos: 31, onStair: true, stairAt: 31, stairLeft: 1 }], turns: 1, rules: ST }, (P) => both(eq(P[1].pos, 31, "other pos"), eq(P[0].pos, 31, "mover")));
+// Lifelines
+const LL = (n) => ({ stairs: true, lifelines: n });
+play("Lifelines: 3 throws without a 6 cost one, and the player still moves", { dice: [2, 3, 5], turns: 3, players: 1, rules: LL(3) }, (P) => both(eq(P[0].life, 2, "lifelines"), eq(P[0].pos, 3, "pos")));
+play("Lifelines: a 6 within 3 throws costs nothing", { dice: [2, 6, 4], turns: 2, players: 1, rules: LL(3) }, (P) => eq(P[0].life, 3, "lifelines"));
+play("Lifelines: losing the last one = out", { dice: [2, 3, 5], setup: [{}, { skip: 9 }, { skip: 9 }], turns: 9, players: 3, rules: LL(1) }, (P) => both(eq(P[0].out, true, "out"), eq(P[0].pos, -2, "off the board")));
+{
+  const r = simulate(board(), { players: 2, diceScript: [2, 3, 5], setup: [{}, { skip: 9 }], ...LL(1) }, 1, 1);
+  const ok = r.fairness.seatWinPct[1] === 100 && r.i6.pctGamesLastStanding === 100;
+  console.log(`${ok ? "PASS" : "FAIL"}  Lifelines: 2 players, one is out -> the other wins`); if (!ok) fail++;
+}
+play("Lifelines: a lifeline square gives one back", { tiles: { 12: { cat: "R", type: "skip", turns: 0 } }, dice: [2], setup: [{ pos: 10, life: 2 }], turns: 1, players: 1, rules: { lifelines: 3, lifelineSquares: [12] } }, (P) => eq(P[0].life, 3, "lifelines"));
+play("Lifelines: never above the starting number", { tiles: { 12: { cat: "R", type: "skip", turns: 0 } }, dice: [2], setup: [{ pos: 10 }], turns: 1, players: 1, rules: { lifelines: 3, lifelineSquares: [12] } }, (P) => eq(P[0].life, 3, "lifelines"));
+// N2 roadblock (game event)
+const RB = { roadblock: { back: 10, range: 10 }, roadblockStart: 15 };
+play("N2 landing on the roadblock: back 10", { dice: [3], setup: [{ pos: 12 }], turns: 1, players: 1, rules: RB }, (P) => eq(P[0].pos, 5, "pos"));
+play("N2 passing over the roadblock does nothing", { dice: [5], setup: [{ pos: 12 }], turns: 1, players: 1, rules: RB }, (P) => eq(P[0].pos, 17, "pos"));
+play("N2 the roadblock is used up after one hit", { dice: [3, 2, 3], setup: [{ pos: 12 }, { pos: 13 }], turns: 2, rules: { ...RB, roadblock: { back: 10, range: 0 } } }, (P) => eq(P[1].pos, 15, "second player passes"));
+play("N2 a jump that ends on the roadblock also hits it", { tiles: { 12: { cat: "R", type: "jump", to: 15 } }, dice: [2], setup: [{ pos: 10 }], turns: 1, players: 1, rules: RB }, (P) => eq(P[0].pos, 5, "pos"));
+// N3 two roads
+const FK = { forks: [{ at: 20, merge: 40, len: 5, tiles: { 2: { cat: "R", type: "jump", to: 60 } } }] };
+play("N3 every token stops at the crossroads", { dice: [5], setup: [{ pos: 17 }], turns: 1, players: 1, rules: FK }, (P) => eq(P[0].pos, 20, "pos"));
+play("N3 simple player takes the safe road", { dice: [4], setup: [{ pos: 20 }], turns: 1, players: 1, rules: FK }, (P) => eq(P[0].pos, 24, "pos"));
+play("N3 wild road: square 2 is the jackpot -> 60", { dice: [2], setup: [{ pos: 20 }], turns: 1, players: 1, rules: { ...FK, types: ["wild"] } }, (P) => eq(P[0].pos, 60, "pos"));
+play("N3 wild road rejoins at the merge (4 then 3 -> 41)", { dice: [4, 3], setup: [{ pos: 20 }], turns: 2, players: 1, rules: { ...FK, types: ["wild"] } }, (P) => eq(P[0].pos, 41, "pos"));
+play("N3 the crossroads holds several players", { dice: [3], setup: [{ pos: 17 }, { pos: 20 }], turns: 1, rules: FK }, (P) => both(eq(P[0].pos, 20, "mover"), eq(P[1].pos, 20, "other")));
+play("N3 thoughtful: 20+ behind the leader -> wild road", { dice: [2], setup: [{ pos: 20 }, { pos: 45 }], turns: 1, rules: { ...FK, types: ["thoughtful", "simple"] } }, (P) => eq(P[0].pos, 60, "pos"));
+play("N3 thoughtful: close to the leader -> safe road", { dice: [2], setup: [{ pos: 20 }, { pos: 30 }], turns: 1, rules: { ...FK, types: ["thoughtful", "simple"] } }, (P) => eq(P[0].pos, 22, "pos"));
+// Thoughtful bonus card
+const TH = { types: ["thoughtful", "simple"] };
+play("Thoughtful keeps the bonus card for a small punishment", { tiles: { 12: { cat: "P", type: "skip", turns: 1 } }, dice: [2], setup: [{ pos: 10, bonus: 1 }], turns: 1, rules: TH }, (P) => eq(P[0].bonus, 1, "card kept"));
+play("Thoughtful uses the bonus card on a big fall", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50, bonus: 1 }], turns: 1, rules: TH }, (P) => both(eq(P[0].pos, 52, "pos"), eq(P[0].bonus, 0, "card used")));
+play("Thoughtful uses the bonus card on the trap", { tiles: trapTiles, dice: [2], setup: [{ pos: 28, bonus: 1 }], turns: 1, rules: TH }, (P) => both(eq(P[0].trapped, false, "not trapped"), eq(P[0].bonus, 0, "card used")));
+play("Thoughtful cancels the leader's big reward", { tiles: { 112: { cat: "R", type: "jump", to: 150 } }, dice: [2], setup: [{ pos: 110 }, { pos: 20, bonus: 1 }], turns: 1, rules: { types: ["simple", "thoughtful"] } }, (P) => eq(P[0].pos, 112, "reward cancelled"));
+play("Thoughtful lets the leader's small reward go", { tiles: { 112: { cat: "R", type: "jump", to: 118 } }, dice: [2], setup: [{ pos: 110 }, { pos: 20, bonus: 1 }], turns: 1, rules: { types: ["simple", "thoughtful"] } }, (P) => both(eq(P[0].pos, 118, "reward kept"), eq(P[1].bonus, 1, "card kept")));
+
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASS");
 process.exit(fail ? 1 : 0);

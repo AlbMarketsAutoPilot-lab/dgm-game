@@ -11,7 +11,7 @@ Working log for step I-6 (`docs/prompts/I-6_logic_and_luck_proposals.md`). Nothi
 | **Computer players** | ✅ The simple and thoughtful player types are agreed. |
 | **Logic Layer G2–G4** | ❌ Rejected: "boring (not thrilling at all) or just dumb". New proposals needed. |
 
-## Open questions (round 2)
+## Questions asked in round 2 (all answered in round 2, below)
 
 My reading of the stairs and lifelines, to confirm or correct:
 1. The stairs replace R16: you leave on your **3rd** throw (after 2 failed throws), not on your 4th turn as R16 works today.
@@ -33,3 +33,18 @@ My reading of the stairs and lifelines, to confirm or correct:
 | N3 | **Two roads** | At 2 places the road splits: a safe road (longer, no events) or a wild road (shorter, with one big jackpot and one big fall). Choose at the fork. | Pure risk; the simulator makes both roads equal on average | Safe road | Wild road when 20+ squares behind the leader |
 
 Dropped: "throw again and add, stop or push" (pushing is almost always best, so it is not a real choice) and "steady die vs wild die" (too close to the forbidden "choose between dice").
+
+## I-6.1 round 2: owner answers (14 Oct 2026)
+
+| Topic | Owner decision |
+|---|---|
+| Stairs and lifelines, questions 1–8 | ✅ Agreed as written above, with **3 lifelines** (owner first thought 5; 3 chosen from the numbers). |
+| Winning lifelines back | ✅ Yes. The owner sees it as a possible part of the Logic Layer. |
+| N1 Risk a lifeline | Not chosen. |
+| N2 Roadblock | ✅ To measure, but **as a game event, not a player decision**: the game places it, anyone can fall on it. Keep it simple. |
+| N3 Two roads | ✅ To measure ("I love this"). |
+| N2 and N3 final approval | After the data. |
+| Logic target 27–32% | ✅ Yes. |
+| The owner's view | The Logic Layer is still lacking. |
+
+Measured in step I-6.3: `docs/analysis/I-6_measurements.md`.
