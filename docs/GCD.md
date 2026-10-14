@@ -1,6 +1,6 @@
 # Don't Get Mad! — Game Concept Document (GCD) v2
 
-> **Status:** v2 draft — ideation restarted 14 Oct 2026. **Not frozen.**
+> **Status:** v2 — I-1 approved except the story (§16). **Not frozen.**
 > When frozen, this document is the contract for coding: anything not written here is not built.
 > **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
 > **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements are in `docs/analysis/SIM_REPORT_v0.md` and `docs/analysis/sim-v0-paper-engine-results.md`. The market research is in `docs/analysis/MARKET_REPORT.md`.
@@ -181,7 +181,18 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 ## 15. Technology ✅ (all free)
 TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Google Play. The rules engine reads the frozen board files and is covered by tests that reproduce the simulator's numbers.
 
-## 16. Open decisions for the owner (I-1)
+## 16. Owner decisions on I-1 (14 Oct 2026)
+
+| # | Topic | Decision |
+|---|---|---|
+| 1 | Vision & pillars (§2, §5) | ✅ Agreed |
+| 2 | Emotional curve (§6) | ✅ Agreed |
+| 3 | Event families (§8.3) | ✅ Agreed |
+| 4 | Story (§9.2) | ⏸ **Not decided.** The owner will judge it only after seeing the full story written square by square, showing how it fits all ages and every event (step I-4). |
+| 5 | Measurement targets (§11.3) | ✅ Agreed |
+| 6 | Replay pull ideas (§12) | ✅ Agreed (all) |
+
+### Original questions (I-1)
 1. Vision and pillars (§2, §5): agree, or change?
 2. Emotional curve (§6): is this the experience you want?
 3. Event families (§8.3): anything missing or unwanted?
