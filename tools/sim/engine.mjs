@@ -109,7 +109,7 @@ export function simulate(board, rules, games, seed) {
       P.forEach((q, i) => {
         if (i === pi || q.pos !== sq || q.onStair) return; // nobody is captured on a stair step
         q.pos = 0; q.trapped = false; q.skip = 0; q.tries = 0; q.captured++; clearStairs(q); // back to Start; the token leaves its trap / waiting
-        if (s.lifeOnCapture && s.lifelines) { q.lostCap++; loseLife(i); }
+        if (s.lifeOnCapture && s.lifelines) { q.lostCap++; q.lastLoss = "capture"; q.capRounds = (q.capRounds ?? []); q.capRounds.push(round); loseLife(i); }
         gCap++; A.captures++;
         if (sq <= 20) A.capturesEarly++;
         if (prog(sq) >= LATE) A.capturesLate++;
@@ -305,7 +305,7 @@ export function simulate(board, rules, games, seed) {
         else if (p.pos === OFF || p.trapped) { // R1 / R6: only a 6 lets you in / out; that 6 gives the extra throw
           const off = p.pos === OFF, limit = off ? s.enterAfter : s.trapAfter;
           if (!s.stairs && p.tries >= limit) { // option: released after too many failed tries -> a normal turn
-            p.tries = 0; if (off) p.pos = 0; else p.trapped = false;
+            p.tries = 0; if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false;
             let n = p.slow ? 1 : throwSequence(0); p.slow = false; if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n);
           } else {
             const r = d6();
@@ -313,7 +313,7 @@ export function simulate(board, rules, games, seed) {
               const moved3 = p.tries >= 2;
               if (s.stairs) setStairs(p, off, p.tries); // each earlier failed throw left one stair step
               p.tries = 0;
-              if (off) p.pos = 0; else p.trapped = false;
+              if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false;
               if (r !== 6) { /* entered without a 6: no extra throw, move next turn */ }
               else if (p.slow) { p.slow = false; moveBy(pi, 1); }
               else { // L1: on the 3rd throw (stairs) the 6 is a normal moving 6; otherwise the out-6 does not move (R6)
@@ -321,10 +321,10 @@ export function simulate(board, rules, games, seed) {
               }
             } else if (s.stairs && p.tries >= 2) { // L1: 3rd throw without a 6 -> move anyway, walking the 2 stair steps
               p.tries = 0;
-              if (s.lifelines) p.lostWait++;
+              if (s.lifelines) { p.lostWait++; p.lastLoss = off ? "start" : "trap"; }
               if (!(s.lifelines && loseLife(pi))) {
                 setStairs(p, off, 2);
-                if (off) p.pos = 0; else p.trapped = false;
+                if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false;
                 let n = p.slow ? 1 : r; p.slow = false; if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n);
               }
             } else {
@@ -362,7 +362,7 @@ export function simulate(board, rules, games, seed) {
     }
     if (winner < 0) { A.capped++; continue; }
     A.wins[winner]++; A.rounds.push(round);
-    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap, outRound: q.outRound ?? null, lifeAt: q.lifeAt })) });
+    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap, outRound: q.outRound ?? null, lifeAt: q.lifeAt, enterRound: q.enterRound ?? 0, lastLoss: q.lastLoss, capRounds: q.capRounds ?? [] })) });
     A.jackpots += gJack; A.falls += gFall; if (gJack) A.gamesJack++; if (gFall) A.gamesFall++;
     A.lateOvertakes += gLate; if (gLate) A.gamesLate++; if (gCap) A.gamesCapture++;
     if (lateFirst >= 0) { A.lateFirstN++; if (lateFirst === winner) A.lateFirstWin++; }

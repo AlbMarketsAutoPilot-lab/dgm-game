@@ -25,3 +25,12 @@ Rules: frozen luck rules + waiting stairs, roadblock, two roads; 3 lifelines at 
 | 4 | 3.4% | 5.0% | 1.4% | 0.3% | 0.1% | 3.0 / 3.5 / 5.0 / 6.4 | 17% / 17% / 12% / 11% |
 
 (% = share of all players. A game lasts about 52 rounds with 4 players.) In the first 10 rounds, gains and losses are about equal. After that, the 6s pile lifelines up.
+
+## Why players meet early: the start rule (4 players, 50,000 games)
+
+| Start rule | Average round a player enters | Gap between first and last player to enter | All 4 enter within 1 round of each other | Captures in rounds 1–10 per game | Players kicked out | Last lifeline lost by a capture |
+|---|---|---|---|---|---|---|
+| Waiting stairs (approved: out on the 3rd throw at the latest) | 2.5 | 1.3 rounds | 49% of games | 2.92 | 10.2% | 97% |
+| Paper start (only a 6 lets you in) | 6.0 | 9.9 rounds | 2% of games | 1.41 | 1.3% | 100% |
+
+The stairs bring everyone onto the board within about 3 rounds, so the tokens start almost together and capture each other early. With the paper start, players enter about 10 rounds apart, as at the real table.
