@@ -98,7 +98,7 @@ The average finish gap is counted in squares (paper 57.5, short 23.9), so it shr
 3. Both crossroads, with the halved Shortcuts (#3, #4): agree?
 4. Snake Leader 69 → 97 and back 100 → 82: agree?
 
-## I-5.2 Build and measure ✅ (waiting for the owner)
+## I-5.2 Build and measure ✅ (owner approved, 14 Oct 2026: Shortcut left as it is)
 
 `data/board-short.json` is built from the approved list (the same mapping as `tools/sim/i5-draft.mjs`). It has 23 event squares; destinations are short-board squares. Its `rules` are identical to the long board's except `forks` (crossroads 41 and 80, halved Shortcuts). The fallen tree is unchanged (back 10, range 10). `text` keeps the paper's original words, so a few of them still name long-board numbers (e.g. 10 "Go to 33" now goes to 16); the real destination is `to`, and the story texts (I-5.3) replace these words on screen.
 
@@ -126,3 +126,71 @@ Commands: `node tools/sim/test/rules.test.mjs` (ALL PASS) · `node tools/sim/run
 Jackpot / fall = a jump of at least 10% of the board (long 20 squares, short 10). Average finish gap is in squares, so it is not compared (paper 57.5, short 24.1).
 
 **Result: every target is met, no change needed.** The Shortcut is 0.45 points above fair (the long board is at fair). That is far inside the ±1 point allowed for seats, so I recommend leaving it. The smallest change that lowers it would be to move a Shortcut jackpot target down one square. Lead changes pass with the smallest margin (6.8 vs 6.7).
+
+## I-5.3 Texts (waiting for the owner)
+
+**Check.** Every kept event is in the same region on the short board as on the long board, and every jump lands in the same region as its long-board jump (checked square by square against `data/board-long.json` `story.regions`). So every approved text still tells the truth, and **all 23 texts and icons are reused unchanged. No square needs a new text.**
+
+### Regions on the short board (long-board squares halved)
+
+| Region | Long board | Short board |
+|---|---|---|
+| Home Town | Start–19 | Start–9 |
+| Countryside | 20–49 | 10–24 |
+| Forest | 50–81 | 25–40 |
+| River & Lake | 82–107 | 41–53 |
+| Mountains | 108–137 | 54–68 |
+| Seaside | 138–159 | 69–79 |
+| Big City | 160–189 | 80–94 |
+| Festival Road | 190–202 | 95–100 |
+
+### Event squares
+
+| Short sq | Text (reused from long sq) | Icon | Goes to |
+|---|---|---|---|
+| 7 | Ankle-deep puddle. Next turn: one careful step. (15) | puddle | – |
+| 10 | A farmer offers a lift. Don't overthink it. (20) | tractor | 16 |
+| 15 | The Bog. Your shoes live here now. Roll a 6. (30) | boot-in-mud | – |
+| 17 | Hay cart to the forest. Not glamorous, but fast. (35) | hay-cart | 33 (Forest) |
+| 20 | Hot-air balloon. See you at the river! (40) | balloon | 51 (River & Lake) |
+| 30 | A kind stranger slips you a Bonus card. (60) | card | – |
+| 32 | A local knows a shortcut: next good square! (65) | signpost | 37 (the swap) |
+| 37 | Plot twist! Swap places with the leader. (75) | swap-arrows | – |
+| 40 | Cable car to the Mountain Lodge. Window seat! (80) | cable-car | 67 (Mountain Lodge) |
+| 45 | Bog boots. Mud? Never heard of it. (90) | boots | – |
+| 49 | Riverbank selfie. Slipped. Straight into the Bog. (97) | slide-mud | Bog 15 |
+| 54 | Spontaneous weekend off. Straight to the Mountain Lodge. (108) | suitcase | 67 (Mountain Lodge) |
+| 61 | Sledge run! Throw three times, add them all up. (123) | sledge | – |
+| 66 | Lodge booking? What booking? Back to Base Camp. (133) | crossed-bed | 55 (Base Camp) |
+| 69 | A sea snake gives you a lift. Snake Leader! (138) | snake-crown | 97 (Festival Road) |
+| 72 | Ice cream break. Everyone else doubles their next throw. (143) | ice-cream | – |
+| 74 | Wrong ferry. All the way back to the Bog. (148) | ferry | Bog 15 |
+| 79 | Wrong snake. This one goes all the way back. (158) | snake-down | 24 (Countryside) |
+| 91 | Fell asleep on the train. Woke up at the river. (183) | sleeping-face | 48 (River & Lake) |
+| 94 | Missed your stop. Back to the seaside. (188) | train-back | 78 (Seaside) |
+| 96 | Forgot your keys! Back to Central Station. (193) | key | 92 (Central Station) |
+| 99 | Forgot your keys AGAIN!!! Back to Central Station, wait two turns. (198) | two-keys | 92 (Central Station) |
+| 100 | Snake Leader? The snake wants its ride back. Down you go. (202) | snake-down | 82 (Snake Leader only) |
+
+### Rule elements and landmarks
+
+| Element | Short board | Text and icon |
+|---|---|---|
+| Title | **The Quick Trip** (GCD §10) | destination: Festival of Lights |
+| Start / END | Home / Festival of Lights (101) | reused |
+| The Bog | square **15** (long 30) | reused |
+| Porch steps / Stepping stones | stones from **15 towards 16** (long 30 → 31) | texts reused; only the square numbers in the picture note change |
+| Lanterns, Fallen tree, Bonus card, Bog boots, Snake Leader badge | – | reused |
+| Crossroads 1 | **41**, roads meet at **48** | "Crossroads. Main Road, or the Shortcut?" reused |
+| Shortcut 1 jackpot | Shortcut square **1** → 50 (long square 2 → 100) | "Rope swing over the river. Worth it!" reused |
+| Shortcut 1 fall | Shortcut square **2** → Bog (long square 5) | "Shortcuts never work. Into the Bog." reused |
+| Crossroads 2 | **80**, roads meet at **90** | "City crossroads. Main Road, or the Shortcut?" reused |
+| Shortcut 2 jackpot | Shortcut square **1** → 92 (long square 3 → 185) | "Through the park. Wait, it actually worked!" reused |
+| Shortcut 2 fall | Shortcut square **3** → Bog (long square 7) | "Lost in the alleys. Somehow, the Bog." reused |
+| Main Road, roads meet | – | reused |
+| Landmarks kept | **Base Camp 55, Mountain Lodge 67, Central Station 92** | names and icons reused |
+| Landmarks dropped | Forest Station, Hill Station, River Pier, Harbour, The Fair | no short-board square leads there |
+
+**One thing to know:** the Forest (25–40) keeps no square that names the forest. Its forest-themed squares were the fog and the trains, and they were dropped in I-5.1. Its four squares (Bonus card, the local's shortcut, the swap, the cable car) fit anywhere on the trip, so the forest is carried by the drawing on the board. I recommend no change.
+
+**Question to the owner (I-5.3):** reuse all texts and icons as listed, with no new text?
