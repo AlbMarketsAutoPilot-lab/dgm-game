@@ -112,6 +112,12 @@ const SP = { stairs: true, lifelines: 3, lifeSpend: true, types: ["thoughtful"] 
 play("Spend: thoughtful gives a lifeline to cancel a big fall", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50 }], turns: 1, players: 1, rules: SP }, (P) => both(eq(P[0].pos, 52, "pos"), eq(P[0].life, 2, "lifelines")));
 play("Spend: never the last lifeline", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50, life: 1 }], turns: 1, players: 1, rules: SP }, (P) => both(eq(P[0].pos, 20, "pos"), eq(P[0].life, 1, "lifelines")));
 play("Spend: a simple player never spends", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50 }], turns: 1, players: 1, rules: { ...SP, types: ["simple"] } }, (P) => eq(P[0].pos, 20, "pos"));
+// Winning a lifeline back by a choice
+play("Rest: thoughtful with 1 lifeline rests 3 turns, wins 1 lifeline, does not move", { dice: [], setup: [{ pos: 50, life: 1 }], turns: 3, players: 1, rules: { ...SP, lifeRest: 3 } }, (P) => both(eq(P[0].pos, 50, "pos"), eq(P[0].life, 2, "lifelines")));
+play("Rest: after winning it back, throws again", { dice: [4], setup: [{ pos: 50, life: 1 }], turns: 4, players: 1, rules: { ...SP, lifeRest: 3 } }, (P) => both(eq(P[0].pos, 54, "pos"), eq(P[0].life, 2, "lifelines")));
+play("Rest: a simple player never rests", { dice: [4], setup: [{ pos: 50, life: 1 }], turns: 1, players: 1, rules: { ...SP, lifeRest: 3, types: ["simple"] } }, (P) => eq(P[0].pos, 54, "pos"));
+play("Refuse: thoughtful with 1 lifeline refuses a big reward and takes a lifeline", { tiles: { 52: { cat: "R", type: "jump", to: 90 } }, dice: [2], setup: [{ pos: 50, life: 1 }], turns: 1, players: 1, rules: { ...SP, lifeRefuse: 20 } }, (P) => both(eq(P[0].pos, 52, "pos"), eq(P[0].life, 2, "lifelines")));
+play("Refuse: a small reward is taken", { tiles: { 52: { cat: "R", type: "jump", to: 60 } }, dice: [2], setup: [{ pos: 50, life: 1 }], turns: 1, players: 1, rules: { ...SP, lifeRefuse: 20 } }, (P) => both(eq(P[0].pos, 60, "pos"), eq(P[0].life, 1, "lifelines")));
 
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASS");
 process.exit(fail ? 1 : 0);

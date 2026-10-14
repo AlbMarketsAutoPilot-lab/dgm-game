@@ -48,3 +48,15 @@ Dropped: "throw again and add, stop or push" (pushing is almost always best, so 
 | The owner's view | The Logic Layer is still lacking. |
 
 Measured in step I-6.3: `docs/analysis/I-6_measurements.md`.
+
+## I-6.3: owner answers (14 Oct 2026)
+
+| Topic | Owner decision |
+|---|---|
+| Waiting stairs, 3 lifelines, roadblock (game event), two roads, spend a lifeline on a big punishment | ✅ Approved (still "not final" until written into the GCD in I-6.5) |
+| Winning lifelines back on reward squares | ❌ Rejected: "not through luck". A lifeline may be won back only **through logic, and not easily**: "you lose through logic, you win through logic". |
+| Reminder | The luck rules are frozen. |
+
+Candidates for winning a lifeline back by a choice, measured in I-6.4 (`docs/analysis/I-6_combination.md`):
+- **Rest:** instead of throwing, rest; 3 turns of rest in a row = 1 lifeline (also measured: 2 turns).
+- **Refuse a big reward:** when a reward would move you 20+ squares forward, you may refuse it and take a lifeline instead.

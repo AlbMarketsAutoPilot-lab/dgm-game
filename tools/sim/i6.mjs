@@ -2,16 +2,11 @@
 // Usage: node tools/sim/i6.mjs <board.json> [games=100000] [out.md]
 import { readFileSync, writeFileSync } from "node:fs";
 import { simulate } from "./engine.mjs";
+import { FORKS } from "./i6-setup.mjs";
 
 const [, , path, gamesArg = "100000", out] = process.argv;
 const board = JSON.parse(readFileSync(path, "utf8")), base = board.rules ?? {}, N = Number(gamesArg);
 
-// N3 two roads, tuned so that always taking the wild road is neither better nor worse (see the check below).
-// Forks sit over the weakest stretches of the paper board (85, 90, 95 and 163-178). The safe road is the paper squares.
-export const FORKS = [
-  { at: 82, merge: 96, len: 13, tiles: { 2: { cat: "R", type: "jump", to: 100, text: "Wild road: shortcut over the hill" }, 5: { cat: "P", type: "jump", to: 30, then: "prison", text: "Wild road: lost, into the trap" } } },
-  { at: 160, merge: 180, len: 19, tiles: { 3: { cat: "R", type: "jump", to: 185, text: "Wild road: shortcut over the hill" }, 7: { cat: "P", type: "jump", to: 30, then: "prison", text: "Wild road: lost, into the trap" } } },
-];
 const LIFE = { stairs: true, lifelines: 3 };
 const all = (t) => [t, t, t, t];
 

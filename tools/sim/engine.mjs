@@ -33,7 +33,9 @@ export const DEFAULTS = {
                          // leader; the first player to land on it (anyone) goes back `back` squares, then it is placed again
   forks: [],             // N3 two roads: [{ at, merge, len, tiles }] = every token stops at the crossroads `at`; next turn it takes
                          // the safe road (the normal squares) or the wild road (`len` squares, own `tiles`) that rejoins at `merge`
-  lifeSpend: false,      // candidate: give up a lifeline to cancel a punishment square (simple players never do)
+  lifeSpend: false,      // give up a lifeline to cancel a big punishment, never the last one (simple players never do)
+  lifeRest: 0,           // candidate: rest (do not throw) this many turns in a row to win a lifeline back (0 = off)
+  lifeRefuse: 0,         // candidate: refuse a reward worth at least this many squares to win a lifeline back (0 = off)
   types: null,           // player type per seat: "simple" (default choices) | "thoughtful" (written rules) | "wild" (always the wild road)
   bigLoss: 20,           // thoughtful player: a punishment / reward this big (squares) is "big"
 };
@@ -71,14 +73,14 @@ export function simulate(board, rules, games, seed) {
     jackpots: 0, falls: 0, gamesJack: 0, gamesFall: 0,
     captures: 0, capturesEarly: 0, capturesLate: 0, gamesCapture: 0, capturedPlayers: 0,
     bonusDefend: 0, bonusAttack: 0, jailPassUsed: 0,
-    kicked: 0, gamesLastStanding: 0, lifeSpent: 0, lifeLost: 0, lifeGained: 0, roadblockHits: 0, wildTaken: 0, safeTaken: 0, stairSteps: 0,
+    kicked: 0, outBySeat: Array(s.players).fill(0), gamesLastStanding: 0, lifeSpent: 0, lifeRested: 0, lifeRefused: 0, restTurns: 0, lifeLost: 0, lifeGained: 0, roadblockHits: 0, wildTaken: 0, safeTaken: 0, stairSteps: 0,
     hit: zero(), hitWin: zero(), oppLand: zero(), oppLandWin: zero(), oppMiss: zero(), oppMissWin: zero(),
   };
 
   for (let g = 0; g < games; g++) {
     const P = Array.from({ length: s.players }, () => ({
       pos: s.entry === "six" ? OFF : 0, skip: 0, trapped: false, slow: false, dbl: false, leader: false,
-      bonus: 0, jailPass: 0, captured: 0, tries: 0, life: s.lifelines, out: false, stairAt: 0, stairLeft: 0, onStair: false,
+      bonus: 0, jailPass: 0, captured: 0, tries: 0, rest: 0, life: s.lifelines, out: false, stairAt: 0, stairLeft: 0, onStair: false,
       lost: 0, waitEnter: 0, waitTrap: 0, dry: 0, maxDry: 0, rewards: 0, punish: 0, gained: 0, lostSq: 0,
       hits: new Set(), opp: new Map(),
     }));
@@ -117,7 +119,7 @@ export function simulate(board, rules, games, seed) {
       const p = P[pi];
       p.life--; A.lifeLost++;
       if (p.life > 0) return false;
-      p.out = true; p.pos = OUT; p.trapped = false; p.skip = 0; clearStairs(p); A.kicked++;
+      p.out = true; p.pos = OUT; p.trapped = false; p.skip = 0; clearStairs(p); A.kicked++; A.outBySeat[pi]++;
       const left = P.map((q, i) => i).filter((i) => !P[i].out);
       if (left.length === 1) { winner = left[0]; A.gamesLastStanding++; }
       return true;
@@ -212,6 +214,9 @@ export function simulate(board, rules, games, seed) {
         if (h >= 0) { P[h].bonus--; A.bonusAttack++; return; }
       }
       if (lifeSquares.has(p.pos) && p.life < s.lifelines) { p.life++; A.lifeGained++; }
+      if (s.lifeRefuse && t.cat === "R" && typeOf(pi) === "thoughtful" && p.life === 1 && swing(pi, t) >= s.lifeRefuse) {
+        p.life++; A.lifeRefused++; return; // refuse the reward, take a lifeline instead
+      }
       p.hits.add(String(p.pos));
       if (t.cat === "P") p.punish++; else if (t.cat === "R") p.rewards++;
       effect(pi, t, depth);
@@ -308,9 +313,13 @@ export function simulate(board, rules, games, seed) {
               if (s.lifelines && !s.stairs && p.tries === 3) loseLife(pi); // R16 version: 3 failed throws cost a lifeline
             }
           }
-        } else if (p.slow) { p.slow = false; p.dbl = false; moveBy(pi, 1); } // R9: move exactly 1
+        } else if (s.lifeRest && typeOf(pi) === "thoughtful" && p.life === 1 && s.lifelines > 1) { // rest instead of throwing
+          p.lost++; A.restTurns++;
+          if (++p.rest >= s.lifeRest) { p.rest = 0; p.life++; A.lifeRested++; }
+        } else if (p.slow) { p.rest = 0; p.slow = false; p.dbl = false; moveBy(pi, 1); } // R9: move exactly 1
         else {
           const from = p.pos;
+          p.rest = 0;
           let n = throwSequence(0);
           const single = n <= 5 && !p.dbl; // a single non-six throw: which square you reach is decided by the die alone
           if (p.dbl) { n *= 2; p.dbl = false; }
@@ -379,8 +388,8 @@ function summarize(board, s, A, BIG) {
       bonusDefendPerGame: f(A.bonusDefend / n, 2), bonusAttackPerGame: f(A.bonusAttack / n, 2), jailPassPerGame: f(A.jailPassUsed / n, 2),
     },
     i6: {
-      pctPlayersOut: f(100 * A.kicked / pg, 2), pctGamesLastStanding: f(100 * A.gamesLastStanding / n, 2),
-      lifelinesLostPerPlayer: f(A.lifeLost / pg, 2), lifelinesGainedPerPlayer: f(A.lifeGained / pg, 2), lifelinesSpentPerGame: f(A.lifeSpent / n, 2),
+      pctPlayersOut: f(100 * A.kicked / pg, 2), pctOutBySeat: A.outBySeat.map((k) => f(100 * k / n, 2)), pctGamesLastStanding: f(100 * A.gamesLastStanding / n, 2),
+      lifelinesLostPerPlayer: f(A.lifeLost / pg, 2), lifelinesGainedPerPlayer: f(A.lifeGained / pg, 2), lifelinesSpentPerGame: f(A.lifeSpent / n, 2), lifelinesRestedPerGame: f(A.lifeRested / n, 2), restTurnsPerGame: f(A.restTurns / n, 2), lifelinesRefusedPerGame: f(A.lifeRefused / n, 2),
       roadblockHitsPerGame: f(A.roadblockHits / n, 2), wildPerGame: f(A.wildTaken / n, 2), safePerGame: f(A.safeTaken / n, 2),
       stairStepsPerPlayer: f(A.stairSteps / pg, 2),
     },
