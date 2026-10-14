@@ -13,6 +13,8 @@ The engine implements the owner's core rules (docs/GCD.md §8.2a).
 | `node tools/sim/lifelines-final.mjs <board.json> [games] [out.md]` | Owner's final lifeline rules: kicked out, lifelines left, whole game vs baseline |
 | `node tools/sim/lifelines-compare.mjs <board.json> [games] [out.md]` | Lifeline versions side by side (A, B, B2) for the owner's choice |
 | `node tools/sim/i6.mjs <board.json> [games] [out.md]` | Step I-6: each proposal on its own (stairs, lifelines, roadblock, two roads) and the thinking target (thoughtful vs simple players) |
+| `node tools/sim/shortcut.mjs <board.json> [games]` | R20 check: one player who always takes the Shortcut against 3 simple players (fair = 25%) |
+| `node tools/sim/i5-draft.mjs [games] [out.md]` | Step I-5.1: the draft short board (built from the long board's kept events) with the owner's options, and the Shortcut fairness check |
 | `node tools/sim/options.mjs <board.json> [games] [out.md]` | Small rule options measured against the boredom target |
 
 `archive/` holds earlier engines whose results are invalid or exploratory. Do not use them.
