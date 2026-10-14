@@ -50,8 +50,11 @@ export function simulate(board, rules, games, seed) {
   const rand = rng(seed);
   // Test hooks: diceScript = fixed dice values; setup = starting state per player; turns = stop after N player turns.
   const script = s.diceScript ? [...s.diceScript] : null;
-  const d6 = script ? () => { if (!script.length) throw new Error("dice script ran out"); return script.shift(); }
-                    : () => 1 + Math.floor(rand() * 6);
+  const d6raw = script ? () => { if (!script.length) throw new Error("dice script ran out"); return script.shift(); }
+                       : () => 1 + Math.floor(rand() * 6);
+  // Counts the sixes thrown in a row at the start of each turn (statistics only; does not change the dice).
+  let run = 0, runOn = false, calls = 0;
+  const d6 = () => { const r = d6raw(); calls++; if (runOn) { if (r === 6) run++; else runOn = false; } return r; };
   const END = board.endTile, LAST = board.lastTile;
   // Wild roads: square i (1..len) of fork k has the id 1000*(k+1)+i; prog() gives its place in the race.
   const forks = s.forks ?? [], isWild = (pos) => pos > 1000, forkOf = (pos) => forks[Math.floor(pos / 1000) - 1];
@@ -83,6 +86,7 @@ export function simulate(board, rules, games, seed) {
     const P = Array.from({ length: s.players }, () => ({
       pos: s.entry === "six" ? OFF : 0, skip: 0, trapped: false, slow: false, dbl: false, leader: false,
       bonus: 0, jailPass: 0, captured: 0, tries: 0, rest: 0, life: s.lifelines, out: false, stairAt: 0, stairLeft: 0, onStair: false,
+      six1: 0, six2: 0, six3: 0, throwTurns: 0,
       lost: 0, waitEnter: 0, waitTrap: 0, dry: 0, maxDry: 0, rewards: 0, punish: 0, gained: 0, lostSq: 0,
       hits: new Set(), opp: new Map(),
     }));
@@ -286,6 +290,7 @@ export function simulate(board, rules, games, seed) {
       for (let pi = 0; pi < s.players && winner < 0; pi++) {
         const p = P[pi], before = p.pos * 8 + p.stairLeft;
         if (p.out) continue;
+        run = 0; runOn = true; const calls0 = calls;
         if (p.skip > 0) { p.skip--; p.lost++; }
         else if (p.pos === OFF || p.trapped) { // R1 / R6: only a 6 lets you in / out; that 6 gives the extra throw
           const off = p.pos === OFF, limit = off ? s.enterAfter : s.trapAfter;
@@ -329,6 +334,8 @@ export function simulate(board, rules, games, seed) {
           moveBy(pi, n);
           if (single && !isWild(from)) for (let k = from + 1; k <= from + 5 && k < END; k++) if (T[k] && !p.opp.has(k)) p.opp.set(k, from + n === k);
         }
+        runOn = false;
+        if (calls > calls0) { p.throwTurns++; if (run >= 1) p.six1++; if (run >= 2) p.six2++; if (run >= 3) p.six3++; }
         if (p.pos * 8 + p.stairLeft !== before) p.dry = 0; else if (++p.dry > p.maxDry) p.maxDry = p.dry;
         if (p.pos === END) winner = pi;
         if (s.turns && ++turnCount >= s.turns) return { players: P.map(({ hits, opp, ...rest }) => rest), diceLeft: script?.length };
@@ -344,6 +351,7 @@ export function simulate(board, rules, games, seed) {
     }
     if (winner < 0) { A.capped++; continue; }
     A.wins[winner]++; A.rounds.push(round);
+    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured })) });
     A.jackpots += gJack; A.falls += gFall; if (gJack) A.gamesJack++; if (gFall) A.gamesFall++;
     A.lateOvertakes += gLate; if (gLate) A.gamesLate++; if (gCap) A.gamesCapture++;
     if (lateFirst >= 0) { A.lateFirstN++; if (lateFirst === winner) A.lateFirstWin++; }
@@ -371,7 +379,7 @@ function summarize(board, s, A, BIG) {
   const r = [...A.rounds].sort((a, b) => a - b), q = (x) => r[Math.min(n - 1, Math.floor(x * n))];
   const f = (x, d = 1) => +x.toFixed(d);
   return {
-    rules: s, games: n, capped: A.capped,
+    rules: s, games: n, capped: A.capped, records: A.records,
     fairness: { seatWinPct: A.wins.map((w) => f(100 * w / n, 2)), ci95: f(196 * Math.sqrt(fair * (1 - fair) / n), 2) },
     length: { mean: f(r.reduce((a, b) => a + b, 0) / n), p10: q(0.1), median: q(0.5), p90: q(0.9) },
     excitement: {
