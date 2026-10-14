@@ -137,7 +137,7 @@ button:focus-visible { outline: 3px solid #f2c230; outline-offset: 2px; }
 .setup .go { font-size: 1.6rem; padding: 10px 40px; }
 
 /* ---- Illustrations: transform helpers; no motion with "reduce motion" ---- */
-.art * { transform-box: fill-box; transform-origin: center; }
+.art *:not([transform]) { transform-box: fill-box; transform-origin: center; }
 .art-icon .bob { animation: icon-bob 2.4s ease-in-out infinite alternate; }
 @keyframes icon-bob { from { transform: translateY(.4px) rotate(-3deg); } to { transform: translateY(-.6px) rotate(3deg); } }
 @media (prefers-reduced-motion: reduce) {

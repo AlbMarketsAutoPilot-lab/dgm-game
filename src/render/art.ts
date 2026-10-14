@@ -3,8 +3,11 @@
 // only, so it stays light on phones). Animations run only while the square is on screen and stop entirely with
 // the system setting "reduce motion" (see board.css).
 //
-// First set (style sample for the owner). Names without an illustration yet fall back to their line icon,
-// gently moving (`artFor`).
+// Part 1 (this file): the first set, approved by the owner. Part 2 `art-travel.ts`, part 3 `art-places.ts`, shared
+// pieces and motions in `art-kit.ts`. Every icon name in the board files has an illustration (test/render.test.ts).
+import { KIT_CSS } from "./art-kit";
+import { PLACES } from "./art-places";
+import { TRAVEL } from "./art-travel";
 import { ICONS } from "./icons";
 
 const INK = "#4b2377";
@@ -243,15 +246,17 @@ ART["two-keys"] = { // "Forgot your keys AGAIN!!!"
     .art-two-keys .bang { animation: bang 1.2s ease-in-out infinite; }`,
 };
 
-/** Every illustration's CSS, to inject once. */
+Object.assign(ART, TRAVEL, PLACES);
+
+/** Every illustration's CSS (and the shared motions), to inject once. */
 export function artCss(): string {
-  return Object.values(ART).map((a) => a.css).join("\n");
+  return KIT_CSS + Object.values(ART).map((a) => a.css).join("\n");
 }
 
 /** Whether `name` has its own illustration (otherwise `artFor` draws the line icon). */
 export const hasArt = (name: string): boolean => name in ART;
 
-/** Inline SVG for an icon name: its illustration, or its line icon with a gentle bob until it has one. */
+/** Inline SVG for an icon name: its illustration (the line icon only as a safety net for an unknown name). */
 export function artFor(name: string, label: string): string {
   const a = ART[name];
   if (a) return `<svg class="art art-${name}" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${label}">${a.svg}</svg>`;
