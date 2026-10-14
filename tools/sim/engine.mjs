@@ -34,6 +34,8 @@ export const DEFAULTS = {
   forks: [],             // N3 two roads: [{ at, merge, len, tiles }] = every token stops at the crossroads `at`; next turn it takes
                          // the safe road (the normal squares) or the wild road (`len` squares, own `tiles`) that rejoins at `merge`
   lifeSpend: false,      // give up a lifeline to cancel a big punishment, never the last one (simple players never do)
+  lifeSpendMax: Infinity, // spends allowed per player per game
+  lifeSpendUntil: Infinity, // spending only cancels squares before this one (keeps the late drama)
   lifeRest: 0,           // candidate: rest (do not throw) this many turns in a row to win a lifeline back (0 = off)
   lifeRefuse: 0,         // candidate: refuse a reward worth at least this many squares to win a lifeline back (0 = off)
   types: null,           // player type per seat: "simple" (default choices) | "thoughtful" (written rules) | "wild" (always the wild road)
@@ -206,8 +208,9 @@ export function simulate(board, rules, games, seed) {
       if (t.cat === "P" && p.bonus > 0 && wantsDefend(pi, t)) {
         p.bonus--; A.bonusDefend++; return;
       }
-      if (s.lifeSpend && t.cat === "P" && typeOf(pi) === "thoughtful" && p.life >= 2 && swing(pi, t) <= -s.bigLoss) {
-        p.life--; A.lifeSpent++; return;
+      if (s.lifeSpend && t.cat === "P" && typeOf(pi) === "thoughtful" && p.life >= 2 && (p.spent ?? 0) < s.lifeSpendMax
+          && prog(p.pos) < s.lifeSpendUntil && swing(pi, t) <= -s.bigLoss) {
+        p.life--; p.spent = (p.spent ?? 0) + 1; A.lifeSpent++; return;
       }
       if (t.cat === "R" && pi === leaderIdx()) {
         const h = P.findIndex((q, i) => i !== pi && q.bonus > 0 && wantsAttack(i, pi, t));
