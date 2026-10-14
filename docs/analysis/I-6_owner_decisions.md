@@ -72,3 +72,7 @@ Candidates for winning a lifeline back by a choice, measured in I-6.4 (`docs/ana
 | Open | How to win a lifeline back through logic, not easily. Asked: brain challenge / mind duel / planning on the board → owner: no preference. |
 
 Engine options `lifeSpend`, `lifeRest`, `lifeRefuse`, `lifeSpendMax`, `lifeSpendUntil` stay in the code, switched off (they are not part of any approved set).
+
+## Owner rule (14 Oct 2026, after the mind-duel proposal)
+
+**Lifelines are too scarce to play with.** A player can lose two lifelines at Start and in the trap and keep only one. So **no logic rule may put a lifeline at risk** (no spending, no betting, no duels for lifelines). Mind duel: ❌ rejected.
