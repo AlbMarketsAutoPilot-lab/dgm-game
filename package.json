@@ -1,0 +1,22 @@
+{
+  "name": "dgm-game",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Don't Get Mad! — a hand-drawn family race game (web + Android).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:sim": "vitest run --config vitest.sim.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}
