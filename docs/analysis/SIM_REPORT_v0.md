@@ -1,3 +1,5 @@
+> **INVALID (14 Oct 2026):** measured without the real core rules (entering with a 6 onto Start, extra throws on 6, capture). See `docs/GCD.md` §8.2a. To be redone.
+
 # Simulation Report v0 — the paper board as drawn
 
 **Source of every number:** [`sim-v0-results.md`](sim-v0-results.md), produced by

@@ -77,6 +77,30 @@ Every rule, tile and screen must serve these. If something fails a pillar, it is
 Throw the die → move forward square by square → if you land on an event square, the event happens → next player. The first to reach **END** wins.
 **No chaining** ✅ (owner, Q4): arriving on a square because of an event does not trigger that square's event, unless the event says so.
 
+### 8.2a Core rules of the original game ✅ (owner answers, 14 Oct 2026)
+
+These are the paper game's real rules. Any change to them must be small, measured, and approved by the owner.
+
+| # | Rule |
+|---|---|
+| R1 | **Entering:** players begin off the board. A **6** puts the token on the **Start square** (no number). Because it is a 6, the player throws again and advances from Start. |
+| R2 | **Sixes:** every 6 gives an extra throw. The throws add up and the token moves **once** by the total (e.g. 6, 6, 1, 5 → 18). **Maximum three 6s:** on the third 6 the player moves 6 × 3 = 18 and the turn ends. |
+| R3 | **Passing over:** squares passed during a move have no effect and capture nobody. Only the final square counts. |
+| R4 | **Capture (universal):** a player who lands on a square occupied by another player, **by a throw or by any jump** (ladder, snake, "go to X", swap), sends that player back to the **Start square**. No safe squares; only Start can hold several players. |
+| R5 | **Back on Start:** a player sent to Start (by capture or by square 10) moves normally from their next turn and does **not** need another 6. |
+| R6 | **Trap square (paper: Prison 30), and the "danger road" squares that send you there:** landing on it by a normal throw also traps you. Only a 6 gets you out; that 6 does not move you. Because it is a 6, you throw again and move normally. The out-6 counts as the first of the maximum three (6 out, 6, 6 → move 12, end). |
+| R7 | **Hospital 50:** miss 3 turns. |
+| R8 | **END:** needs an exact throw; if the total is too big, you stay where you are. |
+| R9 | **15:** next turn you move exactly 1, whatever the die shows. **45:** throw twice, one move with the total. **123:** throw 3 times, one move with the total; the square you land on applies. **143:** the other players double their next throw only. |
+| R10 | **75:** change place with the player closest to the END (the leader). |
+| R11 | **65 / 128:** the nearest reward / punishment **forward only**. **178:** back to **167**. |
+| R12 | 2–4 players, one token each. |
+| R13 | **Content:** the trap mechanic stays. Only its name and story change (e.g. "prison" → a neutral journey trap) to protect the family rating. |
+
+Still open: **Q17**, the two cards (photo 5, pink; photo 21, purple). R1 by analogy with R6: the entering 6 counts as the first of the three 6s — *to confirm*.
+
+**All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, ablation). They will be redone with the corrected engine.
+
 ### 8.3 Event families
 All events belong to a few families. The exact squares, sizes and amounts are decided in the tuning step (§13), with the simulator.
 
@@ -97,11 +121,8 @@ All events belong to a few families. The exact squares, sizes and amounts are de
 - 💡 "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey.
 - 💡 An event square about every 5 squares, as on paper.
 
-### 8.5 Things the paper board did that must change 📊
-Measured on the paper board (`docs/analysis/SIM_REPORT_v0.md`):
-- Waiting at Start for a 6 cost about **6.7 turns per player**, and **29%** of players had a run of 10+ turns without moving. This breaks P3.
-- Prison ("only out with a 6") and Hospital (3 turns) add more long waits. This breaks P3.
-- The rules on which waits stay (and in what form) are decided by measurement in §13.
+### 8.5 Things the paper board did that may need to change
+To be re-measured with the corrected rules (§8.2a). Earlier numbers are invalid.
 
 ## 9. Story: "The Journey" (P4)
 
