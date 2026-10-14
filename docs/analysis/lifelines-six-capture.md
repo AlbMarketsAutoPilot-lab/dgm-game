@@ -15,3 +15,13 @@ Rules: frozen luck rules + waiting stairs, roadblock, two roads; 3 lifelines at 
 | 4 | All games | 10.2% | 34.6% | 11.0 | 7–14 | 9.3 | 0.8 | 1.6 |
 | 4 | Short game | 8.5% | 28.0% | 7.5 | 5–10 | 5.6 | 0.7 | 1.1 |
 | 4 | Long game | 13.2% | 43.6% | 15.8 | 12–19 | 14.0 | 1.0 | 2.3 |
+
+## When are players kicked out? (same rules, 100,000 games)
+
+| Players | Out in rounds 1–5 | 6–10 | 11–20 | 21–30 | after 30 | Average lifelines after round 5 / 10 / 20 / 30 | Players with 0–1 lifelines after round 5 / 10 / 20 / 30 |
+|---|---|---|---|---|---|---|---|
+| 2 | 0.5% | 0.8% | 0.3% | 0.1% | 0.0% | 3.3 / 4.1 / 5.9 / 7.6 | 5% / 4% / 1% / 0% |
+| 3 | 1.7% | 2.5% | 0.8% | 0.2% | 0.1% | 3.1 / 3.8 / 5.4 / 7.0 | 12% / 11% / 7% / 6% |
+| 4 | 3.4% | 5.0% | 1.4% | 0.3% | 0.1% | 3.0 / 3.5 / 5.0 / 6.4 | 17% / 17% / 12% / 11% |
+
+(% = share of all players. A game lasts about 52 rounds with 4 players.) In the first 10 rounds, gains and losses are about equal. After that, the 6s pile lifelines up.

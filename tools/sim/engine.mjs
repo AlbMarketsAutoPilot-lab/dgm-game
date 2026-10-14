@@ -134,7 +134,7 @@ export function simulate(board, rules, games, seed) {
       const p = P[pi];
       p.life--; A.lifeLost++;
       if (p.life > 0) return false;
-      p.out = true; p.pos = OUT; p.trapped = false; p.skip = 0; clearStairs(p); A.kicked++; A.outBySeat[pi]++;
+      p.out = true; p.outRound = round; p.pos = OUT; p.trapped = false; p.skip = 0; clearStairs(p); A.kicked++; A.outBySeat[pi]++;
       const left = P.map((q, i) => i).filter((i) => !P[i].out);
       if (left.length === 1) { winner = left[0]; A.gamesLastStanding++; }
       return true;
@@ -296,6 +296,7 @@ export function simulate(board, rules, games, seed) {
     while (winner < 0 && round < 3000) {
       round++;
       if (s.roadblock && rb === null) placeRoadblock();
+      if (s.perGame && (round === 6 || round === 11 || round === 21 || round === 31)) P.forEach((q) => { (q.lifeAt ??= []).push(q.out ? 0 : q.life); });
       for (let pi = 0; pi < s.players && winner < 0; pi++) {
         const p = P[pi], before = p.pos * 8 + p.stairLeft;
         if (p.out) continue;
@@ -361,7 +362,7 @@ export function simulate(board, rules, games, seed) {
     }
     if (winner < 0) { A.capped++; continue; }
     A.wins[winner]++; A.rounds.push(round);
-    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap })) });
+    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap, outRound: q.outRound ?? null, lifeAt: q.lifeAt })) });
     A.jackpots += gJack; A.falls += gFall; if (gJack) A.gamesJack++; if (gFall) A.gamesFall++;
     A.lateOvertakes += gLate; if (gLate) A.gamesLate++; if (gCap) A.gamesCapture++;
     if (lateFirst >= 0) { A.lateFirstN++; if (lateFirst === winner) A.lateFirstWin++; }
