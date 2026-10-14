@@ -130,14 +130,14 @@ Game duration is **not** a target ✅. It comes from luck, and the simulator onl
 | Group | Question | Measures | Status in code (`tools/sim/engine.mjs`) |
 |---|---|---|---|
 | **A. Fairness** (before the game) | Does every player start with the same chance? | Win % by seat (turn order), with 95% confidence interval | 📊 exists |
-| **B. Excitement** (during the game) | Is it full of swings and surprises until the end? | Lead changes per game; win % of the player leading at halfway (lower = more open); win % of the player last at halfway (higher = more hope); **late overtakes**; **close finishes**; **jackpots and falls per game**; % of games where someone hits a jackpot | 📊 first four exist · late overtakes, close finishes and jackpot counts **to be added** |
+| **B. Excitement** (during the game) | Is it full of swings and surprises until the end? | Lead changes per game; win % of the player leading at halfway (lower = more open); win % of the player last at halfway (higher = more hope); **late overtakes**; **close finishes**; **jackpots and falls per game**; % of games where someone hits a jackpot | 📊 all exist (step I-2) |
 | **C. Boredom** | Does anyone wait too long? | Turns lost per player; % of players with 10+ turns without moving; longest no-move run | 📊 exists |
 
 ### 11.2 How a single event is judged
 For every event square, the simulator reports:
 - **Landing chance:** % of players who land on it in a game (📊 exists).
 - **Win % if landed vs not landed** (📊 exists).
-- **Effect on the game:** how much it raises the excitement measures (group B) and the boredom measures (group C) when it is present compared with removed (**to be added**: "with vs without" runs).
+- **Effect on the game:** how much it raises the excitement measures (group B) and the boredom measures (group C) when it is present compared with removed (📊 `tools/sim/ablate.mjs`, with a noise row).
 
 **Key principle ✅ (from the owner's feedback):** a big event is **not unfair**, because every player has the same chance to land on it. Fairness is judged only by group A. A big event is judged by whether it adds excitement (B) without adding boredom (C).
 
@@ -165,7 +165,7 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 | # | Step | Output |
 |---|---|---|
 | I-1 | **Approve this GCD v2**: vision, pillars, stages, event families, measurement principle, proposals (💡) | Owner decisions written into this file |
-| I-2 | **Engine upgrade**: add the missing measures (late overtakes, close finishes, jackpots and falls per game, with-vs-without event runs) | `tools/sim/engine.mjs` + test that the paper board still gives the same numbers |
+| I-2 ✅ | **Engine upgrade**: add the missing measures (late overtakes, close finishes, jackpots and falls per game, with-vs-without event runs) | `tools/sim/engine.mjs` + test that the paper board still gives the same numbers |
 | I-3 | **Long board, Chance Game**: place and size the events, start rule, end rule and waiting rules, tuned to the targets in §11.3 | `data/board-long.json` + measurement report |
 | I-4 | **Journey story** written over the tuned long board, square by square | Texts in `data/board-long.json` |
 | I-5 | **Short board** built from the best long-board events | `data/board-short.json` + measurement report |

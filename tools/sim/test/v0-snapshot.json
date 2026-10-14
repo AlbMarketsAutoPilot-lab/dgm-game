@@ -1,0 +1,360 @@
+{
+ "seatWinPct": [
+  24.91,
+  25.38,
+  24.98,
+  24.74
+ ],
+ "rounds": {
+  "mean": 52.5,
+  "p10": 30,
+  "median": 50,
+  "p90": 78,
+  "max": 227
+ },
+ "perPlayer": {
+  "turnsLost": 11.7,
+  "boostsHit": 4.29,
+  "setbacksHit": 3.79,
+  "squaresGained": 99.2,
+  "squaresLost": 97.5,
+  "longestNoMove": 7.3,
+  "pctNoMove10": 26.7
+ },
+ "resilience": {
+  "leadChanges": 6.2,
+  "winIfLeadingAtMid": 33.9,
+  "winIfLastAtMid": 17.1,
+  "comebackPct": 66.1
+ },
+ "tiles": [
+  {
+   "tile": 5,
+   "cat": "S",
+   "type": "skip",
+   "hitPct": 0,
+   "winPctIfHit": null,
+   "impactPts": null
+  },
+  {
+   "tile": 10,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 26.3,
+   "winPctIfHit": 20.8,
+   "impactPts": -4.7
+  },
+  {
+   "tile": 15,
+   "cat": "S",
+   "type": "slowNext",
+   "hitPct": 26.6,
+   "winPctIfHit": 24.7,
+   "impactPts": -0.5
+  },
+  {
+   "tile": 20,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 26.7,
+   "winPctIfHit": 27.6,
+   "impactPts": 2.4
+  },
+  {
+   "tile": 25,
+   "cat": "S",
+   "type": "skip",
+   "hitPct": 19.5,
+   "winPctIfHit": 24,
+   "impactPts": -0.2
+  },
+  {
+   "tile": 30,
+   "cat": "S",
+   "type": "wait",
+   "hitPct": 20.2,
+   "winPctIfHit": 22.5,
+   "impactPts": -2
+  },
+  {
+   "tile": 35,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 20.8,
+   "winPctIfHit": 25.9,
+   "impactPts": 2
+  },
+  {
+   "tile": 40,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 26.3,
+   "winPctIfHit": 25.7,
+   "impactPts": 3.6
+  },
+  {
+   "tile": 45,
+   "cat": "B",
+   "type": "rollSum",
+   "hitPct": 20.2,
+   "winPctIfHit": 23.1,
+   "impactPts": -0.1
+  },
+  {
+   "tile": 50,
+   "cat": "S",
+   "type": "skip",
+   "hitPct": 19.6,
+   "winPctIfHit": 19.9,
+   "impactPts": -2.3
+  },
+  {
+   "tile": 55,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 26.5,
+   "winPctIfHit": 21.1,
+   "impactPts": -0.8
+  },
+  {
+   "tile": 60,
+   "cat": "B",
+   "type": "card",
+   "hitPct": 24.8,
+   "winPctIfHit": 26.9,
+   "impactPts": 6.6
+  },
+  {
+   "tile": 65,
+   "cat": "B",
+   "type": "nearest",
+   "hitPct": 23.6,
+   "winPctIfHit": 28.2,
+   "impactPts": 6.5
+  },
+  {
+   "tile": 70,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 15.4,
+   "winPctIfHit": 22.7,
+   "impactPts": -0.1
+  },
+  {
+   "tile": 75,
+   "cat": "B",
+   "type": "swapAhead",
+   "hitPct": 43.3,
+   "winPctIfHit": 28,
+   "impactPts": 5.3
+  },
+  {
+   "tile": 80,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 29.8,
+   "winPctIfHit": 30.9,
+   "impactPts": 11
+  },
+  {
+   "tile": 85,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 20.4,
+   "winPctIfHit": 22.4,
+   "impactPts": 4.5
+  },
+  {
+   "tile": 90,
+   "cat": "B",
+   "type": "card",
+   "hitPct": 17.3,
+   "winPctIfHit": 17.1,
+   "impactPts": 1
+  },
+  {
+   "tile": 95,
+   "cat": "S",
+   "type": "skip",
+   "hitPct": 15.6,
+   "winPctIfHit": 15.5,
+   "impactPts": -1.4
+  },
+  {
+   "tile": 97,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 16.5,
+   "winPctIfHit": 13.5,
+   "impactPts": -3.6
+  },
+  {
+   "tile": 101,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 12.5,
+   "winPctIfHit": 14.4,
+   "impactPts": -2.8
+  },
+  {
+   "tile": 108,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 25.9,
+   "winPctIfHit": 29.3,
+   "impactPts": 8.9
+  },
+  {
+   "tile": 113,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 19.2,
+   "winPctIfHit": 16.4,
+   "impactPts": -4.5
+  },
+  {
+   "tile": 118,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 14.4,
+   "winPctIfHit": 22.1,
+   "impactPts": 1.4
+  },
+  {
+   "tile": 123,
+   "cat": "B",
+   "type": "rollSum",
+   "hitPct": 11.1,
+   "winPctIfHit": 25.3,
+   "impactPts": 3.8
+  },
+  {
+   "tile": 128,
+   "cat": "S",
+   "type": "nearest",
+   "hitPct": 10,
+   "winPctIfHit": 17.7,
+   "impactPts": -5.1
+  },
+  {
+   "tile": 133,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 16.3,
+   "winPctIfHit": 18,
+   "impactPts": -6.9
+  },
+  {
+   "tile": 138,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 21.9,
+   "winPctIfHit": 52,
+   "impactPts": 26.6
+  },
+  {
+   "tile": 143,
+   "cat": "S",
+   "type": "doubleOthers",
+   "hitPct": 15.7,
+   "winPctIfHit": 22.2,
+   "impactPts": -3.2
+  },
+  {
+   "tile": 148,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 15.8,
+   "winPctIfHit": 13.3,
+   "impactPts": -12.4
+  },
+  {
+   "tile": 153,
+   "cat": "S",
+   "type": "skip",
+   "hitPct": 11.8,
+   "winPctIfHit": 26.9,
+   "impactPts": -1.1
+  },
+  {
+   "tile": 158,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 13.4,
+   "winPctIfHit": 15.9,
+   "impactPts": -15.9
+  },
+  {
+   "tile": 163,
+   "cat": "B",
+   "type": "extraRoll",
+   "hitPct": 12.3,
+   "winPctIfHit": 37.1,
+   "impactPts": 2.4
+  },
+  {
+   "tile": 168,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 14.3,
+   "winPctIfHit": 37.1,
+   "impactPts": 1.9
+  },
+  {
+   "tile": 173,
+   "cat": "B",
+   "type": "jump",
+   "hitPct": 11.7,
+   "winPctIfHit": 46.4,
+   "impactPts": 11.4
+  },
+  {
+   "tile": 178,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 6.7,
+   "winPctIfHit": 34.5,
+   "impactPts": -1
+  },
+  {
+   "tile": 183,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 9.1,
+   "winPctIfHit": 13.8,
+   "impactPts": -27.1
+  },
+  {
+   "tile": 188,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 12.4,
+   "winPctIfHit": 26.9,
+   "impactPts": -21.7
+  },
+  {
+   "tile": 193,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 8.6,
+   "winPctIfHit": 43.8,
+   "impactPts": -12.2
+  },
+  {
+   "tile": 198,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 10.3,
+   "winPctIfHit": 38.2,
+   "impactPts": -25.1
+  },
+  {
+   "tile": 202,
+   "cat": "S",
+   "type": "jump",
+   "hitPct": 8.6,
+   "winPctIfHit": 26,
+   "impactPts": -16.9
+  }
+ ]
+}

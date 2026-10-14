@@ -17,7 +17,8 @@ export const DEFAULTS = {
   thinker: false,      // optional mode: roll 2 dice, choose one
   handLimit: 2,        // max cards held
   policies: null,      // array of "casual" | "smart" per seat (default all casual)
-  catchUp: 0,          // "Tailwind": the traveller alone in last place adds this to every throw
+  catchUp: 0,
+  bigJump: null,       // a jump of at least this many squares counts as a jackpot (forward) or a fall (back); default 10% of the board          // "Tailwind": the traveller alone in last place adds this to every throw
 };
 
 // Normalise a v0 (paper) tile into the v1 effect vocabulary.
@@ -45,6 +46,8 @@ export function simulate(board, settings, games, seed) {
   const rand = rng(seed);
   const d6 = () => 1 + Math.floor(rand() * 6);
   const T = board.tiles, END = board.endTile, MID = Math.floor(board.lastTile / 2);
+  const LATE = Math.ceil(board.lastTile * 0.75);           // the last quarter of the board
+  const BIG = s.bigJump ?? Math.round(board.lastTile * 0.1);
   const policies = s.policies ?? Array(s.players).fill("casual");
   const tileKeys = Object.keys(T);
 
@@ -92,6 +95,9 @@ export function simulate(board, settings, games, seed) {
     oppLand: Object.fromEntries(tileKeys.map((k) => [k, 0])), oppLandWin: Object.fromEntries(tileKeys.map((k) => [k, 0])),
     oppMiss: Object.fromEntries(tileKeys.map((k) => [k, 0])), oppMissWin: Object.fromEntries(tileKeys.map((k) => [k, 0])),
     cardsUsed: 0, capped: 0,
+    // excitement measures (step I-2)
+    lateOvertakes: 0, gamesLateOvertake: 0, lateFirstN: 0, lateFirstWin: 0,
+    finishGap: 0, closeFinish: 0, jackpots: 0, falls: 0, gamesJackpot: 0, gamesFall: 0,
   };
 
   for (let g = 0; g < games; g++) {
@@ -102,7 +108,13 @@ export function simulate(board, settings, games, seed) {
     }));
     const hand = (p) => p.cards.umbrella + p.cards.compass + p.cards.jailPass;
 
-    const jumpTo = (p, to) => { const d = to - p.pos; if (d >= 0) p.gained += d; else p.lostSq -= d; p.pos = to; };
+    let gJack = 0, gFall = 0, gLate = 0, lateFirst = -1;
+    const jumpTo = (p, to) => {
+      const d = to - p.pos;
+      if (d >= 0) p.gained += d; else p.lostSq -= d;
+      if (d >= BIG) gJack++; else if (-d >= BIG) gFall++;
+      p.pos = to;
+    };
     const startWait = (p, e) => {
       if (e.pass && p.cards[e.pass] > 0) { p.cards[e.pass]--; agg.cardsUsed++; return; }
       p.wait = { min: e.min, left: e.max };
@@ -217,7 +229,8 @@ export function simulate(board, settings, games, seed) {
         if (p.pos >= END) winner = pi;
       }
       let li = 0; P.forEach((q, i) => { if (q.pos > P[li].pos) li = i; });
-      if (leader >= 0 && li !== leader) agg.leadChanges++;
+      if (leader >= 0 && li !== leader) { agg.leadChanges++; if (P[li].pos >= LATE) gLate++; }
+      if (lateFirst < 0 && P[li].pos >= LATE) lateFirst = li;
       leader = li;
       if (!mid && P[li].pos >= MID) {
         const order = P.map((q, i) => [q.pos, i]).sort((a, b) => b[0] - a[0]);
@@ -226,6 +239,11 @@ export function simulate(board, settings, games, seed) {
     }
     if (winner < 0) { agg.capped++; continue; }
     agg.wins[winner]++; agg.rounds.push(round);
+    agg.jackpots += gJack; agg.falls += gFall; if (gJack) agg.gamesJackpot++; if (gFall) agg.gamesFall++;
+    agg.lateOvertakes += gLate; if (gLate) agg.gamesLateOvertake++;
+    if (lateFirst >= 0) { agg.lateFirstN++; if (lateFirst === winner) agg.lateFirstWin++; }
+    const runnerUp = Math.max(...P.filter((_, i) => i !== winner).map((q) => q.pos));
+    agg.finishGap += END - runnerUp; if (END - runnerUp <= 6) agg.closeFinish++;
     if (mid) {
       agg.midN++;
       if (mid.first === winner) agg.midFirstWin++; else agg.comeback++;
@@ -283,6 +301,18 @@ function summarize(board, s, agg) {
       winIfLeadingAtMid: +(100 * agg.midFirstWin / agg.midN).toFixed(1),
       winIfLastAtMid: +(100 * agg.midLastWin / agg.midN).toFixed(1),
       comebackPct: +(100 * agg.comeback / agg.midN).toFixed(1),
+    },
+    excitement: {
+      bigJumpSquares: s.bigJump ?? Math.round(board.lastTile * 0.1),
+      jackpotsPerGame: +(agg.jackpots / n).toFixed(2),
+      fallsPerGame: +(agg.falls / n).toFixed(2),
+      pctGamesWithJackpot: +(100 * agg.gamesJackpot / n).toFixed(1),
+      pctGamesWithFall: +(100 * agg.gamesFall / n).toFixed(1),
+      lateOvertakesPerGame: +(agg.lateOvertakes / n).toFixed(2),
+      pctGamesWithLateOvertake: +(100 * agg.gamesLateOvertake / n).toFixed(1),
+      winIfFirstIntoLastQuarter: +(100 * agg.lateFirstWin / agg.lateFirstN).toFixed(1),
+      avgFinishGap: +(agg.finishGap / n).toFixed(1),
+      pctCloseFinish: +(100 * agg.closeFinish / n).toFixed(1),
     },
     tiles,
   };
