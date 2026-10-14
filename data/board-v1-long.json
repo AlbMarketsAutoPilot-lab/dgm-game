@@ -1,0 +1,532 @@
+{
+ "id": "v1-long",
+ "title": "The Great Journey",
+ "description": "Long board: Start + tiles 1-202 + END (203 tiles after Start). One continuous journey from Home to the Festival of Lights. cat B = boost, S = setback, C = choice, place = landmark (no effect).",
+ "lastTile": 202,
+ "endTile": 203,
+ "start": {
+  "title": "Home",
+  "text": "Backpack packed - the journey begins!"
+ },
+ "end": {
+  "title": "Festival of Lights",
+  "text": "You made it to the Festival of Lights!"
+ },
+ "chapters": [
+  {
+   "id": "town",
+   "title": "Home Town",
+   "from": 0,
+   "to": 25
+  },
+  {
+   "id": "country",
+   "title": "Countryside",
+   "from": 26,
+   "to": 50
+  },
+  {
+   "id": "forest",
+   "title": "Forest",
+   "from": 51,
+   "to": 75
+  },
+  {
+   "id": "lake",
+   "title": "River & Lake",
+   "from": 76,
+   "to": 102
+  },
+  {
+   "id": "mountain",
+   "title": "Mountains",
+   "from": 103,
+   "to": 135
+  },
+  {
+   "id": "sea",
+   "title": "Seaside",
+   "from": 136,
+   "to": 160
+  },
+  {
+   "id": "city",
+   "title": "Big City",
+   "from": 161,
+   "to": 184
+  },
+  {
+   "id": "festival",
+   "title": "Festival Road",
+   "from": 185,
+   "to": 203
+  }
+ ],
+ "tiles": {
+  "5": {
+   "cat": "S",
+   "type": "skip",
+   "turns": 1,
+   "icon": "shoe",
+   "title": "Shoelaces!",
+   "text": "Tie your shoelaces - wait 1 turn."
+  },
+  "10": {
+   "cat": "S",
+   "type": "jump",
+   "to": 0,
+   "icon": "ticket",
+   "title": "Forgot your ticket",
+   "text": "Run back home to get it."
+  },
+  "15": {
+   "cat": "S",
+   "type": "slowNext",
+   "icon": "crossing",
+   "title": "Busy crossing",
+   "text": "Next turn you move just 1 square."
+  },
+  "20": {
+   "cat": "B",
+   "type": "jump",
+   "to": 33,
+   "icon": "bus",
+   "title": "Early bus",
+   "text": "Hop on the early bus!"
+  },
+  "25": {
+   "cat": "B",
+   "type": "extraRoll",
+   "icon": "bus",
+   "title": "Bus arrives",
+   "text": "The bus comes right away - throw once more!"
+  },
+  "30": {
+   "cat": "S",
+   "type": "wait",
+   "min": 4,
+   "max": 2,
+   "icon": "bike",
+   "title": "Flat tyre",
+   "text": "Fix your bike: move on with a 4, 5 or 6 (at most 2 tries)."
+  },
+  "35": {
+   "cat": "B",
+   "type": "jump",
+   "to": 66,
+   "icon": "tractor",
+   "title": "Tractor ride",
+   "text": "A friendly farmer drives you to the forest."
+  },
+  "40": {
+   "cat": "B",
+   "type": "jump",
+   "to": 78,
+   "icon": "balloon",
+   "title": "Hot-air balloon",
+   "text": "Float over the fields to the river!"
+  },
+  "45": {
+   "cat": "B",
+   "type": "rollSum",
+   "dice": 2,
+   "icon": "clover",
+   "title": "Four-leaf clover",
+   "text": "Throw twice and move the total."
+  },
+  "50": {
+   "cat": "S",
+   "type": "skip",
+   "turns": 2,
+   "icon": "rain",
+   "title": "Rainstorm",
+   "text": "Shelter in the barn - skip 2 turns."
+  },
+  "55": {
+   "cat": "B",
+   "type": "jump",
+   "to": 71,
+   "icon": "train",
+   "title": "Forest railway",
+   "text": "Ride the little train to Forest Station."
+  },
+  "60": {
+   "cat": "B",
+   "type": "card",
+   "card": "umbrella",
+   "icon": "umbrella",
+   "title": "Umbrella",
+   "text": "Keep this card: it can protect you from one setback."
+  },
+  "65": {
+   "cat": "B",
+   "type": "nearest",
+   "target": "B",
+   "icon": "marker",
+   "title": "Trail marker",
+   "text": "Follow the marker to the next boost and use it."
+  },
+  "70": {
+   "cat": "S",
+   "type": "jump",
+   "to": 55,
+   "icon": "train",
+   "title": "Missed the train",
+   "text": "Back to the platform."
+  },
+  "71": {
+   "cat": "place",
+   "type": "place",
+   "icon": "station",
+   "title": "Forest Station",
+   "text": ""
+  },
+  "75": {
+   "cat": "B",
+   "type": "swapAhead",
+   "icon": "swap",
+   "title": "Shared ride",
+   "text": "Swap places with the traveller just ahead of you."
+  },
+  "80": {
+   "cat": "B",
+   "type": "jump",
+   "to": 92,
+   "icon": "canoe",
+   "title": "Canoe trip",
+   "text": "Paddle downstream to the river beach."
+  },
+  "85": {
+   "cat": "B",
+   "type": "jump",
+   "to": 94,
+   "icon": "boat",
+   "title": "Boat ride",
+   "text": "Sail across the lake to the river beach path."
+  },
+  "90": {
+   "cat": "B",
+   "type": "card",
+   "card": "compass",
+   "icon": "compass",
+   "title": "Compass",
+   "text": "Keep this card: throw again once when you like."
+  },
+  "92": {
+   "cat": "place",
+   "type": "place",
+   "icon": "beach",
+   "title": "River Beach",
+   "text": ""
+  },
+  "95": {
+   "cat": "S",
+   "type": "skip",
+   "turns": 1,
+   "icon": "bridge",
+   "title": "Bridge repairs",
+   "text": "Wait 1 turn while the bridge is fixed."
+  },
+  "97": {
+   "cat": "C",
+   "type": "choice",
+   "icon": "reeds",
+   "title": "Path through the reeds",
+   "text": "Take the shortcut? Throw: 4-6 you jump ahead, 1-3 you wait 1 turn. Or stay on the path.",
+   "options": [
+    {
+     "label": "Shortcut",
+     "type": "gamble",
+     "min": 4,
+     "win": {
+      "type": "jump",
+      "to": 105
+     },
+     "lose": {
+      "type": "skip",
+      "turns": 1
+     }
+    },
+    {
+     "label": "Stay on the path",
+     "type": "none"
+    }
+   ]
+  },
+  "101": {
+   "cat": "S",
+   "type": "jump",
+   "to": 86,
+   "icon": "signpost",
+   "title": "Wrong turn",
+   "text": "You took the wrong path around the lake - go back."
+  },
+  "102": {
+   "cat": "place",
+   "type": "place",
+   "icon": "harbour",
+   "title": "Harbour",
+   "text": ""
+  },
+  "108": {
+   "cat": "B",
+   "type": "jump",
+   "to": 116,
+   "icon": "minibus",
+   "title": "Mountain bus",
+   "text": "Take the bus up the first bends of the mountain road."
+  },
+  "110": {
+   "cat": "C",
+   "type": "choice",
+   "icon": "cablecar",
+   "title": "Cable car",
+   "text": "Ride up now and skip your next turn - or keep walking.",
+   "options": [
+    {
+     "label": "Ride",
+     "type": "jump",
+     "to": 122,
+     "then": {
+      "type": "skip",
+      "turns": 1
+     }
+    },
+    {
+     "label": "Walk",
+     "type": "none"
+    }
+   ]
+  },
+  "113": {
+   "cat": "S",
+   "type": "jump",
+   "to": 98,
+   "icon": "mud",
+   "title": "Muddy slide",
+   "text": "Whoops! Slide back down to the lake shore."
+  },
+  "118": {
+   "cat": "B",
+   "type": "jump",
+   "to": 124,
+   "icon": "goat",
+   "title": "Goat path",
+   "text": "A mountain goat shows you a shortcut."
+  },
+  "123": {
+   "cat": "B",
+   "type": "rollSum",
+   "dice": 2,
+   "icon": "snowball",
+   "title": "Snowball",
+   "text": "Roll like a snowball: throw twice and move the total."
+  },
+  "128": {
+   "cat": "S",
+   "type": "nearest",
+   "target": "S",
+   "icon": "fog",
+   "title": "Thick fog",
+   "text": "You get lost in the fog: go to the next setback and take it."
+  },
+  "133": {
+   "cat": "S",
+   "type": "jump",
+   "to": 120,
+   "icon": "lodge",
+   "title": "Lodge is full",
+   "text": "No room tonight - walk back down a little."
+  },
+  "135": {
+   "cat": "place",
+   "type": "place",
+   "icon": "lodge",
+   "title": "Mountain Lodge",
+   "text": ""
+  },
+  "138": {
+   "cat": "B",
+   "type": "jump",
+   "to": 152,
+   "grant": "snakeLeader",
+   "icon": "snake",
+   "title": "Great Snake Slide",
+   "text": "Ride the Great Snake down to the beach - you become the Snake Leader!"
+  },
+  "143": {
+   "cat": "S",
+   "type": "tailwindOthers",
+   "icon": "camera",
+   "title": "Photo stop",
+   "text": "You stop for photos - everyone else doubles their next throw."
+  },
+  "145": {
+   "cat": "B",
+   "type": "card",
+   "card": "umbrella",
+   "icon": "umbrella",
+   "title": "Beach umbrella",
+   "text": "Keep this card: it can protect you from one setback."
+  },
+  "148": {
+   "cat": "S",
+   "type": "wait",
+   "min": 4,
+   "max": 2,
+   "icon": "ferry",
+   "title": "Ferry delayed",
+   "text": "Move on with a 4, 5 or 6 (at most 2 tries)."
+  },
+  "152": {
+   "cat": "place",
+   "type": "place",
+   "icon": "snake",
+   "title": "Snake Leader's Rock",
+   "text": ""
+  },
+  "153": {
+   "cat": "B",
+   "type": "swapAhead",
+   "icon": "buggy",
+   "title": "Beach buggy",
+   "text": "Catch a buggy ride - swap places with the traveller just ahead of you."
+  },
+  "158": {
+   "cat": "S",
+   "type": "jump",
+   "to": 146,
+   "icon": "snake",
+   "title": "Sleepy snake",
+   "text": "A sleepy snake carries you back along the beach."
+  },
+  "163": {
+   "cat": "B",
+   "type": "extraRoll",
+   "icon": "lights",
+   "title": "Green lights",
+   "text": "All traffic lights are green - throw once more!"
+  },
+  "168": {
+   "cat": "B",
+   "type": "jump",
+   "to": 174,
+   "icon": "invite",
+   "title": "Invitation",
+   "text": "You are invited to the City Fair!"
+  },
+  "170": {
+   "cat": "B",
+   "type": "card",
+   "card": "compass",
+   "icon": "compass",
+   "title": "City map",
+   "text": "Keep this card: throw again once when you like."
+  },
+  "173": {
+   "cat": "B",
+   "type": "jump",
+   "to": 177,
+   "icon": "scooter",
+   "title": "Scooter",
+   "text": "Zoom ahead on a scooter."
+  },
+  "174": {
+   "cat": "place",
+   "type": "place",
+   "icon": "fair",
+   "title": "City Fair",
+   "text": ""
+  },
+  "178": {
+   "cat": "S",
+   "type": "jump",
+   "to": 167,
+   "icon": "ticket",
+   "title": "Forgot your invitation",
+   "text": "Go back and fetch it."
+  },
+  "183": {
+   "cat": "S",
+   "type": "jump",
+   "to": 174,
+   "icon": "tram",
+   "title": "Wrong tram",
+   "text": "Oops, wrong tram - ride back to the City Fair."
+  },
+  "184": {
+   "cat": "place",
+   "type": "place",
+   "icon": "station",
+   "title": "Central Station",
+   "text": ""
+  },
+  "188": {
+   "cat": "S",
+   "type": "skip",
+   "turns": 1,
+   "icon": "escalator",
+   "title": "Wrong exit",
+   "text": "You took the wrong exit - wait 1 turn to find the way."
+  },
+  "190": {
+   "cat": "C",
+   "type": "choice",
+   "icon": "hill",
+   "title": "Last hill",
+   "text": "Sprint ahead now (next turn you move just 1) - or walk.",
+   "options": [
+    {
+     "label": "Sprint",
+     "type": "jump",
+     "to": 194,
+     "then": {
+      "type": "slowNext"
+     }
+    },
+    {
+     "label": "Walk",
+     "type": "none"
+    }
+   ]
+  },
+  "193": {
+   "cat": "S",
+   "type": "jump",
+   "to": 189,
+   "icon": "key",
+   "title": "Forgot keys!",
+   "text": "Run back a little to get your keys."
+  },
+  "195": {
+   "cat": "place",
+   "type": "place",
+   "icon": "lantern",
+   "title": "Lantern Hill",
+   "text": ""
+  },
+  "198": {
+   "cat": "S",
+   "type": "skip",
+   "turns": 1,
+   "icon": "key",
+   "title": "Forgot keys AGAIN!!!",
+   "text": "Wait 1 turn while a friend brings them."
+  },
+  "202": {
+   "cat": "S",
+   "type": "jump",
+   "to": 165,
+   "requires": "snakeLeader",
+   "icon": "snake",
+   "title": "Snake Leader's duty",
+   "text": "Snake Leaders only: follow the snake back to the city."
+  }
+ },
+ "rules": {
+  "startRule": "free",
+  "endRule": "exact",
+  "catchUp": 2,
+  "handLimit": 2
+ }
+}

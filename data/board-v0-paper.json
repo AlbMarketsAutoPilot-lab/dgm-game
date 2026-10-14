@@ -1,49 +1,261 @@
 {
-  "id": "v0-paper",
-  "description": "Literal transcription of the hand-drawn paper board (docs/GCD.md section 6). Category R = reward, P = punishment (classification is a simulation setting, see docs/analysis/SIM_REPORT_v0.md).",
-  "lastTile": 202,
-  "endTile": 203,
-  "tiles": {
-    "5":   { "cat": "P", "type": "skip", "turns": 1, "text": "Skip 1 turn" },
-    "10":  { "cat": "P", "type": "jump", "to": 0, "text": "Back to start" },
-    "15":  { "cat": "P", "type": "slowNext", "text": "Next time advance just 1 square" },
-    "20":  { "cat": "R", "type": "jump", "to": 33, "text": "Go to 33" },
-    "25":  { "cat": "P", "type": "skip", "turns": 1, "text": "Skip a turn" },
-    "30":  { "cat": "P", "type": "prison", "text": "Prison - get out with 6" },
-    "35":  { "cat": "R", "type": "jump", "to": 66, "text": "Go to 66" },
-    "40":  { "cat": "R", "type": "jump", "to": 103, "text": "Go upstairs (ladder)" },
-    "45":  { "cat": "R", "type": "rollSum", "dice": 2, "text": "Throw two times" },
-    "50":  { "cat": "P", "type": "hospital", "turns": 3, "text": "Hospital - stay here 3 times" },
-    "55":  { "cat": "R", "type": "jump", "to": 71, "text": "Fly to airport 71" },
-    "60":  { "cat": "R", "type": "card", "card": "skipPunishment", "text": "You can skip a punishment" },
-    "65":  { "cat": "R", "type": "nearest", "target": "R", "text": "Go to nearest reward and do it" },
-    "70":  { "cat": "P", "type": "jump", "to": 55, "text": "Your flight is broken, go back to 55" },
-    "75":  { "cat": "R", "type": "swapAhead", "text": "Change place with the one in front" },
-    "80":  { "cat": "R", "type": "jump", "to": 135, "text": "Go downstairs (ladder) to hotel" },
-    "85":  { "cat": "R", "type": "jump", "to": 102, "text": "You won lottery, go to bank" },
-    "90":  { "cat": "R", "type": "card", "card": "jailPass", "text": "Free jail pass" },
-    "95":  { "cat": "P", "type": "skip", "turns": 1, "text": "Robbery! Wait 1 turn here" },
-    "97":  { "cat": "P", "type": "jump", "to": 30, "then": "prison", "text": "Police - go in prison" },
-    "101": { "cat": "P", "type": "jump", "to": 86, "text": "Bank was robbed, go to 86" },
-    "108": { "cat": "R", "type": "jump", "to": 135, "text": "Get some vacation, go to hotel" },
-    "113": { "cat": "P", "type": "jump", "to": 50, "then": "hospital", "text": "Go downstairs, do punishment (hospital)" },
-    "118": { "cat": "R", "type": "jump", "to": 124, "text": "Advance to 124" },
-    "123": { "cat": "R", "type": "rollSum", "dice": 3, "text": "Throw 3 times, move the total" },
-    "128": { "cat": "P", "type": "nearest", "target": "P", "text": "Go to nearest punishment and do it" },
-    "133": { "cat": "P", "type": "jump", "to": 109, "text": "Hotel reservation cancelled, go to 109" },
-    "138": { "cat": "R", "type": "jump", "to": 195, "grant": "snakeLeader", "text": "Follow the snake - become Snake Leader" },
-    "143": { "cat": "P", "type": "doubleOthers", "text": "The other players double what they throw" },
-    "148": { "cat": "P", "type": "jump", "to": 30, "then": "prison", "text": "Go in prison again" },
-    "153": { "cat": "P", "type": "skip", "turns": 1, "text": "Skip one turn" },
-    "158": { "cat": "P", "type": "jump", "to": 48, "text": "Follow the snake" },
-    "163": { "cat": "R", "type": "extraRoll", "text": "Throw one more time" },
-    "168": { "cat": "R", "type": "jump", "to": 179, "text": "Invited to a party, go to 179" },
-    "173": { "cat": "R", "type": "jump", "to": 184, "text": "Got new car, go fast to work 184" },
-    "178": { "cat": "P", "type": "jump", "to": 167, "text": "Forgot invitation, go back to 167 (Q2 unconfirmed)" },
-    "183": { "cat": "P", "type": "jump", "to": 97, "text": "Car was stolen, go to police 97 - no prison" },
-    "188": { "cat": "P", "type": "jump", "to": 157, "text": "Go downstairs (ladder)" },
-    "193": { "cat": "P", "type": "jump", "to": 184, "text": "Forgot keys, back to work" },
-    "198": { "cat": "P", "type": "jump", "to": 184, "then": "skip2", "text": "Forgot keys again, back to work 184 and skip two turns" },
-    "202": { "cat": "P", "type": "jump", "to": 165, "requires": "snakeLeader", "text": "Snake Leader only: follow the snake back to 165" }
+ "id": "v0-paper",
+ "description": "Literal transcription of the hand-drawn paper board (docs/GCD.md section 6). Category R = reward, P = punishment (classification is a simulation setting, see docs/analysis/SIM_REPORT_v0.md).",
+ "lastTile": 202,
+ "endTile": 203,
+ "tiles": {
+  "5": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Skip 1 turn"
+  },
+  "10": {
+   "cat": "P",
+   "type": "jump",
+   "to": 0,
+   "text": "Back to start"
+  },
+  "15": {
+   "cat": "P",
+   "type": "slowNext",
+   "text": "Next time advance just 1 square"
+  },
+  "20": {
+   "cat": "R",
+   "type": "jump",
+   "to": 33,
+   "text": "Go to 33"
+  },
+  "25": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Skip a turn"
+  },
+  "30": {
+   "cat": "P",
+   "type": "prison",
+   "text": "Prison - get out with 6"
+  },
+  "35": {
+   "cat": "R",
+   "type": "jump",
+   "to": 66,
+   "text": "Go to 66"
+  },
+  "40": {
+   "cat": "R",
+   "type": "jump",
+   "to": 103,
+   "text": "Go upstairs (ladder)"
+  },
+  "45": {
+   "cat": "R",
+   "type": "rollSum",
+   "dice": 2,
+   "text": "Throw two times"
+  },
+  "50": {
+   "cat": "P",
+   "type": "hospital",
+   "turns": 3,
+   "text": "Hospital - stay here 3 times"
+  },
+  "55": {
+   "cat": "R",
+   "type": "jump",
+   "to": 71,
+   "text": "Fly to airport 71"
+  },
+  "60": {
+   "cat": "R",
+   "type": "card",
+   "card": "skipPunishment",
+   "text": "You can skip a punishment"
+  },
+  "65": {
+   "cat": "R",
+   "type": "nearest",
+   "target": "R",
+   "text": "Go to nearest reward and do it"
+  },
+  "70": {
+   "cat": "P",
+   "type": "jump",
+   "to": 55,
+   "text": "Your flight is broken, go back to 55"
+  },
+  "75": {
+   "cat": "R",
+   "type": "swapAhead",
+   "text": "Change place with the one in front"
+  },
+  "80": {
+   "cat": "R",
+   "type": "jump",
+   "to": 135,
+   "text": "Go downstairs (ladder) to hotel"
+  },
+  "85": {
+   "cat": "R",
+   "type": "jump",
+   "to": 102,
+   "text": "You won lottery, go to bank"
+  },
+  "90": {
+   "cat": "R",
+   "type": "card",
+   "card": "jailPass",
+   "text": "Free jail pass"
+  },
+  "95": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Robbery! Wait 1 turn here"
+  },
+  "97": {
+   "cat": "P",
+   "type": "jump",
+   "to": 30,
+   "then": "prison",
+   "text": "Police - go in prison"
+  },
+  "101": {
+   "cat": "P",
+   "type": "jump",
+   "to": 86,
+   "text": "Bank was robbed, go to 86"
+  },
+  "108": {
+   "cat": "R",
+   "type": "jump",
+   "to": 135,
+   "text": "Get some vacation, go to hotel"
+  },
+  "113": {
+   "cat": "P",
+   "type": "jump",
+   "to": 50,
+   "then": "hospital",
+   "text": "Go downstairs, do punishment (hospital)"
+  },
+  "118": {
+   "cat": "R",
+   "type": "jump",
+   "to": 124,
+   "text": "Advance to 124"
+  },
+  "123": {
+   "cat": "R",
+   "type": "rollSum",
+   "dice": 3,
+   "text": "Throw 3 times, move the total"
+  },
+  "128": {
+   "cat": "P",
+   "type": "nearest",
+   "target": "P",
+   "text": "Go to nearest punishment and do it"
+  },
+  "133": {
+   "cat": "P",
+   "type": "jump",
+   "to": 109,
+   "text": "Hotel reservation cancelled, go to 109"
+  },
+  "138": {
+   "cat": "R",
+   "type": "jump",
+   "to": 195,
+   "grant": "snakeLeader",
+   "text": "Follow the snake - become Snake Leader"
+  },
+  "143": {
+   "cat": "P",
+   "type": "doubleOthers",
+   "text": "The other players double what they throw"
+  },
+  "148": {
+   "cat": "P",
+   "type": "jump",
+   "to": 30,
+   "then": "prison",
+   "text": "Go in prison again"
+  },
+  "153": {
+   "cat": "P",
+   "type": "skip",
+   "turns": 1,
+   "text": "Skip one turn"
+  },
+  "158": {
+   "cat": "P",
+   "type": "jump",
+   "to": 48,
+   "text": "Follow the snake"
+  },
+  "163": {
+   "cat": "R",
+   "type": "extraRoll",
+   "text": "Throw one more time"
+  },
+  "168": {
+   "cat": "R",
+   "type": "jump",
+   "to": 179,
+   "text": "Invited to a party, go to 179"
+  },
+  "173": {
+   "cat": "R",
+   "type": "jump",
+   "to": 184,
+   "text": "Got new car, go fast to work 184"
+  },
+  "178": {
+   "cat": "P",
+   "type": "jump",
+   "to": 167,
+   "text": "Forgot invitation, go back to 167 (Q2 unconfirmed)"
+  },
+  "183": {
+   "cat": "P",
+   "type": "jump",
+   "to": 97,
+   "text": "Car was stolen, go to police 97 - no prison"
+  },
+  "188": {
+   "cat": "P",
+   "type": "jump",
+   "to": 157,
+   "text": "Go downstairs (ladder)"
+  },
+  "193": {
+   "cat": "P",
+   "type": "jump",
+   "to": 184,
+   "text": "Forgot keys, back to work"
+  },
+  "198": {
+   "cat": "P",
+   "type": "jump",
+   "to": 184,
+   "then": "skip2",
+   "text": "Forgot keys again, back to work 184 and skip two turns"
+  },
+  "202": {
+   "cat": "P",
+   "type": "jump",
+   "to": 165,
+   "requires": "snakeLeader",
+   "text": "Snake Leader only: follow the snake back to 165"
   }
+ },
+ "rules": {
+  "startRule": "need6",
+  "endRule": "exact",
+  "catchUp": 0,
+  "handLimit": 99
+ }
 }
