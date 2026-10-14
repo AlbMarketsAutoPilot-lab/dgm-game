@@ -33,6 +33,7 @@ export const DEFAULTS = {
                          // leader; the first player to land on it (anyone) goes back `back` squares, then it is placed again
   forks: [],             // N3 two roads: [{ at, merge, len, tiles }] = every token stops at the crossroads `at`; next turn it takes
                          // the safe road (the normal squares) or the wild road (`len` squares, own `tiles`) that rejoins at `merge`
+  lifeSpend: false,      // candidate: give up a lifeline to cancel a punishment square (simple players never do)
   types: null,           // player type per seat: "simple" (default choices) | "thoughtful" (written rules) | "wild" (always the wild road)
   bigLoss: 20,           // thoughtful player: a punishment / reward this big (squares) is "big"
 };
@@ -70,7 +71,7 @@ export function simulate(board, rules, games, seed) {
     jackpots: 0, falls: 0, gamesJack: 0, gamesFall: 0,
     captures: 0, capturesEarly: 0, capturesLate: 0, gamesCapture: 0, capturedPlayers: 0,
     bonusDefend: 0, bonusAttack: 0, jailPassUsed: 0,
-    kicked: 0, gamesLastStanding: 0, lifeLost: 0, lifeGained: 0, roadblockHits: 0, wildTaken: 0, safeTaken: 0, stairSteps: 0,
+    kicked: 0, gamesLastStanding: 0, lifeSpent: 0, lifeLost: 0, lifeGained: 0, roadblockHits: 0, wildTaken: 0, safeTaken: 0, stairSteps: 0,
     hit: zero(), hitWin: zero(), oppLand: zero(), oppLandWin: zero(), oppMiss: zero(), oppMissWin: zero(),
   };
 
@@ -202,6 +203,9 @@ export function simulate(board, rules, games, seed) {
       if (!t || depth > 6 || (t.requires === "snakeLeader" && !p.leader)) return;
       if (t.cat === "P" && p.bonus > 0 && wantsDefend(pi, t)) {
         p.bonus--; A.bonusDefend++; return;
+      }
+      if (s.lifeSpend && t.cat === "P" && typeOf(pi) === "thoughtful" && p.life >= 2 && swing(pi, t) <= -s.bigLoss) {
+        p.life--; A.lifeSpent++; return;
       }
       if (t.cat === "R" && pi === leaderIdx()) {
         const h = P.findIndex((q, i) => i !== pi && q.bonus > 0 && wantsAttack(i, pi, t));
@@ -376,7 +380,7 @@ function summarize(board, s, A, BIG) {
     },
     i6: {
       pctPlayersOut: f(100 * A.kicked / pg, 2), pctGamesLastStanding: f(100 * A.gamesLastStanding / n, 2),
-      lifelinesLostPerPlayer: f(A.lifeLost / pg, 2), lifelinesGainedPerPlayer: f(A.lifeGained / pg, 2),
+      lifelinesLostPerPlayer: f(A.lifeLost / pg, 2), lifelinesGainedPerPlayer: f(A.lifeGained / pg, 2), lifelinesSpentPerGame: f(A.lifeSpent / n, 2),
       roadblockHitsPerGame: f(A.roadblockHits / n, 2), wildPerGame: f(A.wildTaken / n, 2), safePerGame: f(A.safeTaken / n, 2),
       stairStepsPerPlayer: f(A.stairSteps / pg, 2),
     },

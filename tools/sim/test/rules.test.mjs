@@ -107,6 +107,11 @@ play("Thoughtful uses the bonus card on a big fall", { tiles: { 52: { cat: "P", 
 play("Thoughtful uses the bonus card on the trap", { tiles: trapTiles, dice: [2], setup: [{ pos: 28, bonus: 1 }], turns: 1, rules: TH }, (P) => both(eq(P[0].trapped, false, "not trapped"), eq(P[0].bonus, 0, "card used")));
 play("Thoughtful cancels the leader's big reward", { tiles: { 112: { cat: "R", type: "jump", to: 150 } }, dice: [2], setup: [{ pos: 110 }, { pos: 20, bonus: 1 }], turns: 1, rules: { types: ["simple", "thoughtful"] } }, (P) => eq(P[0].pos, 112, "reward cancelled"));
 play("Thoughtful lets the leader's small reward go", { tiles: { 112: { cat: "R", type: "jump", to: 118 } }, dice: [2], setup: [{ pos: 110 }, { pos: 20, bonus: 1 }], turns: 1, rules: { types: ["simple", "thoughtful"] } }, (P) => both(eq(P[0].pos, 118, "reward kept"), eq(P[1].bonus, 1, "card kept")));
+// Candidate: spend a lifeline to cancel a big punishment (thoughtful only, never the last lifeline)
+const SP = { stairs: true, lifelines: 3, lifeSpend: true, types: ["thoughtful"] };
+play("Spend: thoughtful gives a lifeline to cancel a big fall", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50 }], turns: 1, players: 1, rules: SP }, (P) => both(eq(P[0].pos, 52, "pos"), eq(P[0].life, 2, "lifelines")));
+play("Spend: never the last lifeline", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50, life: 1 }], turns: 1, players: 1, rules: SP }, (P) => both(eq(P[0].pos, 20, "pos"), eq(P[0].life, 1, "lifelines")));
+play("Spend: a simple player never spends", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50 }], turns: 1, players: 1, rules: { ...SP, types: ["simple"] } }, (P) => eq(P[0].pos, 20, "pos"));
 
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASS");
 process.exit(fail ? 1 : 0);

@@ -54,6 +54,9 @@ const logic = [
   ["Baseline rules (only choice: the bonus card)", {}, "thoughtful"],
   ["N3 Two roads (bonus card + road choice)", { forks: FORKS }, "thoughtful"],
   ["L1 + 3 lifelines + N2 + N3 (all candidates together)", { ...LIFE, roadblock: { back: 10, range: 10 }, forks: FORKS }, "thoughtful"],
+  ["Candidate: 3 lifelines + spend a lifeline to cancel a big punishment (20+ squares, trap, hospital)", { ...LIFE, lifeSpend: true }, "thoughtful"],
+  ["Candidate + lifelines won back on 90, 118, 163", { ...LIFE, lifeSpend: true, lifelineSquares: [90, 118, 163] }, "thoughtful"],
+  ["Candidate + won back + N2 + N3 (everything together)", { ...LIFE, lifeSpend: true, lifelineSquares: [90, 118, 163], roadblock: { back: 10, range: 10 }, forks: FORKS }, "thoughtful"],
   ["Check: N3 player who ALWAYS takes the wild road", { forks: FORKS }, "wild"],
 ];
 md += `\n## 2. Thinking target: one player against 3 simple players (target 27–32%, fair 25%)\n\nThe player is rotated through all 4 seats; ${(N / 2).toLocaleString("en")} games per seat; ±${ci} points (95%).\n\n| Rules | Win % of the one player |\n|---|---|\n`;

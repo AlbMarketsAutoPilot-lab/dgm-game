@@ -26,8 +26,10 @@ The player is rotated through all 4 seats; 50,000 games per seat; ±0.19 points 
 | Baseline rules (only choice: the bonus card) | 25.20% |
 | N3 Two roads (bonus card + road choice) | 25.46% |
 | L1 + 3 lifelines + N2 + N3 (all candidates together) | 25.30% |
-| Check: N3 player who ALWAYS takes the wild road | 25.02% |
-
+| Candidate: 3 lifelines + spend a lifeline to cancel a big punishment (20+ squares, trap, hospital) | 29.57% |
+| Candidate + lifelines won back on 90, 118, 163 | 30.73% |
+| Candidate + won back + N2 + N3 (everything together) | 29.84% |
+| Check: N3 player who ALWAYS takes the wild road | 25.09% |
 ## 3. Verdict per proposal (plain language)
 
 | Proposal | Verdict |
@@ -37,7 +39,8 @@ The player is rotated through all 4 seats; 50,000 games per seat; ±0.19 points 
 | **…won back on 3 squares** | Small effect: 0.2 lifelines won back per player, kicked out 1.4% → 1.2%. Squares 90, 118, 163 are my choice (weak reward squares); not decided. |
 | **N2 Roadblock (game event)** | ✅ Small gain. It is hit 2.3 times per game, so it is a regular table moment. +0.4 lead changes, +0.5 captures, boredom unchanged, seats fair. |
 | **N3 Two roads** | ✅ Fair. A player who always takes the wild road wins 25.0%, so neither road is better on average. With thoughtful players: +0.1 late overtakes and the leader into the last quarter wins less often (37.8% → 36.8%), so the end is more open. |
-| **Thinking target (27–32%)** | ❌ **Not met.** A thoughtful player wins only 25.2–25.5%. The bonus card and the road choice are real choices, but too small to matter. A stronger choice is needed. |
+| **Thinking target with the bonus card and two roads** | ❌ **Not met.** A thoughtful player wins only 25.2–25.5%. These are real choices, but too small to matter. |
+| **Candidate: spend a lifeline** (not yet approved) | ✅ **Meets the target: 29.6%** (30.7% if lifelines can be won back; 29.8% with everything together). Rule: when you land on a big punishment, you may give up a lifeline to cancel it; never the last one. The price is real: lifelines are also lost waiting at Start or in the trap, and none left = out. Players out rise from 1.4% to about 2.2% (separate run, 4 × 30,000 games). A child who never spends still wins about 23%. |
 
 ## 4. How the two roads were tuned
 
