@@ -1,37 +1,37 @@
-// Step 3 preview: the two boards, drawn as on paper. Step 4 adds the camera (pan, zoom, follow) and the tokens;
-// Step 5 the game screens.
+// Preview of the board at square level (Step 3, redone): drag to move, pinch / wheel / buttons to zoom.
+// Step 4 adds the tokens and the camera following them; Step 5 the game screens.
 import "@fontsource/patrick-hand";
 import { BOARDS, type BoardId } from "./engine";
-import { renderBoard } from "./render/board";
+import { type BoardView, UNIT, createBoardView } from "./render/board";
+import { Camera } from "./render/camera";
 
-const PX_PER_UNIT = 64;
-const view = document.querySelector<HTMLElement>("#view")!;
-const fitButton = document.querySelector<HTMLButtonElement>("#fit")!;
-let current: BoardId = "long", fit = false;
+const viewport = document.querySelector<HTMLElement>("#view")!;
+let view: BoardView | null = null, camera: Camera | null = null;
 
-function show(): void {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const { canvas } = renderBoard(BOARDS[current], PX_PER_UNIT * dpr);
-  const w = canvas.width / dpr, h = canvas.height / dpr;
-  const k = fit ? Math.min(view.clientWidth / w, view.clientHeight / h) : 1;
-  canvas.style.width = `${w * k}px`;
-  canvas.style.height = `${h * k}px`;
-  canvas.setAttribute("role", "img");
-  canvas.setAttribute("aria-label", `${BOARDS[current].story.title}: the board`);
-  view.replaceChildren(canvas);
+/** Square level, with Start in the upper left part of the screen. */
+function toStart(ms?: number): void {
+  if (!view || !camera) return;
+  const s = view.layout.squares[0];
+  camera.focus(s.x + 1, s.y + 0.6, ms);
+}
+
+function show(id: BoardId): void {
+  view = createBoardView(BOARDS[id]);
+  viewport.replaceChildren(view.world);
+  camera = new Camera(viewport, view.world, view.layout.bounds, UNIT);
+  view.setLive(viewport);
+  toStart(0);
+  if (import.meta.env.DEV) Object.assign(window, { dgm: { view, camera } }); // for screenshots while developing
 }
 
 document.querySelectorAll<HTMLButtonElement>("button[data-board]").forEach((b) =>
   b.addEventListener("click", () => {
-    current = b.dataset.board as BoardId;
     document.querySelectorAll("button[data-board]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    show();
+    show(b.dataset.board as BoardId);
   }));
-fitButton.addEventListener("click", () => {
-  fit = !fit;
-  fitButton.setAttribute("aria-pressed", String(fit));
-  show();
-});
-window.addEventListener("resize", () => { if (fit) show(); });
+document.querySelector("#zin")!.addEventListener("click", () => camera?.zoomBy(1.5));
+document.querySelector("#zout")!.addEventListener("click", () => camera?.zoomBy(1 / 1.5));
+document.querySelector("#all")!.addEventListener("click", () => camera?.overview());
+document.querySelector("#home")!.addEventListener("click", () => toStart());
 
-document.fonts.load('100px "Patrick Hand"').finally(show);
+document.fonts.load('100px "Patrick Hand"').finally(() => show("long"));

@@ -1,0 +1,89 @@
+/* The board world (sizes in world pixels: 100 px = one board unit; the camera scales it). */
+.board-viewport {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: #d9cdb3;
+  outline: none;
+  cursor: grab;
+}
+.board-viewport:active { cursor: grabbing; }
+
+.board-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-shadow: 0 6px 30px rgba(60, 40, 20, 0.35);
+}
+.board-world .layer { position: absolute; left: 0; top: 0; overflow: visible; }
+.board-world .labels { position: absolute; inset: 0; }
+
+.board-world .sq {
+  position: absolute;
+  color: #4b2377;
+  font-family: "Patrick Hand", "Comic Sans MS", cursive;
+}
+.board-world .sq .num {
+  position: absolute;
+  left: 7px;
+  top: 1px;
+  font-size: 19px;
+  line-height: 1.1;
+  text-shadow: 0 0 3px #f7f1e3, 0 0 3px #f7f1e3;
+}
+.board-world .sq .mark { position: absolute; right: 5px; top: 3px; width: 16px; height: 11px; }
+.board-world .sq .art { position: absolute; left: 9%; top: 14%; width: 82%; height: 74%; overflow: visible; }
+/* Event squares: the illustration in a paper window framed by the square's crayon colour (it also hides any
+   ladder or snake passing under it). */
+.board-world .sq.ev .art {
+  left: 9%; top: 15%; width: 82%; height: 76%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(247, 241, 227, 0.96);
+  box-shadow: inset 0 0 0 1.5px rgba(75, 35, 119, 0.45);
+}
+.board-world .sq.ev .num { top: -1px; font-size: 17px; }
+.board-world .sq .art-icon { left: 22%; top: 24%; width: 56%; height: 56%; }
+.board-world .sq .dest {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  font-size: 14px;
+  line-height: 1;
+  padding: 1px 4px 2px;
+  border-radius: 6px;
+  background: rgba(247, 241, 227, 0.88);
+}
+.board-world .sq .name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1;
+  text-shadow: 0 0 3px #f7f1e3;
+}
+.board-world .sq.lm .soft { position: absolute; inset: 0; opacity: 0.65; }
+.board-world .sq .title { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; }
+.board-world .sq.end .title { inset: auto 0 2px 0; font-size: 20px; text-align: center; }
+.board-world .sq.end .art { left: 4%; top: 2%; width: 92%; height: 76%; }
+.board-world .sq.home .art { left: 10%; top: 0; width: 80%; height: 80%; }
+.board-world .sq.home .name { font-size: 18px; bottom: -6px; }
+.board-world .sq.stone .art { left: 4%; top: 4%; width: 92%; height: 92%; }
+.board-world .sq.stone .mark { right: -10px; top: -12px; }
+
+/* Animation: only on screen (.live), never with "reduce motion". */
+.board-world .art * { transform-box: fill-box; transform-origin: center; }
+.board-world .art-icon .bob { animation: icon-bob 2.4s ease-in-out infinite alternate; }
+@keyframes icon-bob { from { transform: translateY(0.4px) rotate(-3deg); } to { transform: translateY(-0.6px) rotate(3deg); } }
+.board-world .snake-tongue { transform-box: fill-box; transform-origin: 0 50%; animation: tongue 2.6s infinite; }
+.board-world .art *, .board-world .snake-tongue { animation-play-state: paused; }
+.board-world .live .art *, .board-world .live .snake-tongue { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) {
+  .board-world .art *, .board-world .snake-tongue { animation: none !important; }
+}
