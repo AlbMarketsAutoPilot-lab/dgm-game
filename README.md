@@ -5,6 +5,7 @@
 - [Game Concept Document](docs/GCD.md)
 - [Project Plan](docs/PROJECT_PLAN.md)
 - [Rules engine](src/engine/README.md)
+- [Board rendering](src/render/README.md)
 
 ## Develop
 
