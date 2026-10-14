@@ -126,6 +126,14 @@ play("Life on 6: a 6 gives a lifeline (6, 3 -> 4 lifelines)", { dice: [6, 3], se
 play("Life on 6: the 6 that enters also counts", { dice: [6, 2], turns: 1, players: 1, rules: L6 }, (P) => eq(P[0].life, 4, "lifelines"));
 play("Life on capture: the captured player loses one", { dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1, rules: L6 }, (P) => both(eq(P[1].pos, 0, "captured"), eq(P[1].life, 2, "lifelines")));
 play("Life on capture: the last one lost -> out", { dice: [3], setup: [{ pos: 10 }, { pos: 13, life: 1 }, { pos: 50 }], turns: 1, players: 3, rules: L6 }, (P) => eq(P[1].out, true, "out"));
+// Owner final lifeline rules: lost only at Start / in the trap, won by three 6s in a row, out at the 4th loss
+const LF = { stairs: true, lifelines: 3, lifeOnTriple: true, outAfterZero: true };
+play("Final: three 6s in a row give a lifeline", { dice: [6, 6, 6], setup: [{ pos: 10 }], turns: 1, players: 1, rules: LF }, (P) => eq(P[0].life, 4, "lifelines"));
+play("Final: two 6s in a row give nothing", { dice: [6, 6, 2, 3], setup: [{ pos: 10 }], turns: 1, players: 1, rules: LF }, (P) => eq(P[0].life, 3, "lifelines"));
+play("Final: entering 6 + two 6s = three in a row -> lifeline", { dice: [6, 6, 6], turns: 1, players: 1, rules: LF }, (P) => eq(P[0].life, 4, "lifelines"));
+play("Final: a capture costs no lifeline", { dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1, rules: LF }, (P) => eq(P[1].life, 3, "lifelines"));
+play("Final: losing the 3rd lifeline -> 0 left, still playing", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, life: 1 }], turns: 3, players: 1, rules: LF }, (P) => both(eq(P[0].life, 0, "lifelines"), eq(P[0].out, false, "still in"), eq(P[0].pos, 33, "moved")));
+play("Final: the 4th loss -> out", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, life: 0 }, { skip: 9 }, { skip: 9 }], turns: 9, players: 3, rules: LF }, (P) => eq(P[0].out, true, "out"));
 
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASS");
 process.exit(fail ? 1 : 0);

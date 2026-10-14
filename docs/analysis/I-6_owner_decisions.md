@@ -76,3 +76,17 @@ Engine options `lifeSpend`, `lifeRest`, `lifeRefuse`, `lifeSpendMax`, `lifeSpend
 ## Owner rule (14 Oct 2026, after the mind-duel proposal)
 
 **Lifelines are too scarce to play with.** A player can lose two lifelines at Start and in the trap and keep only one. So **no logic rule may put a lifeline at risk** (no spending, no betting, no duels for lifelines). Mind duel: ❌ rejected.
+
+## Lifelines: owner's final rules (14 Oct 2026)
+
+Measured as ideas and dropped: −1 lifeline when captured, +1 lifeline for every 6 (`docs/analysis/lifelines-six-capture.md`).
+
+| Rule | Owner decision |
+|---|---|
+| Start | 3 lifelines |
+| Losing | −1 each time a player fails to get out of Start or the trap with a 6 (3 throws without a 6, waiting stairs) |
+| At 0 | The player plays on. Message: "Attention! You have no lifelines left…". The **4th** loss = out. |
+| Winning | +1 **only** for three 6s in a row in one turn |
+| Captures | Cost no lifeline |
+
+Measured: `docs/analysis/lifelines-final.md`.

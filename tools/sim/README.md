@@ -10,6 +10,7 @@ The engine implements the owner's core rules (docs/GCD.md §8.2a).
 | `node tools/sim/ablate.mjs <board.json> [games] [out.md]` | With vs without: removes one event square at a time, with a noise row |
 | `node tools/sim/sixes.mjs <board.json> [games] [out.md]` | Sixes in a row and captures per player, 2–4 players, short vs long games |
 | `node tools/sim/lifelines.mjs <board.json> [games] [out.md]` | Owner idea: lifelines lost at Start/trap and when captured, +1 per 6: chance of being kicked out, lifelines left |
+| `node tools/sim/lifelines-final.mjs <board.json> [games] [out.md]` | Owner's final lifeline rules: kicked out, lifelines left, whole game vs baseline |
 | `node tools/sim/i6.mjs <board.json> [games] [out.md]` | Step I-6: each proposal on its own (stairs, lifelines, roadblock, two roads) and the thinking target (thoughtful vs simple players) |
 | `node tools/sim/options.mjs <board.json> [games] [out.md]` | Small rule options measured against the boredom target |
 

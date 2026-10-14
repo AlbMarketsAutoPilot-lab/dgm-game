@@ -8,4 +8,5 @@ export const FORKS = [
 
 // The rules the owner approved in I-6 (14 Oct 2026): waiting stairs, 3 lifelines, the roadblock as a game event and the two roads.
 // ("Spend a lifeline" was rejected by the owner after I-6.4.)
-export const APPROVED = { stairs: true, lifelines: 3, roadblock: { back: 10, range: 10 }, forks: FORKS };
+// Lifelines (owner, final): lost only at Start / in the trap, won by three 6s in a row, out at the 4th loss.
+export const APPROVED = { stairs: true, lifelines: 3, lifeOnTriple: true, outAfterZero: true, roadblock: { back: 10, range: 10 }, forks: FORKS };
