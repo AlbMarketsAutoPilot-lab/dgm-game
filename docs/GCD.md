@@ -140,15 +140,15 @@ All events belong to a few families. The exact squares, sizes and amounts were d
 - ✅ "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey (I-4, both boards).
 - ✅ An event square about every 5 squares, as on paper (long: 41 on 202; short: 23 on 100).
 
+### 8.5 Measurements of the paper game with the real rules (before I-6)
+See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Excitement is high (captures, late overtakes). Boredom fails the target (21% of players wait 10+ turns, mostly waiting to enter and in the trap). Small options are measured there and wait for the owner's decision.
+
 ### 8.6 Computer players ✅ (owner, step I-7)
 - Any seat can be a computer player. It plays as the **simple player** the simulator measured (`types: "simple"` in `tools/sim/engine.mjs`), so every fairness and excitement number in this document holds for it:
   - at a crossroads it always takes the **Main Road** (R20);
   - it uses its **Bonus card** on its own next punishment (R14, the "defend" use);
   - Bog boots work by themselves, as for every player.
 - It has no other choice to make: everything else is the dice (R21).
-
-### 8.5 Measurements of the paper game with the real rules (before I-6)
-See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Excitement is high (captures, late overtakes). Boredom fails the target (21% of players wait 10+ turns, mostly waiting to enter and in the trap). Small options are measured there and wait for the owner's decision.
 
 ## 9. Story: "The Journey" (P4)
 
