@@ -28,7 +28,10 @@ export const DEFAULTS = {
   stairs: false,         // L1 waiting stairs (owner): each throw at Start / in the trap without a 6 adds one stair step on the
                          // next square; on the 3rd throw you move anyway, walking the stair steps first (replaces enterAfter/trapAfter)
   lifelines: 0,          // lifelines per player (0 = off): 3 throws without a 6 at Start / in the trap cost one; none left = out
-  lifelineSquares: [],   // squares that give a lifeline back (never above the starting number)
+  lifelineSquares: [],
+  lifeOnSix: false,      // owner idea: every 6 thrown gives a lifeline (no upper limit unless lifeMax)
+  lifeOnCapture: false,  // owner idea: a captured player (sent back to Start by another player) loses a lifeline
+  lifeMax: Infinity,   // squares that give a lifeline back (never above the starting number)
   roadblock: null,       // N2 roadblock event: { back, range } = the game puts it on a free plain square 1..range in front of the
                          // leader; the first player to land on it (anyone) goes back `back` squares, then it is placed again
   forks: [],             // N3 two roads: [{ at, merge, len, tiles }] = every token stops at the crossroads `at`; next turn it takes
@@ -53,8 +56,13 @@ export function simulate(board, rules, games, seed) {
   const d6raw = script ? () => { if (!script.length) throw new Error("dice script ran out"); return script.shift(); }
                        : () => 1 + Math.floor(rand() * 6);
   // Counts the sixes thrown in a row at the start of each turn (statistics only; does not change the dice).
-  let run = 0, runOn = false, calls = 0;
-  const d6 = () => { const r = d6raw(); calls++; if (runOn) { if (r === 6) run++; else runOn = false; } return r; };
+  let run = 0, runOn = false, calls = 0, thrower = null;
+  const d6 = () => {
+    const r = d6raw(); calls++;
+    if (runOn) { if (r === 6) run++; else runOn = false; }
+    if (r === 6 && s.lifeOnSix && thrower && !thrower.out && thrower.life < s.lifeMax) { thrower.life++; thrower.gainSix++; }
+    return r;
+  };
   const END = board.endTile, LAST = board.lastTile;
   // Wild roads: square i (1..len) of fork k has the id 1000*(k+1)+i; prog() gives its place in the race.
   const forks = s.forks ?? [], isWild = (pos) => pos > 1000, forkOf = (pos) => forks[Math.floor(pos / 1000) - 1];
@@ -86,7 +94,7 @@ export function simulate(board, rules, games, seed) {
     const P = Array.from({ length: s.players }, () => ({
       pos: s.entry === "six" ? OFF : 0, skip: 0, trapped: false, slow: false, dbl: false, leader: false,
       bonus: 0, jailPass: 0, captured: 0, tries: 0, rest: 0, life: s.lifelines, out: false, stairAt: 0, stairLeft: 0, onStair: false,
-      six1: 0, six2: 0, six3: 0, throwTurns: 0,
+      six1: 0, six2: 0, six3: 0, throwTurns: 0, gainSix: 0, lostWait: 0, lostCap: 0,
       lost: 0, waitEnter: 0, waitTrap: 0, dry: 0, maxDry: 0, rewards: 0, punish: 0, gained: 0, lostSq: 0,
       hits: new Set(), opp: new Map(),
     }));
@@ -101,6 +109,7 @@ export function simulate(board, rules, games, seed) {
       P.forEach((q, i) => {
         if (i === pi || q.pos !== sq || q.onStair) return; // nobody is captured on a stair step
         q.pos = 0; q.trapped = false; q.skip = 0; q.tries = 0; q.captured++; clearStairs(q); // back to Start; the token leaves its trap / waiting
+        if (s.lifeOnCapture && s.lifelines) { q.lostCap++; loseLife(i); }
         gCap++; A.captures++;
         if (sq <= 20) A.capturesEarly++;
         if (prog(sq) >= LATE) A.capturesLate++;
@@ -290,7 +299,7 @@ export function simulate(board, rules, games, seed) {
       for (let pi = 0; pi < s.players && winner < 0; pi++) {
         const p = P[pi], before = p.pos * 8 + p.stairLeft;
         if (p.out) continue;
-        run = 0; runOn = true; const calls0 = calls;
+        run = 0; runOn = true; thrower = p; const calls0 = calls;
         if (p.skip > 0) { p.skip--; p.lost++; }
         else if (p.pos === OFF || p.trapped) { // R1 / R6: only a 6 lets you in / out; that 6 gives the extra throw
           const off = p.pos === OFF, limit = off ? s.enterAfter : s.trapAfter;
@@ -311,6 +320,7 @@ export function simulate(board, rules, games, seed) {
               }
             } else if (s.stairs && p.tries >= 2) { // L1: 3rd throw without a 6 -> move anyway, walking the 2 stair steps
               p.tries = 0;
+              if (s.lifelines) p.lostWait++;
               if (!(s.lifelines && loseLife(pi))) {
                 setStairs(p, off, 2);
                 if (off) p.pos = 0; else p.trapped = false;
@@ -318,7 +328,7 @@ export function simulate(board, rules, games, seed) {
               }
             } else {
               p.tries++; p.lost++; if (off) p.waitEnter++; else p.waitTrap++;
-              if (s.lifelines && !s.stairs && p.tries === 3) loseLife(pi); // R16 version: 3 failed throws cost a lifeline
+              if (s.lifelines && !s.stairs && p.tries === 3) { p.lostWait++; loseLife(pi); } // R16 version: 3 failed throws cost a lifeline
             }
           }
         } else if (s.lifeRest && typeOf(pi) === "thoughtful" && p.life === 1 && s.lifelines > 1) { // rest instead of throwing
@@ -351,7 +361,7 @@ export function simulate(board, rules, games, seed) {
     }
     if (winner < 0) { A.capped++; continue; }
     A.wins[winner]++; A.rounds.push(round);
-    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured })) });
+    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap })) });
     A.jackpots += gJack; A.falls += gFall; if (gJack) A.gamesJack++; if (gFall) A.gamesFall++;
     A.lateOvertakes += gLate; if (gLate) A.gamesLate++; if (gCap) A.gamesCapture++;
     if (lateFirst >= 0) { A.lateFirstN++; if (lateFirst === winner) A.lateFirstWin++; }

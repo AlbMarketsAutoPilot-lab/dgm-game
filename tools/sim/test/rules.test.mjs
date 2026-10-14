@@ -120,6 +120,12 @@ play("Refuse: thoughtful with 1 lifeline refuses a big reward and takes a lifeli
 play("Refuse: a small reward is taken", { tiles: { 52: { cat: "R", type: "jump", to: 60 } }, dice: [2], setup: [{ pos: 50, life: 1 }], turns: 1, players: 1, rules: { ...SP, lifeRefuse: 20 } }, (P) => both(eq(P[0].pos, 60, "pos"), eq(P[0].life, 1, "lifelines")));
 play("Spend: not allowed on the last stretch (from 190)", { tiles: { 195: { cat: "P", type: "jump", to: 150 } }, dice: [2], setup: [{ pos: 193 }], turns: 1, players: 1, rules: { ...SP, lifeSpendUntil: 190 } }, (P) => both(eq(P[0].pos, 150, "pos"), eq(P[0].life, 3, "lifelines")));
 play("Spend: limit per game", { tiles: { 52: { cat: "P", type: "jump", to: 20 } }, dice: [2], setup: [{ pos: 50, spent: 1 }], turns: 1, players: 1, rules: { ...SP, lifeSpendMax: 1 } }, (P) => eq(P[0].pos, 20, "pos"));
+// Owner idea: lifelines from 6s, lost when captured
+const L6 = { stairs: true, lifelines: 3, lifeOnSix: true, lifeOnCapture: true };
+play("Life on 6: a 6 gives a lifeline (6, 3 -> 4 lifelines)", { dice: [6, 3], setup: [{ pos: 10 }], turns: 1, players: 1, rules: L6 }, (P) => eq(P[0].life, 4, "lifelines"));
+play("Life on 6: the 6 that enters also counts", { dice: [6, 2], turns: 1, players: 1, rules: L6 }, (P) => eq(P[0].life, 4, "lifelines"));
+play("Life on capture: the captured player loses one", { dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1, rules: L6 }, (P) => both(eq(P[1].pos, 0, "captured"), eq(P[1].life, 2, "lifelines")));
+play("Life on capture: the last one lost -> out", { dice: [3], setup: [{ pos: 10 }, { pos: 13, life: 1 }, { pos: 50 }], turns: 1, players: 3, rules: L6 }, (P) => eq(P[1].out, true, "out"));
 
 console.log(fail ? `\n${fail} FAILED` : "\nALL PASS");
 process.exit(fail ? 1 : 0);
