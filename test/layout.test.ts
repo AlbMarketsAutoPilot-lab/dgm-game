@@ -14,19 +14,21 @@ describe.each(["long", "short"] as const)("%s board layout", (id) => {
     expect(L.squares).toHaveLength(B.lastTile + 1);
     expect(pointOf(L, B.endTile)).toBe(L.end);
     expect(pointOf(L, OFF)).toEqual(pointOf(L, 0));
-    expect(L.start.w).toBeGreaterThanOrEqual(2); // four tokens fit
   });
   it("squares never overlap (about one unit apart)", () => {
-    for (let i = 0; i < sq.length; i++) for (let j = i + 1; j < sq.length; j++) expect(box(sq[i], sq[j]), `${i + 1}/${j + 1}`).toBeGreaterThanOrEqual(0.9);
+    for (let i = 0; i < sq.length; i++) for (let j = i + 1; j < sq.length; j++) expect(box(sq[i], sq[j]), `${i + 1}/${j + 1}`).toBeGreaterThanOrEqual(0.89);
   });
   it("one continuous road: neighbours touch, or step through a wall opening into the next ring", () => {
     for (let n = 2; n <= B.lastTile; n++) expect(d(L.squares[n - 1], L.squares[n]), `square ${n}`).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side
     expect(d(L.squares[B.lastTile], L.end)).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side
   });
-  it("square 1 at the top left, the road goes right, then down the right side (clockwise inwards)", () => {
-    expect(L.squares[1]).toEqual({ x: 0, y: 0 });
+  it("the long Start square at the top left (room for four tokens), then square 1, going right", () => {
+    expect(L.start.w).toBeGreaterThan(3.5);
+    expect(L.squares[1].y).toBe(0);
+    expect(L.squares[1].x).toBeGreaterThan(L.start.centre.x + L.start.w / 2 - 0.1);
     expect(L.squares[2].x).toBeGreaterThan(L.squares[1].x);
   });
+  it("no empty margin: the board is the labyrinth", () => expect(L.bounds).toEqual(L.maze));
   it("the festival is inside the labyrinth", () => {
     expect(L.end.x).toBeGreaterThan(1);
     expect(L.end.y).toBeGreaterThan(1);

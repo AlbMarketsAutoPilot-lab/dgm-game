@@ -336,8 +336,11 @@ export class GameScreen {
   }
 
   private cardInfo(k: keyof typeof CARD_INFO): void {
-    const c = CARD_INFO[k];
-    void this.pops.show({ kind: "info", title: c.title, text: c.text, art: artFor(c.icon, c.title), kicker: "What it does" });
+    const c = CARD_INFO[k], p = this.game.players[this.seat];
+    const n = k === "bonus" ? p.bonus : k === "jailPass" ? p.jailPass : Number(p.snakeLeader);
+    const where = (cat: "card" | "boots") => Object.entries(this.board.tiles).filter(([, t]) => t.icon === cat).map(([q]) => q).join(", ");
+    const have = n ? `${this.name(this.seat)} holds ${n === 1 ? "this card" : `${n} of these`}.` : k === "snakeLeader" ? "" : `${this.name(this.seat)} doesn't have one yet. Land on square ${where(k === "bonus" ? "card" : "boots")} to get it.`;
+    void this.pops.show({ kind: "info", title: c.title, text: c.text, art: artFor(c.icon, c.title), kicker: "Card", outcome: have || undefined, tone: n ? "good" : "" });
   }
 
   private playerInfo(seat: number): void {
@@ -401,13 +404,11 @@ export class GameScreen {
       + (p.bonus || p.jailPass ? `<span class="badge c">${artFor(p.bonus ? "card" : "boots", "")}${p.bonus + p.jailPass}</span>` : "")
       + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">CPU</span>` : "") + `</button>`).join("");
     const p: PlayerState = P[cur];
-    const things = [
-      ...Array.from({ length: p.bonus }, () => ["bonus", "card", "Bonus card"]),
-      ...Array.from({ length: p.jailPass }, () => ["jailPass", "boots", "Bog boots"]),
-      ...(p.snakeLeader ? [["snakeLeader", "snake-crown", "Snake Leader"]] : []),
-    ].map(([k, icon, label]) => `<button class="thing" data-card="${k}" aria-label="${label}: what it does">${artFor(icon, label)}<span>${label}</span></button>`).join("");
+    // The cards: always both slots, so everyone knows what exists; the ones held glow and can be tapped.
+    const slot = (k: keyof typeof CARD_INFO, n: number) => `<button class="gcard ${k}${n ? " held" : ""}" data-card="${k}" aria-label="${CARD_INFO[k].title}: ${n ? `you hold ${n}` : "not held"}. Tap to see what it does">`
+      + `<span class="gc-art">${artFor(CARD_INFO[k].icon, "")}</span><span class="gc-name">${CARD_INFO[k].title}</span>${n > 1 ? `<span class="gc-n">×${n}</span>` : ""}</button>`;
     const status = [p.double ? "×2 next throw" : "", p.slow ? "moves 1 next turn" : "", p.skip ? `waits ${p.skip}` : ""].filter(Boolean).join(" · ");
-    this.hud.innerHTML = `<div class="who">${tokenSvg(cur, "tok", true)}<div><b>${this.name(cur)}'s turn</b><span class="lan" aria-label="${p.lanterns} lanterns">${lanternSvg.repeat(Math.min(p.lanterns, 6))}${p.lanterns > 6 ? `+${p.lanterns - 6}` : ""}${p.lanterns === 0 ? "no lanterns!" : ""}</span>${status ? `<span class="st">${status}</span>` : ""}</div></div>`
-      + `<div class="things">${things}</div>${this.round ? `<span class="round">Round ${this.round}</span>` : ""}`;
+    this.hud.innerHTML = `<div class="who">${tokenSvg(cur, "tok", true)}<div><b>${this.name(cur)}'s turn</b>${this.round ? `<span class="st">Round ${this.round}</span>` : ""}${status ? `<span class="st">${status}</span>` : ""}</div></div>`
+      + `<div class="hand">${slot("bonus", p.bonus)}${slot("jailPass", p.jailPass)}${p.snakeLeader ? slot("snakeLeader", 1) : ""}</div>`;
   }
 }

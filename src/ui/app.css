@@ -31,14 +31,12 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 @media (orientation: landscape) {
   .game { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr); grid-template-areas: "board stage players"; }
 }
-.overview { grid-area: board; position: relative; min-height: 0; min-width: 0; padding: 4px; display: grid; place-items: center; background: var(--table); }
+.overview { grid-area: board; position: relative; min-height: 0; min-width: 0; padding: 2px; display: grid; place-items: center; background: var(--table); }
 .overview-board { width: 100%; height: 100%; }
 .overview-board .pick { cursor: pointer; }
 .overview-board .sq:hover rect:first-child { fill: #fff8e6; }
-.ov-title { font-size: 46px; fill: var(--ink); letter-spacing: 3px; }
-.ov-sub { font-size: 27px; fill: var(--ink); }
-.ov-legend { font-size: 37px; fill: var(--ink); }
-.ov-tip { font-size: 33px; opacity: .85; }
+.ov-sub { font-size: 30px; fill: var(--ink); }
+.zoom-out { position: absolute; left: 8px; bottom: 8px; z-index: 0; font-size: 1.05rem; min-height: 44px; padding: 4px 12px; }
 .overview-board .flow { animation: flow 1.6s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -64; } }
 .ov-token { transition: transform 300ms ease-in-out, opacity 300ms; pointer-events: none; }
@@ -118,18 +116,26 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 @media (orientation: landscape) { .stage-panel { border-top: 0; border-left: 3px solid var(--ink); } }
 
 /* Whose turn: token, lanterns, and their cards (tap a card to see what it does) */
-.hud { display: flex; align-items: center; gap: 8px; padding: 6px 10px; min-height: 56px; border-bottom: 2px dashed rgba(75, 35, 119, .3); }
+.hud { display: flex; align-items: center; gap: 8px; padding: 6px 10px 8px; min-height: 56px; border-bottom: 2px dashed rgba(75, 35, 119, .3); }
 .hud .who { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .hud .who .tok { width: 40px; height: 40px; flex: 0 0 auto; }
 .hud .who b { display: block; font-weight: normal; font-size: 1.3rem; line-height: 1.05; }
-.hud .lan svg { width: 18px; height: 18px; }
 .hud .st { display: block; font-size: .95rem; }
-.hud .things { display: flex; gap: 6px; margin-left: auto; }
-.thing { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 2px 6px; min-height: 48px; min-width: 48px; font-size: .8rem; border-width: 2px; box-shadow: 0 2px 0 var(--ink); }
-.thing .art { width: 34px; height: 34px; }
-.hud .round { font-size: .95rem; opacity: .85; white-space: nowrap; align-self: flex-start; }
-.hud .things + .round { margin-left: 4px; }
-.hud .who + .round { margin-left: auto; }
+/* The hand: game cards (Bonus card, Bog boots, Snake Leader); held ones glow, all can be tapped */
+.hand { display: flex; gap: 8px; margin-left: auto; }
+.gcard {
+  position: relative; width: 62px; height: 80px; min-width: 0; min-height: 0; padding: 4px 3px 3px; display: flex; flex-direction: column; align-items: center;
+  border-radius: 9px; border: 3px solid var(--ink); background: #e9e1cf; box-shadow: 0 3px 0 var(--ink); font-size: .72rem; line-height: 1; color: var(--ink);
+  filter: grayscale(1); opacity: .5;
+}
+.gcard .gc-art { flex: 1; width: 100%; display: block; border-radius: 6px; background: #fffdf6; overflow: hidden; }
+.gcard .gc-art .art { width: 100%; height: 100%; display: block; }
+.gcard .gc-name { margin-top: 3px; white-space: nowrap; }
+.gcard .gc-n { position: absolute; right: -8px; top: -8px; background: var(--ink); color: var(--paper); border-radius: 10px; padding: 2px 6px; font-size: .85rem; }
+.gcard.held { filter: none; opacity: 1; background: linear-gradient(160deg, #fff6b0, #f2c230); animation: card-shine 2.6s ease-in-out infinite; }
+.gcard.held.jailPass { background: linear-gradient(160deg, #d9f0c4, #6fbf73); }
+.gcard.held.snakeLeader { background: linear-gradient(160deg, #cfeaff, #3d74c4); }
+@keyframes card-shine { 0%, 100% { box-shadow: 0 3px 0 var(--ink), 0 0 0 0 rgba(242, 194, 48, 0); } 50% { box-shadow: 0 3px 0 var(--ink), 0 0 14px 4px rgba(242, 194, 48, .8); } }
 
 /* Effects on the stage */
 .fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -238,7 +244,26 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .art-icon .bob { animation: icon-bob 2.4s ease-in-out infinite alternate; }
 @keyframes icon-bob { from { transform: translateY(.4px) rotate(-3deg); } to { transform: translateY(-.6px) rotate(3deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .art *, .stage-token svg, .ov-token .halo, .die, .card, .overview-board .flow { animation: none !important; }
+  .art *, .stage-token svg, .ov-token .halo, .die, .card, .gcard { animation: none !important; }
   .ov-token { transition: none; }
 }
 .act button.big:not(:only-child) { font-size: 1.2rem; padding: 6px 10px; line-height: 1.1; }
+
+/* Popup pictures: light rays turning behind the picture (golden for good luck, stormy for bad), floating motes */
+.pop-art { position: relative; isolation: isolate; }
+.pop-art::before {
+  content: ""; position: absolute; inset: -40%; z-index: -1;
+  background: repeating-conic-gradient(from 0deg, rgba(242, 194, 48, .38) 0 10deg, rgba(255, 253, 246, 0) 10deg 22deg);
+  animation: rays 14s linear infinite;
+}
+.pop.bad .pop-art::before { background: repeating-conic-gradient(from 0deg, rgba(120, 40, 60, .22) 0 10deg, rgba(255, 253, 246, 0) 10deg 22deg); animation-duration: 22s; }
+.pop-art::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(circle at 20% 80%, #fff6b0 0 2px, transparent 3px), radial-gradient(circle at 75% 30%, #fff6b0 0 2px, transparent 3px), radial-gradient(circle at 55% 70%, #fff 0 1.5px, transparent 2.5px);
+  animation: motes 3.2s ease-in-out infinite alternate;
+}
+.pop.bad .pop-art::after { background: radial-gradient(circle at 25% 30%, rgba(75, 35, 119, .5) 0 2px, transparent 3px), radial-gradient(circle at 70% 75%, rgba(75, 35, 119, .4) 0 2px, transparent 3px); }
+@keyframes rays { to { transform: rotate(360deg); } }
+@keyframes motes { from { transform: translateY(4px); opacity: .5; } to { transform: translateY(-6px); opacity: 1; } }
+.pop-art > svg, .pop-art .art { position: relative; filter: drop-shadow(0 4px 3px rgba(43, 18, 72, .35)); }
+@media (prefers-reduced-motion: reduce) { .pop-art::before, .pop-art::after { animation: none; } }

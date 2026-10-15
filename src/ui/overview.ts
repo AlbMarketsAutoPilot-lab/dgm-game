@@ -1,17 +1,18 @@
 // The whole board (the info area, owner 15 Oct): where am I, and what is ahead of me?
-// A labyrinth spiral of plain paper squares with ink walls between the rings. No numbers and no crayon colours:
-// good squares have a green frame (and ▲), bad squares a red frame (and ▼). The only colours are the players'
-// tokens and the paper's old ladders and snakes, now cable cars (forward) and rivers (back). Tap any square, stone
-// or pad to see what happens there. The squares the current player can reach with one die show a small die face.
+// A labyrinth spiral of plain paper squares with thin ink walls between the rings, as big as the panel allows. No
+// numbers, no colours, no lines: good squares have a green frame (and ▲), bad squares a red frame (and ▼). Tap any
+// square to see what happens there; where squares are small (the long board), the first tap zooms in.
+// The squares the current player can reach with one die show a small die face.
 import { OFF, OUT, isShortcut, shortcutPos, type Board, type Pos } from "../engine";
-import { artFor } from "../render/art";
-import { type BoardLayout, type Point, layoutFor, pointOf } from "../render/layout";
+import { WALL_WIDE, type BoardLayout, type Point, layoutFor, pointOf } from "../render/layout";
 import { INK, PAPER, PUNISH, REWARD } from "../render/palette";
+
+/** Squares smaller than this on screen (px) are zoomed in on first. */
+const TAP = 40;
 import { PLAYERS, tokenSvg } from "./players";
 
 const U = 100;
 const WALL = "#3b1f5e";
-const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const PIPS: Record<number, [number, number][]> = {
   1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
   5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
@@ -26,6 +27,9 @@ export class Overview {
   private readonly tree: SVGGElement;
   private readonly reach: SVGGElement;
   private readonly end: number;
+  private readonly full: string;
+  private readonly zoomOut: HTMLButtonElement;
+  private zoomed = false;
 
   constructor(host: HTMLElement, board: Board, players: number, onPick: (pos: Pos) => void) {
     const L = (this.layout = layoutFor(board)), B = L.bounds;
@@ -42,13 +46,12 @@ export class Overview {
     };
     for (let n = 1; n < board.lastTile; n++) if (Math.hypot(L.squares[n + 1].x - L.squares[n].x, L.squares[n + 1].y - L.squares[n].y) > 1.1) s += link(L.squares[n], L.squares[n + 1]);
     s += link(L.squares[board.lastTile], L.end);
-    // Shortcut trails and stones (inside the walls)
+    // Shortcut stones (small squares inside the wider walls)
     for (const sc of L.shortcuts) {
-      s += `<polyline points="${sc.trail.map((q) => `${P(q).x},${P(q).y}`).join(" ")}" fill="none" stroke="#cbbfe0" stroke-width="5" stroke-dasharray="4 9" stroke-linecap="round"/>`;
       sc.stones.forEach((q, i) => {
-        const t = board.rules.forks[sc.fork].tiles[i + 1], c = P(q), r = t ? 17 : 13;
-        s += `<g class="pick" data-pos="${shortcutPos(sc.fork, i + 1)}"><circle cx="${c.x}" cy="${c.y}" r="${r + 9}" fill="transparent"/>`
-          + `<ellipse cx="${c.x}" cy="${c.y}" rx="${r}" ry="${r * 0.82}" fill="#d9d2c4" stroke="${t ? (t.cat === "R" ? REWARD : PUNISH) : INK}" stroke-width="${t ? 7 : 3}"/></g>`;
+        const t = board.rules.forks[sc.fork].tiles[i + 1], c = P(q), r = (WALL_WIDE * U) / 2 - 2;
+        s += `<g class="pick" data-pos="${shortcutPos(sc.fork, i + 1)}"><rect x="${c.x - r - 10}" y="${c.y - r - 10}" width="${2 * r + 20}" height="${2 * r + 20}" fill="transparent"/>`
+          + `<rect x="${c.x - r}" y="${c.y - r}" width="${2 * r}" height="${2 * r}" rx="5" fill="#d9d2c4" stroke="${t ? (t.cat === "R" ? REWARD : PUNISH) : INK}" stroke-width="${t ? 7 : 3}"/></g>`;
       });
     }
     // the squares
@@ -68,43 +71,33 @@ export class Overview {
       }
       s += `</g>`;
     }
-    // Start pad (Home and Start: room for four tokens) and the festival
-    const sp = P(L.start.centre), sw = L.start.w * U, sh = L.start.h * U, first = P(L.squares[1]);
-    s += `<path d="M${sp.x + sw / 2 - 4} ${first.y}H${first.x - 52}" stroke="${INK}" stroke-width="8" stroke-dasharray="2 14" stroke-linecap="round"/>`
-      + `<g class="pick" data-pos="0"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="22" fill="${PAPER}" stroke="${INK}" stroke-width="8"/>`
-      + `<rect x="${sp.x - sw / 2 + 10}" y="${sp.y - sh / 2 + 10}" width="${sw - 20}" height="${sh - 20}" rx="15" fill="none" stroke="${INK}" stroke-width="2.5" stroke-dasharray="7 7"/>`
-      + `<text x="${sp.x}" y="${sp.y - sh / 2 + 50}" text-anchor="middle" class="ov-title">START</text>`
-      + `<text x="${sp.x}" y="${sp.y - sh / 2 + 82}" text-anchor="middle" class="ov-sub">a 6 to set off</text></g>`;
-    const e = P(L.end), ew = L.endPad.w * U;
-    s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - ew / 2}" width="${ew}" height="${ew}" rx="24" fill="#fff4c8" stroke="${INK}" stroke-width="8"/>`
-      + artFor("lanterns", "Festival of Lights").replace("<svg ", `<svg x="${e.x - ew / 2 + 14}" y="${e.y - ew / 2 + 38}" width="${ew - 28}" height="${ew - 52}" `)
-      + `<text x="${e.x}" y="${e.y - ew / 2 + 30}" text-anchor="middle" class="ov-sub">FESTIVAL</text></g>`;
-    // cable cars (forward) and rivers (back)
-    L.drawings.forEach((d, i) => {
-      const pts = d.path.map(P), line = pts.map((q) => `${q.x},${q.y}`).join(" ");
-      if (d.kind === "river") {
-        s += `<polyline points="${line}" fill="none" stroke="#3d74c4" stroke-opacity=".55" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>`
-          + `<polyline class="flow" points="${line}" fill="none" stroke="#bfe6ff" stroke-width="6" stroke-dasharray="10 22" stroke-linecap="round"/>`;
-      } else {
-        const [a, b] = [pts[0], pts.at(-1)!], id = `cable${i}`;
-        s += `<path id="${id}" d="M${a.x} ${a.y}L${b.x} ${b.y}" stroke="#3a2f45" stroke-width="5"/>`
-          + [a, b].map((q) => `<circle cx="${q.x}" cy="${q.y}" r="11" fill="#3a2f45"/>`).join("")
-          + `<g><rect x="-17" y="-4" width="34" height="26" rx="6" fill="#d8433b" stroke="${INK}" stroke-width="4"/><path d="M0 -4v-12" stroke="#3a2f45" stroke-width="4"/><rect x="-11" y="2" width="22" height="9" rx="2" fill="#bfe6ff"/>`
-          + (reduced() ? `<animateMotion dur="1s" fill="freeze" keyPoints=".5;.5" keyTimes="0;1" calcMode="linear"><mpath href="#${id}"/></animateMotion>` : `<animateMotion dur="${(5 + i).toFixed(1)}s" repeatCount="indefinite" keyPoints="0;1;1;0;0" keyTimes="0;.42;.5;.92;1" calcMode="linear"><mpath href="#${id}"/></animateMotion>`)
-          + `</g>`;
-      }
-    });
+    // Start (four squares long: everyone waits here) and the festival
+    const sp = P(L.start.centre), sw = L.start.w * U - 4, sh = U - 4;
+    s += `<g class="pick" data-pos="0"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
+      + `<text x="${sp.x - sw / 2 + 14}" y="${sp.y - sh / 2 + 32}" class="ov-sub">START · roll a 6 →</text></g>`;
+    const e = P(L.end), ew = U - 4;
+    s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - ew / 2}" width="${ew}" height="${ew}" rx="10" fill="#f2c230" stroke="${INK}" stroke-width="7"/>`
+      + `<path d="M${e.x} ${e.y - 30}l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" fill="#fff6b0" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/></g>`;
     host.innerHTML = `<svg class="overview-board" viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The whole board">`
-      + s + this.legend(P)
+      + s
       + `<g class="reach" aria-hidden="true"></g>`
       + `<g class="tree" opacity="0" aria-hidden="true"><path d="M-34 16l64-28M-30 26l64-28" stroke="#6b4f34" stroke-width="13" stroke-linecap="round"/><circle cx="32" cy="-16" r="18" fill="#3c8c50" stroke="${INK}" stroke-width="4"/></g>`
       + `<g class="tokens"></g></svg>`;
     this.svg = host.querySelector("svg")!;
     this.tree = this.svg.querySelector(".tree")!;
     this.reach = this.svg.querySelector(".reach")!;
+    this.full = `0 0 ${B.w * U} ${B.h * U}`;
+    this.zoomOut = document.createElement("button");
+    this.zoomOut.className = "zoom-out";
+    this.zoomOut.textContent = "Whole board";
+    this.zoomOut.hidden = true;
+    this.zoomOut.onclick = () => this.zoom(null);
+    host.append(this.zoomOut);
     this.svg.addEventListener("click", (ev) => {
       const g = (ev.target as Element).closest<SVGGElement>(".pick");
-      if (g) onPick(Number(g.dataset.pos));
+      if (!g) return;
+      if (!this.zoomed && Math.min(this.svg.clientWidth / L.bounds.w, this.svg.clientHeight / L.bounds.h) < TAP) return this.zoom(ev);
+      onPick(Number(g.dataset.pos));
     });
     const layer = this.svg.querySelector(".tokens")!;
     for (let i = 0; i < players; i++) {
@@ -119,18 +112,19 @@ export class Overview {
     this.layoutTokens();
   }
 
-  private legend(P: (p: Point) => Point): string {
-    const g = this.layout.legend, o = P({ x: g.x, y: g.y }), row = 84;
-    const items: [string, string][] = [
-      [`<rect x="0" y="-22" width="44" height="44" rx="6" fill="${PAPER}" stroke="${REWARD}" stroke-width="9"/>`, "good luck"],
-      [`<rect x="0" y="-22" width="44" height="44" rx="6" fill="${PAPER}" stroke="${PUNISH}" stroke-width="9"/>`, "bad luck"],
-      [`<rect x="-4" y="-26" width="52" height="52" rx="8" fill="${WALL}"/><ellipse cx="22" cy="0" rx="15" ry="12" fill="#d9d2c4" stroke="${INK}" stroke-width="3"/>`, "Shortcut"],
-      [`<path d="M0 0H44" stroke="#3a2f45" stroke-width="5"/><rect x="11" y="-6" width="22" height="18" rx="4" fill="#d8433b" stroke="${INK}" stroke-width="3"/>`, "cable car: up"],
-      [`<path d="M0 0q11-12 22 0t22 0" fill="none" stroke="#3d74c4" stroke-opacity=".7" stroke-width="16" stroke-linecap="round"/>`, "river: back"],
-    ];
-    return `<g class="legend" transform="translate(${o.x + 8} ${o.y + 30})" aria-hidden="true">`
-      + items.map(([icon, label], i) => `<g transform="translate(0 ${i * row})">${icon}<text x="62" y="12" class="ov-legend">${label}</text></g>`).join("")
-      + `<text x="0" y="${items.length * row + 6}" class="ov-legend ov-tip">Tap a square</text><text x="0" y="${items.length * row + 50}" class="ov-legend ov-tip">to see what's there</text></g>`;
+  /** Zooms in around a tap so the squares are big enough to tap (null = the whole board again). */
+  private zoom(ev: MouseEvent | null): void {
+    if (!ev) { this.svg.setAttribute("viewBox", this.full); this.zoomed = false; this.zoomOut.hidden = true; return; }
+    const r = this.svg.getBoundingClientRect(), B = this.layout.bounds;
+    const fit = Math.min(r.width / B.w, r.height / B.h); // px per unit now
+    const k = Math.max(1.5, 54 / fit), vw = (r.width / fit / k) * U, vh = (r.height / fit / k) * U;
+    // the tapped point in board coordinates (the drawing is centred in the svg)
+    const ox = (r.width - B.w * fit) / 2, oy = (r.height - B.h * fit) / 2;
+    const bx = ((ev.clientX - r.left - ox) / fit) * U, by = ((ev.clientY - r.top - oy) / fit) * U;
+    const x = Math.max(0, Math.min(B.w * U - vw, bx - vw / 2)), y = Math.max(0, Math.min(B.h * U - vh, by - vh / 2));
+    this.svg.setAttribute("viewBox", `${x} ${y} ${vw} ${vh}`);
+    this.zoomed = true;
+    this.zoomOut.hidden = false;
   }
 
   /** Puts a token on a place (the token glides there). */
@@ -193,7 +187,7 @@ export class Overview {
       const same = groups.get(key(pl))!, k = same.indexOf(i), n = same.length;
       const c = this.px(pointOf(this.layout, pl.pos, pl.stair));
       let dx = 0, dy = 0;
-      if (key(pl) === "pad") { dx = (k % 2 ? 1 : -1) * 50; dy = 14 + Math.floor(k / 2) * 84; }
+      if (key(pl) === "pad") { dx = (i - 1.5) * U; dy = 8; }
       else if (n > 1) { dx = (k - (n - 1) / 2) * 30; dy = n > 2 ? (k % 2 ? 14 : -14) : 0; }
       t.style.opacity = pl.pos === OFF ? ".75" : "1";
       t.style.transform = `translate(${c.x + dx}px, ${c.y + dy}px)${n > 1 && key(pl) !== "pad" ? " scale(.8)" : ""}`;
