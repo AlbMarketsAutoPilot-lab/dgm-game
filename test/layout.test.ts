@@ -24,7 +24,9 @@ describe.each(["long", "short"] as const)("%s board layout", (id) => {
   });
   it("one continuous road: neighbours touch, or step through a wall opening into the next ring", () => {
     for (let n = 2; n <= B.lastTile; n++) expect(d(L.squares[n - 1], L.squares[n]), `square ${n}`).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side
-    expect(d(L.squares[B.lastTile], L.end)).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side
+    // the festival fills the middle (owner: no empty space); the last square touches it
+    const E = L.endPad, q = L.squares[B.lastTile];
+    expect(Math.max(0, Math.abs(q.x - E.centre.x) - E.w / 2) + Math.max(0, Math.abs(q.y - E.centre.y) - E.h / 2)).toBeLessThanOrEqual(0.75);
   });
   it("the long Start square at the top left (room for four tokens), then square 1, going right", () => {
     expect(L.start.w).toBeGreaterThan(3.5);

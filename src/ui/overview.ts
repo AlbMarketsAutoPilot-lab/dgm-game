@@ -4,7 +4,7 @@
 // square to see what happens there; where squares are small (the long board), the first tap zooms in.
 // The squares the current player can reach with one die show a small die face.
 import { OFF, OUT, isShortcut, shortcutPos, type Board, type Pos } from "../engine";
-import { WALL_WIDE, type BoardLayout, type Point, layoutFor, pointOf } from "../render/layout";
+import { WALL_WIDE, type BoardLayout, type Point, designFor, layoutFor, pointOf } from "../render/layout";
 import { INK, PAPER, PUNISH, REWARD } from "../render/palette";
 
 /** Squares smaller than this on screen (px) are zoomed in on first. */
@@ -19,22 +19,44 @@ const PIPS: Record<number, [number, number][]> = {
 };
 
 export class Overview {
-  readonly layout: BoardLayout;
+  layout!: BoardLayout;
   private readonly board: Board;
-  private readonly svg: SVGSVGElement;
-  private readonly tokens: SVGGElement[] = [];
+  private svg!: SVGSVGElement;
+  private tokens: SVGGElement[] = [];
   private readonly places: { pos: Pos; stair: number }[] = [];
-  private readonly tree: SVGGElement;
-  private readonly reach: SVGGElement;
+  private tree!: SVGGElement;
+  private reach!: SVGGElement;
   private readonly end: number;
-  private readonly full: string;
+  private full = "";
   private readonly zoomOut: HTMLButtonElement;
   private zoomed = false;
+  /** What is shown, so the board can be drawn again in another shape (the screen turned). */
+  private current = -1;
+  private roadblock: number | null = null;
+  private reachFrom: Pos | null = null;
+  private design = "";
 
-  constructor(host: HTMLElement, board: Board, players: number, onPick: (pos: Pos) => void) {
-    const L = (this.layout = layoutFor(board)), B = L.bounds;
+  constructor(private readonly host: HTMLElement, board: Board, private readonly players: number, private readonly onPick: (pos: Pos) => void) {
     this.board = board;
     this.end = board.endTile;
+    for (let i = 0; i < players; i++) this.places.push({ pos: OFF, stair: 0 });
+    this.zoomOut = document.createElement("button");
+    this.zoomOut.className = "zoom-out";
+    this.zoomOut.textContent = "Whole board";
+    this.zoomOut.hidden = true;
+    this.zoomOut.onclick = () => this.zoom(null);
+    host.append(this.zoomOut);
+    this.build();
+    // the board takes the shape that gives the biggest squares in its panel (owner: no empty space)
+    new ResizeObserver(() => { if (designFor(board, host.clientWidth, host.clientHeight).join("x") !== this.design) this.build(); }).observe(host);
+  }
+
+  private build(): void {
+    const host = this.host, board = this.board, players = this.players, onPick = this.onPick;
+    this.design = designFor(board, host.clientWidth, host.clientHeight).join("x");
+    const L = (this.layout = layoutFor(board, host.clientWidth, host.clientHeight)), B = L.bounds;
+    this.zoomed = false;
+    this.zoomOut.hidden = true;
     const P = (p: Point) => ({ x: (p.x - B.x) * U, y: (p.y - B.y) * U });
     const M = L.maze, m = P({ x: M.x, y: M.y });
     let s = `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="${WALL}"/>`;
@@ -77,24 +99,24 @@ export class Overview {
     const sp = P(L.start.centre), sw = L.start.w * U - 4, sh = U - 4;
     s += `<g class="pick" data-pos="0"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
       + `<text x="${sp.x - sw / 2 + 14}" y="${sp.y - sh / 2 + 32}" class="ov-sub">START: a 6 to enter</text></g>`;
-    const e = P(L.end), ew = U - 4;
-    s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - ew / 2}" width="${ew}" height="${ew}" rx="10" fill="#f2c230" stroke="${INK}" stroke-width="7"/>`
-      + `<path d="M${e.x} ${e.y - 30}l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" fill="#fff6b0" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/></g>`;
-    host.innerHTML = `<svg class="overview-board" viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The whole board">`
+    // the festival fills the middle of the spiral (it grows into the space the squares leave)
+    const e = P(L.endPad.centre), ew = L.endPad.w * U - 4, eh = L.endPad.h * U - 4, k = Math.min(ew, eh) / 96, big = ew >= 190 && eh >= 150;
+    s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="12" fill="#f2c230" stroke="${INK}" stroke-width="7"/>`
+      + `<path d="M0 -30l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" transform="translate(${e.x} ${e.y - (big ? 18 : 0)}) scale(${Math.min(k, big ? 1.6 : 2.4)})" fill="#fff6b0" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`
+      + (big ? `<text x="${e.x}" y="${e.y + eh / 2 - 22}" text-anchor="middle" class="ov-sub">Festival of Lights</text>` : "") + `</g>`;
+    const markup = `<svg class="overview-board" viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The whole board">`
       + s
       + `<g class="reach" aria-hidden="true"></g>`
       + `<g class="tree" opacity="0" aria-hidden="true"><path d="M-34 16l64-28M-30 26l64-28" stroke="#6b4f34" stroke-width="13" stroke-linecap="round"/><circle cx="32" cy="-16" r="18" fill="#3c8c50" stroke="${INK}" stroke-width="4"/></g>`
       + `<g class="tokens"></g></svg>`;
-    this.svg = host.querySelector("svg")!;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = markup;
+    const svg = tmp.firstElementChild as SVGSVGElement;
+    if (this.svg) this.svg.replaceWith(svg); else host.prepend(svg);
+    this.svg = svg;
     this.tree = this.svg.querySelector(".tree")!;
     this.reach = this.svg.querySelector(".reach")!;
     this.full = `0 0 ${B.w * U} ${B.h * U}`;
-    this.zoomOut = document.createElement("button");
-    this.zoomOut.className = "zoom-out";
-    this.zoomOut.textContent = "Whole board";
-    this.zoomOut.hidden = true;
-    this.zoomOut.onclick = () => this.zoom(null);
-    host.append(this.zoomOut);
     this.svg.addEventListener("click", (ev) => {
       const g = (ev.target as Element).closest<SVGGElement>(".pick");
       if (!g) return;
@@ -102,6 +124,7 @@ export class Overview {
       onPick(Number(g.dataset.pos));
     });
     const layer = this.svg.querySelector(".tokens")!;
+    this.tokens = [];
     for (let i = 0; i < players; i++) {
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.classList.add("ov-token");
@@ -109,9 +132,11 @@ export class Overview {
         + `<g transform="translate(-40 -40) scale(.8)">${tokenSvg(i).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g>`;
       layer.append(g);
       this.tokens.push(g);
-      this.places.push({ pos: OFF, stair: 0 });
     }
     this.layoutTokens();
+    if (this.current >= 0) this.setCurrent(this.current);
+    this.setRoadblock(this.roadblock);
+    this.setReach(this.reachFrom);
   }
 
   /** Zooms in around a tap so the squares are big enough to tap (null = the whole board again). */
@@ -142,11 +167,13 @@ export class Overview {
 
   /** Highlights the player whose turn it is. */
   setCurrent(seat: number): void {
+    this.current = seat;
     this.tokens.forEach((t, i) => t.classList.toggle("current", i === seat));
     this.tokens[seat].parentNode!.append(this.tokens[seat]);
   }
 
   setRoadblock(square: number | null): void {
+    this.roadblock = square;
     if (square === null) { this.tree.setAttribute("opacity", "0"); return; }
     const c = this.px(this.layout.squares[square]);
     this.tree.setAttribute("transform", `translate(${c.x} ${c.y})`);
@@ -155,6 +182,7 @@ export class Overview {
 
   /** Die faces on the squares 1–6 ahead of `pos` (Main Road; null = none). */
   setReach(pos: Pos | null): void {
+    this.reachFrom = pos;
     let s = "";
     if (pos !== null && pos !== OFF && pos !== OUT) {
       for (let k = 1; k <= 6; k++) {

@@ -68,10 +68,14 @@ export const WALL_WIDE = 0.44;
 /** How long the Start square is (it holds up to four tokens side by side). */
 export const START_LEN = 4;
 
-const DESIGNS: Record<string, { w: number; h: number }> = {
-  // Without the Shortcuts (owner, 15 Oct) the walls are all thin: these sizes let the spiral fill the board.
-  long: { w: 15.5, h: 13.5 },
-  short: { w: 11.5, h: 9 },
+/**
+ * Board sizes (w × h units) where the spiral fills the board with (almost) no empty space in the middle (owner,
+ * 15 Oct: no empty space, bigger squares). Each suits a different panel shape, from tall to wide; the board view
+ * takes the one that gives the biggest squares in its panel. The first is the default.
+ */
+const DESIGNS: Record<string, [number, number][]> = {
+  long: [[16.25, 12.5], [12.5, 16.25], [12.75, 16], [14.25, 15.25], [15.5, 14.25], [15.5, 13.5], [17.75, 13.25], [19.5, 13], [20, 12.75], [19.5, 10.25]],
+  short: [[11, 9.75], [8.25, 12], [9.5, 11.75], [10, 10.25], [10.25, 10], [11.5, 9.25], [12.5, 9.25], [12, 8], [15, 9.25], [15.25, 9]],
 };
 
 /** The paper drawings (archived transcription §6.1, §8.1): ladders and snakes, by their long-board squares. */
@@ -104,15 +108,23 @@ function spiral(w: number, h: number, count: number, gaps: number[]): { pts: Poi
   return { pts, along, ring };
 }
 
-const cache = new Map<Board, BoardLayout>();
+const cache = new Map<Board, Map<string, BoardLayout>>();
 
-export function layoutFor(board: Board): BoardLayout {
-  const hit = cache.get(board);
-  if (hit) return hit;
-  const design = DESIGNS[board.id];
-  if (!design) throw new Error(`no layout for board "${board.id}"`);
-  const layout = layoutForDesign(board, design.w, design.h);
-  cache.set(board, layout);
+/** The board size that gives the biggest squares in a panel of panelW × panelH pixels (no panel: the default). */
+export function designFor(board: Board, panelW = 0, panelH = 0): [number, number] {
+  const list = DESIGNS[board.id];
+  if (!list) throw new Error(`no layout for board "${board.id}"`);
+  if (!(panelW > 0 && panelH > 0)) return list[0];
+  const side = ([w, h]: [number, number]) => Math.min(panelW / (w + 1 + 2 * WALL_THIN), panelH / (h + 1 + 2 * WALL_THIN));
+  return list.reduce((best, d) => (side(d) > side(best) + 0.01 ? d : best));
+}
+
+export function layoutFor(board: Board, panelW = 0, panelH = 0): BoardLayout {
+  const [w, h] = designFor(board, panelW, panelH), key = `${w}x${h}`;
+  let byBoard = cache.get(board);
+  if (!byBoard) cache.set(board, (byBoard = new Map()));
+  let layout = byBoard.get(key);
+  if (!layout) byBoard.set(key, (layout = layoutForDesign(board, w, h)));
   return layout;
 }
 
@@ -136,14 +148,32 @@ export function layoutForDesign(board: Board, w: number, h: number): BoardLayout
   const s0 = road.pts[0], s1 = road.pts[START_LEN - 1];
   const start: Pad = { centre: lerp(s0, s1, 0.5), w: dist(s0, s1) + dist(s0, road.pts[1]), h: 1 };
   const squares = [start.centre, ...road.pts.slice(START_LEN, START_LEN + last)], along = [START_LEN, ...road.along.slice(START_LEN, START_LEN + last)];
-  const end = road.pts[START_LEN + last];
-  const endPad: Pad = { centre: end, w: 1, h: 1 };
-  const next = (n: number) => (n < last ? squares[n + 1] : end);
+  const roadEnd = road.pts[START_LEN + last];
+  const next = (n: number) => (n < last ? squares[n + 1] : roadEnd);
   const heading = squares.map((p, n) => {
     if (n === 0) return { x: 1, y: 0 };
     const q = next(n), d = dist(p, q) || 1;
     return { x: (q.x - p.x) / d, y: (q.y - p.y) / d };
   });
+  // The festival grows into whatever space the spiral leaves in the middle, so the board has no empty hole.
+  const boxes = squares.map((p, n) => {
+    if (n === 0) return { x0: p.x - start.w / 2, x1: p.x + start.w / 2, y0: p.y - 0.5, y1: p.y + 0.5 };
+    const horiz = Math.abs(heading[n].x) > Math.abs(heading[n].y), a = along[n], bw = horiz ? a : 1, bh = horiz ? 1 : a;
+    return { x0: p.x - bw / 2, x1: p.x + bw / 2, y0: p.y - bh / 2, y1: p.y + bh / 2 };
+  });
+  type Box = { x0: number; x1: number; y0: number; y1: number };
+  const clear = (q: Box) => q.x0 >= -0.5 && q.y0 >= -0.5 && q.x1 <= w + 0.5 && q.y1 <= h + 0.5
+    && boxes.every((b) => b.x1 <= q.x0 + 1e-6 || b.x0 >= q.x1 - 1e-6 || b.y1 <= q.y0 + 1e-6 || b.y0 >= q.y1 - 1e-6);
+  let pad: Box = { x0: roadEnd.x - 0.45, x1: roadEnd.x + 0.45, y0: roadEnd.y - 0.45, y1: roadEnd.y + 0.45 };
+  for (let grew = clear(pad); grew;) {
+    grew = false;
+    for (const [k, d] of [["x0", -0.05], ["x1", 0.05], ["y0", -0.05], ["y1", 0.05]] as const) {
+      const t = { ...pad, [k]: pad[k] + d };
+      if (clear(t)) { pad = t; grew = true; }
+    }
+  }
+  const end = { x: (pad.x0 + pad.x1) / 2, y: (pad.y0 + pad.y1) / 2 };
+  const endPad: Pad = { centre: end, w: pad.x1 - pad.x0, h: pad.y1 - pad.y0 };
   // inwards = the heading turned right (the road turns clockwise)
   const inward = (n: number) => ({ x: -heading[n].y, y: heading[n].x });
   // Each Shortcut runs in the wall beside its Main Road squares, on the inner or the outer side, whichever is clear.
