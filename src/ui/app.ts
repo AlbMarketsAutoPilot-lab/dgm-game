@@ -255,6 +255,7 @@ export class GameScreen {
       });
       if (v === "fx") sound.set("fx", !fx);
       else if (v === "music") sound.set("music", !music);
+      else if (v === "replaced" && !this.gone && !this.game.over) continue; // a story of the turn took its place: open again, it stays until Done
       else return;
     }
   }
