@@ -221,3 +221,15 @@ authorised); now every sound is in the package and stored for offline at install
 
 Found and fixed while building: on a folded phone (280 px) the two switches pushed "Postcards" and "How to play" off
 the start screen; "Let's go!" is narrower there, so all stay on one line.
+
+## 9. Copyright and privacy (owner, 15 Oct, for Google Play)
+
+| What | Built | Tested |
+|---|---|---|
+| Notice | "© 2026 Connect AL · Copyright · Privacy" at the foot of the start screen (on a phone held sideways, under the players) | all 19 screen sizes; accessibility scan |
+| Copyright page | `public/copyright.html`: all rights reserved; what is protected (code, boards, texts, pictures, name and look); what players may do; what needs written permission; material by others and its licences; how to report copying | browser test: link, page, way back; accessibility scan; opens offline |
+| Privacy Policy | `public/privacy.html`, written for Google Play's user-data rules: no personal data collected; what the game keeps on the device (4 things, each named) and how to delete it; hosting (GitHub Pages, Google Play); no permissions beyond vibration; children; changes; contact | `test/legal.test.ts`: every storage key in the code is named in the policy (a new one fails the test until the policy says it) |
+| Licences | `LICENSE` (all rights reserved), `package.json` `"license": "UNLICENSED"`; `public/licenses/third-party.txt` with the font's SIL Open Font License (which must travel with the font), the CC0 sound credits and Vite's MIT notice | `test/legal.test.ts`: every sound file credited |
+
+The pages are plain HTML with no script and their own strict security policy; the offline worker stores them with the
+rest of the game. Contact on both pages: the project's GitHub issues page.

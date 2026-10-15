@@ -121,7 +121,7 @@ export async function checkPublished(browser, pub, report) {
       const keys = new Set((await (await caches.open(name)).keys()).map((r) => new URL(r.url).pathname));
       return files.every((f) => keys.has(f.slice(1)));
     }, [CACHE, FILES.map((f) => f.replace(/^\./, ""))], { timeout: 30000, polling: 500 }).then(() => true, () => false);
-    let offline = false, starts = false, sounds = [], why = stored ? "" : `the offline worker did not store all ${FILES.length} files within 30 s`;
+    let offline = false, starts = false, sounds = [], legal = [], why = stored ? "" : `the offline worker did not store all ${FILES.length} files within 30 s`;
     if (stored) {
       await own.close(); // the site is gone
       errors.length = 0; // from now on, failed downloads are expected (the worker answers instead)
@@ -138,17 +138,46 @@ export async function checkPublished(browser, pub, report) {
           }, SOUND_FILES);
           await page.click(".setup .go"); starts = await page.locator(".pop button", { hasText: "Let's go" }).waitFor({ timeout: 8000 }).then(() => true, () => false);
           if (starts) { await page.locator(".pop button", { hasText: "Let's go" }).click(); await someTurns(page, 20); }
+          for (const [file, title] of [["copyright.html", "Copyright"], ["privacy.html", "Privacy Policy"]]) {
+            await page.goto(`${url}/${file}`);
+            if ((await page.textContent("h1").catch(() => "")) !== title) legal.push(file);
+          }
         }
         if (sounds.length) why = `sounds not on the device: ${sounds.join(", ")}`;
+        if (legal.length) why += ` pages not on the device: ${legal.join(", ")}`;
       } catch (e) {
         const state = await page.evaluate(async (name) => ({ controlled: !!navigator.serviceWorker.controller, keys: (await (await caches.open(name)).keys()).map((r) => new URL(r.url).pathname + new URL(r.url).search) }), CACHE).catch((x) => String(x));
         why = `${String(e).split("\n")[0]}; worker: ${JSON.stringify(state)}`;
       }
     }
     const failed = errors.filter((e) => !/^(net::|Failed to fetch)/.test(e));
-    report.add(G, "offline (the site gone): the game opens, sound switched on for the first time plays every sound, a game is played", offline && starts && !sounds.length && !failed.length, why || failed.slice(0, 3).join(" | "));
+    report.add(G, "offline (the site gone): the game opens, sound switched on for the first time plays every sound, a game is played, the copyright and privacy pages open", offline && starts && !sounds.length && !legal.length && !failed.length, why || failed.slice(0, 3).join(" | "));
     await ctx.close();
     await own.close().catch(() => {});
+  }
+
+  // 2b. Copyright and privacy (owner, 15 Oct, for Google Play): the notice on the start screen, its two links, the
+  // pages and their way back; the third-party licences; no security-policy violation
+  {
+    const { ctx, page, errors } = await newPage(browser);
+    await page.goto(url + "/"); await page.waitForSelector(".setup .go");
+    const notice = (await page.textContent(".setup .s-legal"))?.includes("© 2026 Connect AL");
+    const seen = [];
+    for (const [link, title, words] of [["Copyright", "Copyright", "All rights reserved"], ["Privacy", "Privacy Policy", "collects no personal data"]]) {
+      await page.locator(".setup .s-legal a", { hasText: link }).click();
+      await page.waitForSelector("h1");
+      const ok = (await page.textContent("h1")) === title && (await page.textContent("body")).includes(words) && (await page.textContent("body")).includes("Connect AL");
+      if (!ok) seen.push(`${link} page`);
+      if (link === "Copyright") {
+        const r = await page.request.get(url + "/licenses/third-party.txt"), t = r.ok() ? await r.text() : "";
+        if (!(t.includes("SIL OPEN FONT LICENSE") && t.includes("CC0") && t.includes("MIT License"))) seen.push("third-party licences");
+      }
+      await page.locator("a.back").click();
+      if (!(await page.locator(".setup .go").waitFor({ timeout: 8000 }).then(() => true, () => false))) seen.push(`back from ${link}`);
+    }
+    report.add(G, "copyright and privacy: the notice on the start screen, both pages, the licences, back to the game", notice && !seen.length && !errors.length,
+      [!notice && "no notice", ...seen, ...errors].filter(Boolean).join(", "));
+    await ctx.close();
   }
 
   // 3. Tampered or blocked storage: no crash, nothing runs, no Continue for a broken save
@@ -200,6 +229,8 @@ export async function checkPublished(browser, pub, report) {
     await page.keyboard.press("Escape"); await page.waitForSelector(".setup .go"); await scan("the start screen");
     await page.click(".album-open"); await scan("the postcard album"); await page.keyboard.press("Escape");
     await page.click(".setup .go"); await page.locator(".pop button", { hasText: "Let's go" }).waitFor(); await scan("the game screen with a popup");
+    await page.goto(url + "/copyright.html"); await scan("the copyright page");
+    await page.goto(url + "/privacy.html"); await scan("the privacy page");
     await ctx.close();
   }
 

@@ -29,6 +29,7 @@ export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setu
           <div class="seats">${PLAYERS.slice(0, players).map((p, i) => `<button class="seat" data-seat="${i}">${tokenSvg(i, "mini")}<span>${esc(p.name)}</span><b>${computer[i] ? "Computer" : "Person"}</b></button>`).join("")}</div>
         </section>
         <footer class="s-go"><button class="go primary">Let's go!</button>${switchButtons()}<div class="s-more"><button class="album-open">Postcards · ${POSTCARDS.filter((p) => album.has(p.id)).length} / ${POSTCARDS.length}</button><button class="how-open">How to play</button></div></footer>
+        <p class="s-legal">© 2026 Connect AL · <a href="./copyright.html">Copyright</a> · <a href="./privacy.html">Privacy</a></p>
       </div>`;
     root.querySelectorAll<HTMLButtonElement>("[data-board]").forEach((b) => b.onclick = () => { board = b.dataset.board as BoardId; render(); });
     root.querySelectorAll<HTMLButtonElement>("[data-players]").forEach((b) => b.onclick = () => { players = Number(b.dataset.players); render(); });

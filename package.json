@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "description": "Don't Get Mad! — a hand-drawn family race game (web + Android).",
+  "author": "Connect AL",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",
