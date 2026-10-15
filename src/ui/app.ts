@@ -12,6 +12,7 @@ import { PLAYERS, tokenSvg } from "./players";
 import { Popups, type PopupContent } from "./popup";
 import { Stage } from "./stage";
 import { MOMENTS, fill, outcome, taleOf, type Tale } from "./tales";
+import { loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 
 export interface Setup {
   board: Board;
@@ -42,6 +43,9 @@ export class GameScreen {
   private readonly hud: HTMLElement;
   private readonly act: HTMLElement;
   private round = 0;
+  /** Postcards collected on this device, and the new ones from this game. */
+  private readonly album = loadAlbum();
+  private readonly newCards: Postcard[] = [];
   private seat = 0;
   /** This turn's story so far (newest first): the popup shows the newest, with the earlier ones below it. */
   private told: PopupContent[] = [];
@@ -101,11 +105,17 @@ export class GameScreen {
     const m = w === null ? MOMENTS.nobody : this.game.lastStanding ? MOMENTS.winLast : MOMENTS.win;
     if (w !== null) { this.overview.setCurrent(w); this.stage.celebrate("win"); this.stage.stamp("good", "Champion!"); }
     this.setAct([]);
-    const again = await this.pops.show({
-      kind: "win", tone: "good", art: artFor("lanterns", "Festival of Lights"), kicker: "The end of the journey",
-      title: fill(m.title, { p: w === null ? "" : this.name(w) }), text: fill(m.text, { p: w === null ? "" : this.name(w) }),
-      buttons: [{ label: "Play again", value: "again", primary: true }, { label: "New game", value: "new" }],
-    });
+    const cards = this.newCards.length ? `<p class="pop-sub">New postcard${this.newCards.length > 1 ? "s" : ""}: <b>${this.newCards.map((c) => c.title).join(", ")}</b></p>` : "";
+    let again: string;
+    for (;;) {
+      again = await this.pops.show({
+        kind: "win", tone: "good", art: artFor("lanterns", "Festival of Lights"), kicker: "The end of the journey",
+        title: fill(m.title, { p: w === null ? "" : this.name(w) }), text: fill(m.text, { p: w === null ? "" : this.name(w) }), more: cards || undefined,
+        buttons: [{ label: "Play again", value: "again", primary: true }, { label: "New game", value: "new" }, { label: "Album", value: "album" }],
+      });
+      if (again !== "album") break;
+      await showAlbum();
+    }
     this.onExit(again !== "new");
   }
 
@@ -140,7 +150,7 @@ export class GameScreen {
     for (;;) {
       const fresh = this.game.events.slice(shown);
       shown = this.game.events.length;
-      for (const e of fresh) await this.play(e);
+      for (const e of fresh) { await this.play(e); this.collect(e); }
       if (r.done) break;
       r = t.next(comp ? simplePlayer(r.value, this.game) : await this.decide(r.value));
     }
@@ -151,6 +161,17 @@ export class GameScreen {
     if (comp && this.setup.computer[next]) await wait(1300);
     else await this.ask([{ label: `Pass the die to ${this.name(next)} ▶`, value: "ok" }]);
     this.setAct([]);
+  }
+
+  /** Journey postcards (GCD §12): a person earns one the first time on this device; a stamp on the square says so. */
+  private collect(e: GameEvent): void {
+    for (const c of postcardsFor(this.board, e, (seat) => !this.setup.computer[seat])) {
+      if (this.album.has(c.id)) continue;
+      this.album.add(c.id);
+      this.newCards.push(c);
+      saveAlbum(this.album);
+      this.stage.stamp("good", "New postcard!"); // waits for the square's own stamp
+    }
   }
 
   /** A person's choice (R21: the road, the bonus card), in a popup. */

@@ -23,6 +23,13 @@ Two areas plus the players:
 - **Turn** (`app.ts`): Roll (or tap the die) → the move → what happens → "Pass the die to Red ▶". Computer players
   (GCD §8.6) play by themselves. No auto-focus: the game is played by tapping, not by holding Enter.
 
+- **Stamps** (`stage.ts`): a big word on the square for the big moments ("Woohoo!", "Ouch!", "Bump!", "Dodged it!",
+  "New postcard!", …), one at a time; never in the popups (owner).
+- **Journey postcards** (`postcards.ts`, GCD §12): 8 regions + 8 special moments, earned by the people at the table
+  (not computer players) from the engine's events, kept only on this device (`localStorage`, every access in
+  try / catch; blocked storage = no album, same game). "New postcard!" stamp when one is earned; the win popup names
+  the new ones; the album opens from the start screen ("Postcards · 5 / 16") and the win popup.
+
 Every rule comes from the engine (`src/engine`); this folder only shows its events and answers its decisions.
 Accessibility: tokens differ by colour and shape, good/bad by colour and ▲/▼, big buttons, no timers for people,
 "reduce motion" stops the animations (reading pauses stay). `?fast` in the address fast-forwards games (testing).

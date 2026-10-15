@@ -82,6 +82,8 @@ export class Stage {
   private readonly strip: HTMLElement;
   private readonly token: HTMLElement;
   private readonly fx: HTMLElement;
+  /** When the stamp showing now is gone (stamps never overlap). */
+  private stampFree = 0;
   private cards: HTMLElement[] = [];
   private index = 0;
 
@@ -128,14 +130,19 @@ export class Stage {
   /** A big stamp over the square: "Lucky!", "Don't get mad!" … */
   stamp(kind: "good" | "bad", say?: string): string {
     const words = say ? [say] : kind === "good" ? ["Lucky!", "Yes!", "Woohoo!", "Nice one!", "Jackpot!", "Look at you!"] : ["Don't get mad!", "Oh no!", "Ouch!", "Seriously?!", "Not again!", "Typical."];
-    const el = document.createElement("div");
-    el.className = `stamp ${kind}`;
-    const word = (el.textContent = words[Math.floor(Math.random() * words.length)]);
-    this.fx.append(el);
-    const r = reduced();
-    el.animate(r ? [{ opacity: 1 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }] : [{ transform: "translate(-50%, -50%) scale(2.6) rotate(-14deg)", opacity: 0 }, { transform: "translate(-50%, -50%) scale(1) rotate(-8deg)", opacity: 1, offset: 0.18 },
-      { transform: "translate(-50%, -50%) scale(1.06) rotate(-8deg)", opacity: 1, offset: 0.75 }, { transform: "translate(-50%, -80%) scale(.9) rotate(-8deg)", opacity: 0 }], { duration: 1500, easing: "ease-out", fill: "forwards" });
-    setTimeout(() => el.remove(), 1600);
+    const word = words[Math.floor(Math.random() * words.length)];
+    // one stamp at a time: a second one waits until the first has gone
+    const now = performance.now(), start = Math.max(now, this.stampFree);
+    this.stampFree = start + 1500;
+    setTimeout(() => {
+      const el = document.createElement("div");
+      el.className = `stamp ${kind}`;
+      el.textContent = word;
+      this.fx.append(el);
+      el.animate(reduced() ? [{ opacity: 1 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }] : [{ transform: "translate(-50%, -50%) scale(2.6) rotate(-14deg)", opacity: 0 }, { transform: "translate(-50%, -50%) scale(1) rotate(-8deg)", opacity: 1, offset: 0.18 },
+        { transform: "translate(-50%, -50%) scale(1.06) rotate(-8deg)", opacity: 1, offset: 0.75 }, { transform: "translate(-50%, -80%) scale(.9) rotate(-8deg)", opacity: 0 }], { duration: 1500, easing: "ease-out", fill: "forwards" });
+      setTimeout(() => el.remove(), 1600);
+    }, start - now);
     return word;
   }
 

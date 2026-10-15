@@ -271,3 +271,22 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 @keyframes motes { from { transform: translateY(4px); opacity: .5; } to { transform: translateY(-6px); opacity: 1; } }
 .pop-art > svg, .pop-art .art { position: relative; filter: drop-shadow(0 4px 3px rgba(43, 18, 72, .35)); }
 @media (prefers-reduced-motion: reduce) { .pop-art::before, .pop-art::after { animation: none; } }
+
+/* ---- Journey postcards (GCD §12) and the album ---- */
+.pc { position: relative; width: 100%; aspect-ratio: 3 / 2; display: grid; grid-template-columns: 42% 1fr; gap: 10px; padding: 10px;
+  background: #fffdf6; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 5px 0 rgba(75, 35, 119, .25); color: var(--ink); text-align: center; }
+.pc .pic { border: 3px solid var(--ink); border-radius: 8px; overflow: hidden; background: var(--paper); align-self: center; aspect-ratio: 1; }
+.pc .pic .art { width: 100%; height: 100%; display: block; }
+.pc .side { position: relative; display: flex; flex-direction: column; justify-content: center; border-left: 2px dashed rgba(75, 35, 119, .35); padding-left: 10px; }
+.pc h3 { margin: 0; font-weight: normal; font-size: 1.3rem; line-height: 1.05; }
+.pc p { margin: 6px 0 0; font-size: 1rem; line-height: 1.2; }
+.pc .post { position: absolute; right: 0; top: 0; width: 30px; height: 36px; border: 2px dashed var(--ink); border-radius: 3px; background: #f2c230; }
+.pc .mark { position: absolute; right: 22px; top: 22px; width: 34px; height: 34px; border: 2px solid rgba(75, 35, 119, .45); border-radius: 50%; }
+.pc.locked { background: var(--paper-2); }
+.pc.locked .pic { opacity: .18; filter: grayscale(1); }
+.pc.locked h3 { opacity: .6; } .pc.locked .post { background: #e0d6c0; }
+.pc .how { font-size: .9rem; opacity: .85; }
+.album { position: fixed; inset: 0; z-index: 10; overflow: auto; background: var(--paper); padding: 0 12px 30px; }
+.album-top { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; background: var(--paper); border-bottom: 2px dashed rgba(75, 35, 119, .3); }
+.album-top h2 { margin: 0; font-weight: normal; font-size: 1.8rem; } .album-top h2 span { font-size: 1.2rem; opacity: .8; }
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; max-width: 1000px; margin: 14px auto 0; }

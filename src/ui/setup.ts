@@ -2,11 +2,13 @@
 import { BOARDS, type BoardId } from "../engine";
 import type { Setup } from "./app";
 import { PLAYERS, tokenSvg } from "./players";
+import { POSTCARDS, loadAlbum, showAlbum } from "./postcards";
 
 export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setup) => void): void {
   let board: BoardId = (last?.board.id as BoardId) ?? "short", players = last?.players ?? 2;
   const computer = last ? [...last.computer] : [false, true, true, true];
   const render = () => {
+    const album = loadAlbum();
     root.innerHTML = `
       <div class="setup">
         <h1>Don't Get Mad!</h1>
@@ -17,10 +19,12 @@ export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setu
         <div class="row">${[2, 3, 4].map((n) => `<button class="pick num" data-players="${n}" aria-pressed="${players === n}">${n}</button>`).join("")}</div>
         <div class="seats">${PLAYERS.slice(0, players).map((p, i) => `<button class="seat" data-seat="${i}">${tokenSvg(i, "mini")}<span>${p.name}</span><b>${computer[i] ? "Computer" : "Person"}</b></button>`).join("")}</div>
         <button class="go primary">Let's go!</button>
+        <p><button class="album-open">Postcards · ${POSTCARDS.filter((p) => album.has(p.id)).length} / ${POSTCARDS.length}</button></p>
       </div>`;
     root.querySelectorAll<HTMLButtonElement>("[data-board]").forEach((b) => b.onclick = () => { board = b.dataset.board as BoardId; render(); });
     root.querySelectorAll<HTMLButtonElement>("[data-players]").forEach((b) => b.onclick = () => { players = Number(b.dataset.players); render(); });
     root.querySelectorAll<HTMLButtonElement>("[data-seat]").forEach((b) => b.onclick = () => { const i = Number(b.dataset.seat); computer[i] = !computer[i]; render(); });
+    root.querySelector<HTMLButtonElement>(".album-open")!.onclick = () => void showAlbum().then(render);
     root.querySelector<HTMLButtonElement>(".go")!.onclick = () => start({ board: BOARDS[board], players, computer: computer.slice(0, players) });
   };
   render();
