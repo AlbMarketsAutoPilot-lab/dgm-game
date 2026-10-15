@@ -265,13 +265,14 @@ export class GameScreen {
       case "bonusUsed": {
         const m = e.use === "defend" ? M.bonusDefend : M.bonusAttack;
         st.cardPlayed();
+        st.stamp(e.use === "defend" ? "good" : "bad", e.use === "defend" ? "Dodged it!" : "Spoiled!");
         this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad");
         this.render();
         await wait(1500);
         break;
       }
       case "doubleNext": this.render(); break;
-      case "snakeLeader": this.render();
+      case "snakeLeader": this.render(); st.stamp("good", "Snake Leader!");
         this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good"); await wait(1200); break;
       case "swap": {
         const mine = this.places[e.player];
