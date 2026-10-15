@@ -147,6 +147,14 @@
    "story": "Wrong snake. This one goes all the way back.",
    "icon": "snake-down"
   },
+  "85": {
+   "cat": "R",
+   "type": "card",
+   "card": "bonus",
+   "text": "Bonus card: once, whenever you like - avoid one of your punishments OR cancel a reward of another player",
+   "story": "A kind stranger slips you a Bonus card.",
+   "icon": "card"
+  },
   "91": {
    "cat": "P",
    "type": "jump",

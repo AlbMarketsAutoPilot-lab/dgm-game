@@ -59,8 +59,9 @@ export const REGION_WASH = [
 
 /** Crayon colour of an event square. The short board reuses the long board's events, so it reuses their colours. */
 export function crayonFor(board: Board, square: number, tile: Tile): string {
-  if (board.id === "long") return PAPER_COLOURS[square] ?? CRAYON.grey;
-  const long = Object.entries(BOARDS.long.tiles).find(([, t]) => t.story === tile.story);
+  if (board.id === "long" && PAPER_COLOURS[square]) return PAPER_COLOURS[square];
+  // a square that is not on the paper (the short board's, the second Bonus card) takes the colour of the same event
+  const long = Object.entries(BOARDS.long.tiles).find(([k, t]) => t.story === tile.story && PAPER_COLOURS[Number(k)]);
   return (long && PAPER_COLOURS[Number(long[0])]) ?? CRAYON.grey;
 }
 

@@ -114,6 +114,8 @@ Bonus card square confirmed: **60**. Bonus card use: **avoid your own next punis
 | R20 | ~~Two roads (Main Road and the Shortcut).~~ **Removed by the owner, 15 Oct 2026:** there are no crossroads and no Shortcut on either board; a throw is always counted in full. |
 | R21 | **Who decides what.** The only player choice is the **bonus card** (R14). Nothing a player chooses can cost or win a lifeline. (The road choice went with R20, owner 15 Oct 2026.) |
 
+**Owner, 15 Oct 2026: a second Bonus card square** (long 155, short 85; same card as R14), chosen from the five calculations in `docs/analysis/audit-2026-10-15.md` §4: fewer falls, more close finishes, shorter games, still fair (seats 24.7–25.6%). The order of good and bad squares stays (spreading them evenly measured worse).
+
 **Owner, 15 Oct 2026 (real-life test):** R2, R17 and R20 changed as written above; the computer players are unchanged (they never had a choice left but the Bonus card). Measured, 40,000 games per board: every seat wins 24.7–25.2% (±0.42); long 52.1 rounds, short 30.1. Report: `docs/analysis/audit-2026-10-15.md`.
 
 **Status (14 Oct 2026): rules R1–R21 are FROZEN (owner).** Boards: the long board `data/board-long.json` (the paper squares; its `rules` are identical to `data/board-v0-paper.json`) and the short board `data/board-short.json` (§10.1). **Square numbers in R6–R11 and R20 are long-board squares;** the short board's own squares (trap 15, crossroads 41 and 80, …) are in §10.1 and in its file. Measurements of the frozen game: `docs/analysis/measure-frozen.md`, `docs/analysis/lifelines-final.md`, `docs/analysis/lifelines-compare.md` (version A = R18), `docs/analysis/sixes-and-captures.md`.

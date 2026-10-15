@@ -14,9 +14,9 @@ describe("board files", () => {
     }
   });
 
-  it("sizes: long Start + 202 + END, short Start + 100 + END; 41 and 23 event squares", () => {
-    expect([BOARDS.long.lastTile, BOARDS.long.endTile, Object.keys(BOARDS.long.tiles).length]).toEqual([202, 203, 41]);
-    expect([BOARDS.short.lastTile, BOARDS.short.endTile, Object.keys(BOARDS.short.tiles).length]).toEqual([100, 101, 23]);
+  it("sizes: long Start + 202 + END, short Start + 100 + END; 42 and 24 event squares (a second Bonus card: owner 15 Oct)", () => {
+    expect([BOARDS.long.lastTile, BOARDS.long.endTile, Object.keys(BOARDS.long.tiles).length]).toEqual([202, 203, 42]);
+    expect([BOARDS.short.lastTile, BOARDS.short.endTile, Object.keys(BOARDS.short.tiles).length]).toEqual([100, 101, 24]);
   });
 
   it("every tile type in the boards has a rule test", () => {

@@ -252,6 +252,14 @@
    "story": "Waiting for the tide. Wait one turn.",
    "icon": "waves"
   },
+  "155": {
+   "cat": "R",
+   "type": "card",
+   "card": "bonus",
+   "text": "Bonus card: once, whenever you like - avoid one of your punishments OR cancel a reward of another player",
+   "story": "A kind stranger slips you a Bonus card.",
+   "icon": "card"
+  },
   "158": {
    "cat": "P",
    "type": "jump",

@@ -30,7 +30,7 @@ const robotSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6V3.5
 const lanternSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6M12 2v2M8 7h8l-1 11H9zM8 7c0-2 8-2 8 0M9.5 18h5v2.5h-5z" fill="#f2c230" stroke="#4b2377" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 const CARD_INFO = {
-  bonus: { icon: "card", title: "Bonus card", text: "With this card you have the power to <b>cancel a punishment</b> for yourself, or <b>cancel a reward</b> for another player. Use it once, whenever you choose: the game asks you each time the moment comes." },
+  bonus: { icon: "card", title: "Bonus card", text: "With this card you have the power to cancel a punishment for yourself or cancel a reward for another player. Use any time at your will." },
   jailPass: { icon: "boots", title: "Bog boots", text: "They work by themselves: the next time the Bog would catch you, you walk straight through. Then they're worn out." },
   snakeLeader: { icon: "snake-crown", title: "Snake Leader", text: "You rode the sea snake. Careful: if you land on the very last square, the snake wants its ride back." },
 };
