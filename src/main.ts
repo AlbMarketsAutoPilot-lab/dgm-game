@@ -17,3 +17,11 @@ function menu(): void {
 }
 
 document.fonts.load('100px "Patrick Hand"').finally(menu);
+
+// Offline (Step 7): only in the built game, so development always shows the latest code. Works without it too.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").then(() => navigator.serviceWorker.ready).then((r) => {
+    const files = performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.startsWith(location.origin));
+    r.active?.postMessage({ cache: files });
+  }).catch(() => {});
+}

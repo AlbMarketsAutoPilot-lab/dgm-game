@@ -16,12 +16,15 @@ Two areas plus the players:
 - **Popups** (`popup.ts`) over the whole board: every story moment, choice and the win. A story popup stays until the
   next one replaces it, or until it is closed with ✕; the moments earlier in the same turn are listed under it. A
   choice is explained in the popup; its buttons wait in the action area.
-- **Players** (`app.ts`): round avatars on top (portrait) or on the right (landscape), with lanterns and cards; tap one
+- **Players** (`app.ts`): round avatars on top (portrait) or on the right (landscape), with lanterns and cards (a computer player wears a small robot badge); tap one
   for everything about that player (place, squares to go, cards, waiting, a tip for the next throw).
 - **Narrative** (`tales.ts`): a tale per event square, Shortcut stone and rule moment, for young adults first. What a
   square does is always derived from the engine's tile (`outcome()`), never written by hand.
 - **Turn** (`app.ts`): Roll (or tap the die) → the move → what happens → "Pass the die to Red ▶". Computer players
-  (GCD §8.6) play by themselves. No auto-focus: the game is played by tapping, not by holding Enter.
+  (GCD §8.6) play by themselves.
+- **Spoil question** (`spoil.ts`, R14, owner Step 5b): a person holding a Bonus card is asked "Spoil Blue's luck?"
+  for each reward another player lands on: "Spoil it!", "Let it go", or "Don't ask me again this game" (from then
+  on that person's answer is "Let it go"; for this game only, nothing is stored). No auto-focus: the game is played by tapping, not by holding Enter.
 
 - **Stamps** (`stage.ts`): a big word on the square for the big moments ("Woohoo!", "Ouch!", "Bump!", "Dodged it!",
   "New postcard!", …), one at a time; never in the popups (owner).
@@ -33,3 +36,8 @@ Two areas plus the players:
 Every rule comes from the engine (`src/engine`); this folder only shows its events and answers its decisions.
 Accessibility: tokens differ by colour and shape, good/bad by colour and ▲/▼, big buttons, no timers for people,
 "reduce motion" stops the animations (reading pauses stay). `?fast` in the address fast-forwards games (testing).
+
+**Offline and install (Step 7):** `public/manifest.webmanifest` (name, colours, icons in `public/icons/`, drawn from the
+four tokens) and `public/sw.js` (only in the built game: pages network-first, everything else cache-first; the page
+hands over the files it loaded before the worker took charge). `.github/workflows/pages.yml` tests, builds and
+publishes `dist/` to GitHub Pages on every push to `main`.
