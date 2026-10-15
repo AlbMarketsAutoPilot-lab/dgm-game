@@ -170,6 +170,19 @@ export class Game implements GameView {
 
   private *waitingTurn(pi: number): Turn {
     const p = this.players[pi], off = p.pos === OFF, where = off ? "start" : "trap";
+    // Owner, 15 Oct: with a lantern left, the player may spend it to leave at once (no throws for a 6), then throws to
+    // move as on any turn. Never offered with 0 lanterns (the next loss puts the player out, R18).
+    if (p.lanterns >= 1 && (yield { kind: "spendLantern", player: pi, where, tries: p.tries, lanterns: p.lanterns })) {
+      p.tries = 0;
+      if (off) p.pos = START; else p.trapped = false;
+      this.emit({ type: "released", player: pi, where, bySix: false, stairs: 0, paid: true });
+      this.loseLantern(pi); // never out: at least one lantern was left
+      let n = p.slow ? 1 : this.throwSequence(0);
+      p.slow = false;
+      if (p.double) { n *= 2; p.double = false; }
+      yield* this.moveBy(pi, n);
+      return;
+    }
     const r = this.throwDie();
     if (r === 6) { // freed; the 6 itself never moves you, you throw again (owner, 15 Oct: "6 to enter, 2 to move")
       p.tries = 0;
@@ -333,9 +346,10 @@ export class Game implements GameView {
 
   // ---- Event squares ----
 
-  private trap(pi: number): void {
+  /** R6: the Bog. Bog boots walk through it once, if the player chooses to wear them (owner, 15 Oct: asked, not automatic). */
+  private *trap(pi: number): Turn {
     const p = this.players[pi];
-    if (p.jailPass > 0) { p.jailPass--; this.emit({ type: "bogBoots", player: pi }); }
+    if (p.jailPass > 0 && (yield { kind: "bogBoots", player: pi, square: p.pos })) { p.jailPass--; this.emit({ type: "bogBoots", player: pi }); }
     else { p.trapped = true; this.emit({ type: "trapped", player: pi, square: p.pos }); }
   }
 
@@ -364,7 +378,7 @@ export class Game implements GameView {
       case "skip": case "hospital":
         p.skip += t.turns!; this.emit({ type: "wait", player: pi, turns: t.turns! }); break;
       case "prison":
-        this.trap(pi); break;
+        yield* this.trap(pi); break;
       case "slowNext":
         p.slow = true; this.emit({ type: "slowNext", player: pi }); break;
       case "card":
@@ -387,7 +401,7 @@ export class Game implements GameView {
       case "jump":
         this.jumpTo(pi, t.to!, "tile");
         if (t.grant === "snakeLeader") { p.snakeLeader = true; this.emit({ type: "snakeLeader", player: pi }); }
-        if (t.then === "prison") this.trap(pi);
+        if (t.then === "prison") yield* this.trap(pi);
         if (t.then === "hospital") { p.skip += 3; this.emit({ type: "wait", player: pi, turns: 3 }); }
         if (t.then === "skip2") { p.skip += 2; this.emit({ type: "wait", player: pi, turns: 2 }); }
         break;
@@ -435,12 +449,15 @@ export function runTurn(game: Game, decide: Decider): GameEvent[] {
 
 /**
  * The computer player (GCD §8.6) = the simulator's "simple" player, so every measured number holds for it:
- * always the Main Road, the bonus card on its own next punishment, never against another player.
+ * always the Main Road, the bonus card on its own next punishment, never against another player, the Bog boots
+ * always, and never a lantern spent to leave Home or the Bog.
  */
 export const simplePlayer: Decider = (d: Decision): Answer => {
   switch (d.kind) {
     case "road": return "main";
     case "bonusDefend": return true;
     case "bonusAttack": return false;
+    case "bogBoots": return true; // as the simulator: the boots always walk through
+    case "spendLantern": return false; // as the simulator: always throws for a 6
   }
 };

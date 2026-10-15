@@ -5,7 +5,7 @@
 import { BOARDS, Game, type Answer, type Board, type BoardId } from "../engine";
 
 /** Bump when a rule change in the engine would play a saved game differently (old saves are then dropped). */
-const VERSION = 1;
+const VERSION = 2; // 2 (owner, 15 Oct): the Bog boots and spending a lantern are answers too; older saves would replay wrong
 const KEY = "dgm.game.v1";
 
 export interface SavedGame {

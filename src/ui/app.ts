@@ -38,7 +38,7 @@ const lanternSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6M
 
 const CARD_INFO = {
   bonus: { icon: "card", title: "Bonus card", text: "With this card you have the power to cancel a punishment for yourself or cancel a reward for another player. Use any time at your will." },
-  jailPass: { icon: "boots", title: "Bog boots", text: "They work by themselves: the next time the Bog would catch you, you walk straight through. Then they're worn out." },
+  jailPass: { icon: "boots", title: "Bog boots", text: "When the Bog would catch you, you're asked: wear them and walk straight through, or keep them for later. Once worn, they're worn out." },
   snakeLeader: { icon: "snake-crown", title: "Snake Leader", text: "You rode the sea snake. Careful: if you land on the very last square, the snake wants its ride back." },
 };
 
@@ -63,6 +63,12 @@ export class GameScreen {
   private spoil = new SpoilQuestion();
   /** This turn's story so far (newest first); only the newest is shown (owner: no list of earlier moments). */
   private told: PopupContent[] = [];
+  /** When the story popup on screen has been read (see `story`). */
+  private readUntil = 0;
+  /** The seat that just spent a lantern to leave Home or the Bog: they throw to move themselves (owner, 15 Oct). */
+  private paid = -1;
+  /** A person's choice before a turn at Home or in the Bog: spend a lantern (true) or roll for a 6. */
+  private spendNow = false;
   /** Where each token is shown (follows the events, one step behind the engine's final state). */
   private readonly places: Pos[];
   /** What decides this game (U1: saved after every turn, so it can be continued). */
@@ -274,7 +280,8 @@ export class GameScreen {
   private async turn(): Promise<void> {
     const seat = (this.seat = this.nextSeat()), p = this.game.players[seat], comp = this.setup.computer[seat];
     this.told = [];
-    if (!comp) this.pops.clear(); // a person's turn starts with the whole board in view
+    this.paid = -1; this.spendNow = false;
+    if (!comp) { await this.readFirst(); this.pops.clear(); } // a person's turn starts with the whole board in view
     this.overview.setCurrent(seat);
     this.overview.zoomOutAll();
     this.dice.clear();
@@ -288,11 +295,20 @@ export class GameScreen {
     this.overview.setReach(p.skip > 0 || p.trapped || p.pos === OFF || p.slow ? null : pl, p.double);
     if (p.skip > 0) {
       const who = this.name(seat), left = p.skip - 1, cause = this.waitCause[seat];
-      this.story(seat, { title: MOMENTS.wait.title, text: cause ? `${who} landed on <b>${cause}</b>, which says “miss turns”. So ${who} skips this turn.` : fill(MOMENTS.wait.text, { p: who }), art: artFor("big-clock", "Waiting") },
+      await this.story(seat, { title: MOMENTS.wait.title, text: cause ? `${who} landed on <b>${cause}</b>, which says “miss turns”. So ${who} skips this turn.` : fill(MOMENTS.wait.text, { p: who }), art: artFor("big-clock", "Waiting") },
         left > 0 ? `${left} more turn${left > 1 ? "s" : ""} to wait after this one.` : `Next turn ${who} plays again.`);
       if (comp) await this.wait(1400); else await this.ask([{ label: "OK, skip this turn", value: "ok" }]);
     } else if (comp) {
       await this.wait(800);
+    } else if ((p.pos === OFF || p.trapped) && p.lanterns >= 1) {
+      // Owner, 15 Oct: at Home or in the Bog, roll for a 6, or spend a lantern to go at once (then throw to move)
+      this.dice.ready(true);
+      const v = await Promise.race([
+        this.ask([{ label: "Roll for a 6", value: "roll", primary: true }, { label: `Spend a lantern and go (${p.lanterns} left)`, value: "spend" }]),
+        this.dice.tapped().then(() => "roll"),
+      ]);
+      this.spendNow = v === "spend";
+      this.dice.ready(false);
     } else {
       this.dice.ready(true);
       await Promise.race([this.ask([{ label: "Roll the die", value: "roll" }]), this.dice.tapped()]);
@@ -310,11 +326,12 @@ export class GameScreen {
         if (e.type === "tile") sum = e.tile.type === "rollSum" ? e.tile.dice ?? 0 : e.tile.type === "extraRoll" ? -1 : 0;
         if (e.type === "move" || e.type === "jump") { rolls = []; if (e.type === "move") sum = 0; }
         // A person throws every die themselves (owner): after a 6, and on "throw 3 times".
-        if (e.type === "roll" && !comp && e.player === seat && (rolls.length || sum)) await this.rollAgain(rolls, sum);
+        if (e.type === "roll" && !comp && e.player === seat && (rolls.length || sum || this.paid === seat)) await this.rollAgain(rolls, sum);
+        if (e.type === "roll" && this.paid === e.player) this.paid = -1;
         await this.play(e);
         if (e.type === "roll") rolls.push(e.value);
         const after = fresh.slice(fresh.indexOf(e) + 1);
-        if (e.type === "roll" && e.value === 6 && sum <= 0 && !comp && e.player === seat && after[0]?.type !== "released" && after.some((x) => x.type === "roll" && x.player === seat)) this.sixParty(seat);
+        if (e.type === "roll" && e.value === 6 && sum <= 0 && !comp && e.player === seat && after[0]?.type !== "released" && after.some((x) => x.type === "roll" && x.player === seat)) await this.sixParty(seat);
         this.collect(e);
       }
       if (r.done) break;
@@ -353,6 +370,7 @@ export class GameScreen {
   private async decide(d: Decision): Promise<Answer> {
     if (this.setup.computer[d.player]) return simplePlayer(d, this.game);
     if (d.kind === "bonusAttack" && !this.spoil.asks(d.player)) return false;
+    if (d.kind === "spendLantern") return this.spendNow; // chosen with the buttons before the turn
     const v = await this.choose(d);
     this.pops.clear();
     if (d.kind === "bonusAttack") return this.spoil.answer(d.player, v);
@@ -360,16 +378,16 @@ export class GameScreen {
   }
 
   /** A 6 for a person: a popup and a stamp, then they roll again themselves. */
-  private sixParty(seat: number): void {
+  private async sixParty(seat: number): Promise<void> {
     sound.play("six");
     this.stage.celebrate("good");
     this.stage.stamp("good", "A six!");
-    this.story(seat, { title: "A 6!", text: "Lucky you: a 6 always gives you one more throw, and the throws add up. Roll again!", art: artFor("lanterns", "A six") }, "Three 6s in a row win a lantern.", "good");
+    await this.story(seat, { title: "A 6!", text: "Lucky you: a 6 always gives you one more throw, and the throws add up. Roll again!", art: artFor("lanterns", "A six") }, "Three 6s in a row win a lantern.", "good");
   }
 
   /** Waits for a person to throw the next die of this turn. */
   private async rollAgain(rolls: number[], sum: number): Promise<void> {
-    const label = sum > 0 ? `Throw ${rolls.length + 1} of ${sum}` : "Roll again";
+    const label = sum > 0 ? `Throw ${rolls.length + 1} of ${sum}` : rolls.length ? "Roll again" : "Roll to move";
     this.dice.ready(true);
     await Promise.race([this.ask([{ label, value: "roll", primary: true }]), this.dice.tapped()]);
     this.dice.ready(false);
@@ -377,8 +395,9 @@ export class GameScreen {
   }
 
   /** The choice: the popup explains it, the big buttons wait in the action area. */
-  private choose(d: Decision): Promise<string> {
+  private async choose(d: Decision): Promise<string> {
     const who = this.name(d.player);
+    await this.readFirst(); // the square's own story first
     switch (d.kind) {
       case "road": return Promise.resolve("main"); // never asked: the boards have no Shortcut (owner, 15 Oct; C2)
       case "bonusDefend": {
@@ -399,6 +418,15 @@ export class GameScreen {
         });
         return this.ask([{ label: "Spoil it!", value: "yes", primary: true }, { label: "Let it go", value: "no" }, { label: "Don't ask me again this game", value: "never" }]);
       }
+      case "bogBoots": { // owner, 15 Oct: asked, not worn by themselves
+        void this.pops.show({
+          kind: "choice", tone: "bad", art: cardFace("jailPass", "Bog boots"), kicker: `${who} · The Bog`,
+          title: "Wear your Bog boots?", text: "The Bog is about to catch you. Your boots carry you straight through, once. Or keep them for a worse moment.",
+          outcome: "Without the boots: stuck until a 6, or until you spend a lantern.",
+        });
+        return this.ask([{ label: "Wear the boots: walk through!", value: "yes", primary: true }, { label: "Keep the boots", value: "no" }]);
+      }
+      case "spendLantern": return "no"; // answered by the buttons before the turn (decide)
     }
   }
 
@@ -413,7 +441,7 @@ export class GameScreen {
       case "roll": sound.play("dice"); await this.dice.roll(e.value); break;
       case "skipTurn": await this.wait(500); break;
       case "noSix":
-        this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`);
+        await this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`);
         await this.wait(900);
         break;
       case "released": {
@@ -422,7 +450,11 @@ export class GameScreen {
         this.render();
         if (e.bySix) { st.celebrate("good"); sound.play("six"); }
         if (e.bySix) st.stamp("good", e.where === "start" ? "A six!" : "Free!");
-        this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
+        if (e.paid) { // owner, 15 Oct: a lantern spent to leave at once; the lantern's own event follows quietly
+          this.paid = e.player;
+          const m = e.where === "start" ? M.paidHome : M.paidBog;
+          await this.story(e.player, { ...m, text: fill(m.text, { p: this.name(e.player) }), art: artFor("lantern", "A lantern spent") }, `${this.game.players[e.player].lanterns - 1} lantern${this.game.players[e.player].lanterns === 2 ? "" : "s"} left.`, "good");
+        } else await this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
         await this.wait(900);
         break;
       }
@@ -433,7 +465,7 @@ export class GameScreen {
         break;
       case "overshoot": {
         const need = this.board.endTile - this.places[e.player];
-        this.story(e.player, { ...M.overshoot, art: artFor("lanterns", "Festival"), text: fill(M.overshoot.text, { n: need }) },
+        await this.story(e.player, { ...M.overshoot, art: artFor("lanterns", "Festival"), text: fill(M.overshoot.text, { n: need }) },
           `Rolled ${e.squares}, needed exactly ${need}: you stay where you are.${need === 6 ? " A 6 can never finish: a 6 always throws again, so the total is at least 7." : ""}`, "bad");
         await this.wait(1100);
         break;
@@ -445,7 +477,7 @@ export class GameScreen {
         st.celebrate(tone);
         st.stamp(tone);
         this.noteWait(e);
-        this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone);
+        await this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone);
         await this.wait(1700);
         break;
       }
@@ -463,52 +495,53 @@ export class GameScreen {
         this.overview.setPlace(e.victim, START);
         st.celebrate("bump");
         st.stamp("bad", "Bump!");
-        this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad");
+        await this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad");
         this.render();
         await this.wait(1400);
         break;
-      case "roadblockHit": st.celebrate("bad"); this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await this.wait(1300); break;
+      case "roadblockHit": st.celebrate("bad"); await this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await this.wait(1300); break;
       case "trapped": sound.play("bog"); if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
-        this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "Only a 6 gets you out.", "bad"); await this.wait(1100); break;
+        await this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "A 6 gets you out, or spend a lantern.", "bad"); await this.wait(1100); break;
       case "bogBoots": sound.play("card"); st.celebrate("good"); st.stamp("good", "Not today, Bog!");
-        this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await this.wait(1300); break;
+        await this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await this.wait(1300); break;
       case "card": sound.play("card"); this.render(); await this.wait(300); break;
       case "bonusUsed": {
         sound.play("card");
         const m = e.use === "defend" ? M.bonusDefend : M.bonusAttack;
         st.cardPlayed();
         st.stamp(e.use === "defend" ? "good" : "bad", e.use === "defend" ? "Dodged it!" : "Spoiled!");
-        this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad");
+        await this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad");
         this.render();
         await this.wait(1500);
         break;
       }
       case "doubleNext": this.render(); break;
       case "snakeLeader": this.render(); st.stamp("good", "Snake Leader!");
-        this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good"); await this.wait(1200); break;
+        await this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good"); await this.wait(1200); break;
       case "swap": {
         const mine = this.places[e.player];
         this.places[e.other] = mine;
         this.overview.setPlace(e.other, mine);
-        this.story(e.player, { title: M.swap.title, text: fill(M.swap.text, { p: this.name(e.player), o: this.name(e.other) }), art: this.twoTokens(e.player, e.other) }, "", "good");
+        await this.story(e.player, { title: M.swap.title, text: fill(M.swap.text, { p: this.name(e.player), o: this.name(e.other) }), art: this.twoTokens(e.player, e.other) }, "", "good");
         await this.wait(900);
         break;
       }
       case "lanternLost":
         sound.play("lantern-out");
+        if (this.paid === e.player) { this.render(); await this.wait(600); break; } // spent by choice: already told
         st.celebrate("bad");
         st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
-        this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad");
+        await this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad");
         this.render();
         await this.wait(1600);
         break;
       case "lanternWon": sound.play("lantern-on"); st.celebrate("good"); st.stamp("good", "Three sixes!");
-        this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await this.wait(1400); break;
+        await this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await this.wait(1400); break;
       case "out":
         sound.play("out");
         this.places[e.player] = OUT;
         this.overview.setPlace(e.player, OUT);
-        this.story(e.player, { ...M.out, text: fill(M.out.text, { p: this.name(e.player) }), art: artFor("lantern", "Lights out") }, "Out of the game.", "bad");
+        await this.story(e.player, { ...M.out, text: fill(M.out.text, { p: this.name(e.player) }), art: artFor("lantern", "Lights out") }, "Out of the game.", "bad");
         this.render();
         await this.wait(1800);
         break;
@@ -544,10 +577,21 @@ export class GameScreen {
   }
 
   /** A story moment, in a popup (only the newest one: owner, no list of earlier moments). */
-  private story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = ""): void {
+  // Owner, 15 Oct: two popups in a row went too fast to read. A story popup now stays at least as long as it takes to
+  // read it (about 4 words a second, at least 2.5 s, at most 9 s) before the next one replaces it.
+  private async story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = ""): Promise<void> {
+    await this.readFirst();
     const c: PopupContent = { title: t.title, text: t.text, art: t.art, outcome: result || undefined, tone, kicker: `${tokenSvg(seat, "kick", true)}${this.name(seat)}` };
     this.told.unshift(c);
     void this.pops.show(c);
+    const words = `${t.title} ${t.text} ${result}`.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+    this.readUntil = Date.now() + Math.min(9000, Math.max(2500, 1000 + words * 250));
+  }
+
+  /** Waits until the popup on screen has been on long enough to read (a player's tap on a button ends it at once). */
+  private async readFirst(): Promise<void> {
+    const left = this.readUntil - Date.now();
+    if (left > 0) await this.wait(left);
   }
 
   private twoTokens(a: number, b: number): string {
@@ -562,7 +606,7 @@ export class GameScreen {
     const x = taleOf(B, pos);
     let c: PopupContent;
     if (x) c = { title: x.tale.title, text: x.tale.text, art: this.pic(x.icon, x.tale.title), outcome: outcome(B, x.tile), tone: x.tile.cat === "R" ? "good" : "bad" };
-    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to leave Home. No 6 in three throws: a lantern goes out, and you set off anyway with that third throw." };
+    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to leave Home, or spend a lantern to set off at once. No 6 in three throws: a lantern goes out, and you set off anyway with that third throw." };
     else if (pos === B.endTile) c = { ...MOMENTS.end, art: artFor("lanterns", "Festival"), outcome: "You need the exact number to get in. Too much, and you stay where you are. A 6 can never land here exactly: a 6 always throws again and adds up." };
     else {
       const lm = B.story.landmarks[pos], region = B.story.regions.find((r) => pos >= r.from && pos <= r.to)?.name ?? "";
@@ -589,7 +633,8 @@ export class GameScreen {
   private playerInfo(seat: number): void {
     const p = this.game.players[seat], B = this.board, lines: string[] = [];
     const pos = this.places[seat];
-    const where = p.out ? "Out of the game." : pos === OFF ? "At Home: needs a 6 to set off." : p.trapped ? "Stuck in the Bog: needs a 6." : pos === 0 ? "On Start."
+    const or = p.lanterns >= 1 ? ", or a lantern spent" : "";
+    const where = p.out ? "Out of the game." : pos === OFF ? `At Home: needs a 6 to set off${or}.` : p.trapped ? `Stuck in the Bog: needs a 6${or}.` : pos === 0 ? "On Start."
       : `On square ${pos}: ${B.endTile - pos} squares to the festival.`;
     lines.push(where);
     lines.push(`${lanternSvg.replace("<svg", '<svg class="inl"')} ${p.lanterns} lantern${p.lanterns === 1 ? "" : "s"}${p.lanterns === 0 ? ": one more slip and it's over" : ""}.`);
@@ -610,7 +655,7 @@ export class GameScreen {
   private tip(seat: number): string {
     const p = this.game.players[seat], pos = this.places[seat], B = this.board;
     if (p.out) return "";
-    if (pos === OFF || p.trapped) return "Tip: only a 6 will do. Three misses cost a lantern.";
+    if (pos === OFF || p.trapped) return p.lanterns >= 1 ? "Tip: roll for a 6, or spend a lantern to go now. Three misses cost a lantern anyway." : "Tip: only a 6 will do. Three misses cost your last light.";
     const toEnd = B.endTile - pos;
     if (p.slow) return toEnd === 1 ? "Tip: next turn moves exactly 1 square: straight into the festival." : "Tip: next turn moves exactly 1 square, whatever the die shows.";
     const fin = this.finish(p, toEnd);
@@ -639,7 +684,7 @@ export class GameScreen {
   }
 
   private ask(options: { label: string; value: string; primary?: boolean }[]): Promise<string> {
-    return this.setAct(options);
+    return this.setAct(options).then((v) => { this.readUntil = 0; return v; }); // the player has read on: no more waiting
   }
 
   /** Squares to the festival when they need an exact throw of 1–5 (shown to everyone on the avatar), else 0. */
@@ -653,8 +698,9 @@ export class GameScreen {
     const p = this.game.players[seat], pos = this.places[seat], d = this.board.endTile - pos;
     if (p.out) return "Out of the game.";
     if (p.skip > 0) return `Waits this turn${this.waitCause[seat] ? ` (${this.waitCause[seat]})` : ""}.`;
-    if (pos === OFF) return `At Home: roll a 6 to enter the board (throw ${p.tries + 1} of 3).`;
-    if (p.trapped) return `Stuck in the Bog: only a 6 gets you out (throw ${p.tries + 1} of 3).`;
+    const pay = p.lanterns >= 1 ? ", or spend a lantern" : "";
+    if (pos === OFF) return `At Home: roll a 6 to enter the board (throw ${p.tries + 1} of 3)${pay}.`;
+    if (p.trapped) return `Stuck in the Bog: a 6 gets you out (throw ${p.tries + 1} of 3)${pay}.`;
     if (p.slow) return "Puddle: this turn you move exactly 1 square, whatever you roll.";
     const extra = p.double ? " Your throw counts double this turn." : "";
     if (p.double) { // a doubled throw needs half the squares (audit: "needs exactly 3" with a double meant 6 squares)

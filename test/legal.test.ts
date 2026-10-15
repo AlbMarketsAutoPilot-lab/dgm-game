@@ -26,7 +26,7 @@ describe("copyright and privacy", () => {
     for (const f of fs.readdirSync(new URL("../src/ui", import.meta.url)).filter((f) => f.endsWith(".ts")))
       for (const m of read(`src/ui/${f}`).matchAll(/"(dgm\.[a-z]+\.v\d+)"/g)) keys.add(m[1]);
     // each storage key and the line of the policy that tells it
-    const told: Record<string, string> = { "dgm.game.v1": "The game in progress", "dgm.postcards.v1": "postcards", "dgm.sound.v1": "sound effects and music", "dgm.guide.v1": "guide" };
+    const told: Record<string, string> = { "dgm.game.v1": "The game in progress", "dgm.postcards.v1": "postcards", "dgm.sound.v1": "sound effects or music", "dgm.guide.v1": "guide" };
     const policy = read("public/privacy.html");
     expect([...keys].sort()).toEqual(Object.keys(told).sort()); // a new kind of saved data must be added to the policy
     for (const k of keys) expect(policy).toContain(told[k]);

@@ -17,7 +17,7 @@ export const GUIDE: Page[] = [
   },
   {
     art: () => artFor("house", "Home"), title: "Roll a 6 to set off",
-    text: "You need a <b>6</b> to step onto the board. Every 6 gives you one more throw, and the throws add up. No 6 after three tries? You set off anyway, but one of your lanterns goes out.",
+    text: "You need a <b>6</b> to step onto the board. Every 6 gives you one more throw, and the throws add up. No 6 after three tries? You set off anyway, but one of your lanterns goes out. In a hurry? Spend a lantern to set off at once, without waiting for a 6 (the Bog works the same way).",
   },
   {
     art: () => cardFace("bonus", "Bonus card"), title: "Good and bad squares",

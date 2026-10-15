@@ -2,8 +2,9 @@
 // The sound files are part of the game itself (owner, 15 Oct: "all sound should be part of the package"): the build
 // puts them with the game's other files, the Android app carries them, and the offline worker stores every one of them
 // when the game is installed, so sound works fully offline from the first start.
-// Off until a player switches them on (two switches: sound effects with vibration, and music); the choice is kept on
-// this device. Web Audio: browsers allow sound only after a tap, so all sounds are prepared at the first one.
+// On by default (owner, 15 Oct); a player can mute either with its switch (sound effects with vibration, and music),
+// and the choice is kept on this device. Web Audio: browsers allow sound only after a tap, so the sound starts, and all
+// sounds are prepared, at the first tap or key press.
 // The game never waits for a sound.
 
 export type Effect =
@@ -31,9 +32,9 @@ interface Settings { fx: boolean; music: boolean }
 function load(): Settings {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) ?? "{}") as Partial<Settings>;
-    return { fx: s.fx === true, music: s.music === true };
+    return { fx: s.fx !== false, music: s.music !== false }; // on unless the player muted it
   } catch {
-    return { fx: false, music: false };
+    return { fx: true, music: true };
   }
 }
 
@@ -45,10 +46,16 @@ class Sound {
   private want: Music | null = null;
   private playing: { name: Music; gain: GainNode; sources: AudioBufferSourceNode[] } | null = null;
   private listeners = new Set<() => void>();
+  /** Whether the player has tapped or pressed a key yet (before that, browsers keep sound blocked). */
+  private unlocked = false;
 
   constructor() {
     // The first tap anywhere opens the sound (browsers allow it only then)
-    const unlock = () => { if (this.settings.fx || this.settings.music) this.start(); };
+    const unlock = () => {
+      if (this.unlocked) { if (this.settings.fx || this.settings.music) this.start(); return; }
+      this.unlocked = true;
+      if (this.settings.fx || this.settings.music) { this.start(); this.music(this.want); }
+    };
     addEventListener("pointerdown", unlock, { capture: true });
     addEventListener("keydown", unlock, { capture: true });
     // A soft click on every button, when sound is on
@@ -131,6 +138,7 @@ class Sound {
 
   /** The audio context, made on first need (after a tap, or the browser keeps it paused). */
   private start(): AudioContext | null {
+    if (!this.unlocked) return null; // nothing before the first tap: the music then starts on it
     try {
       if (!this.ctx) {
         const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;

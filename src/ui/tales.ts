@@ -69,13 +69,15 @@ export const MOMENTS = {
   stones: { title: "Still Stuck", text: "No 6. The mud holds on with a little gurgle. The Bog is patient. So are you. Mostly." },
   leaveHome: { title: "Off You Go!", text: "A 6! The door clicks shut behind you and the road opens up. Throw again." },
   leaveBog: { title: "Free!", text: "A 6! The Bog lets go with a disappointed slurp. Throw again." },
+  paidHome: { title: "A Lantern for the Road", text: "{p} doesn't wait for a 6: one lantern is traded for an early start, and off {p} goes. Now throw to move." },
+  paidBog: { title: "A Lantern for a Way Out", text: "{p} doesn't wait for a 6: one lantern lights the way out of the mud. Now throw to move." },
   thirdThrow: { title: "Third Time Lucky", text: "Three throws and still no 6, but you're not waiting any longer. You set off anyway, and that third throw moves you." },
   lanternLost: { title: "A Lantern Goes Out", text: "Three throws without a 6. One of {p}'s lanterns flickers and goes dark. Look after the ones that are left." },
   lanternNone: { title: "Last Light", text: "Attention! {p} has no lanterns left. One more slip and the journey is over." },
   lanternWon: { title: "Lantern Relit!", text: "Three 6s in a row. Something like that doesn't go unnoticed: one of {p}'s lanterns flares back to life." },
   out: { title: "Lights Out", text: "{p}'s last lantern goes out. The journey ends here, but the festival will still be there next time." },
   tree: { title: "Fallen Tree", text: "A tree lies across the road. Nobody is moving it, nobody has a saw, and there's no way round. Back you go." },
-  bogged: { title: "Stuck in the Bog", text: "The mud closes round your ankles. Only a 6 will get you out." },
+  bogged: { title: "Stuck in the Bog", text: "The mud closes round your ankles. A 6 will get you out, or a lantern spent." },
   boots: { title: "Bog Boots!", text: "The Bog tries its usual trick, and gets a mouthful of yellow rubber. Your Bog boots carry you straight through." },
   capture: { title: "Bump!", text: "{p} lands right where {o} was standing. Apologies are made, luggage is picked up, and {o} goes back to Start." },
   swap: { title: "Swap!", text: "{p} and {o} trade places. One of you will be telling this story for weeks." },
@@ -98,9 +100,9 @@ export function outcome(board: Board, t: Tile): string {
   switch (t.type) {
     case "skip": return t.turns === 1 ? "Miss your next turn." : `Miss ${t.turns} turns.`;
     case "hospital": return `Miss ${t.turns} turns.`;
-    case "prison": return "Stuck in the Bog: only a 6 gets you out.";
+    case "prison": return "Stuck in the Bog: a 6 gets you out, or spend a lantern.";
     case "slowNext": return "Next turn you move exactly 1 square, whatever you roll.";
-    case "card": return t.card === "jailPass" ? "You get Bog boots: they carry you through the Bog once, by themselves." : "You get a Bonus card. With this card you have the power to cancel a punishment for yourself or cancel a reward for another player. Use any time at your will.";
+    case "card": return t.card === "jailPass" ? "You get Bog boots: when the Bog would catch you, you can wear them and walk straight through, once." : "You get a Bonus card. With this card you have the power to cancel a punishment for yourself or cancel a reward for another player. Use any time at your will.";
     case "doubleOthers": return "Every other player doubles their next throw.";
     case "extraRoll": return "Throw again!";
     case "rollSum": return `Throw ${t.dice} times and move the total.`;
@@ -109,7 +111,7 @@ export function outcome(board: Board, t: Tile): string {
     case "jump": {
       const where = t.to === trap ? "the Bog" : place(t.to!);
       let s = t.requires === "snakeLeader" ? `Only the Snake Leader: back to ${where}. Everyone else is safe here.` : `${t.cat === "R" ? "Jump ahead" : "Back"} to ${where}.`;
-      if (t.then === "prison") s += " Stuck there: only a 6 gets you out.";
+      if (t.then === "prison") s += " Stuck there: a 6 gets you out, or spend a lantern.";
       if (t.then === "hospital") s += " Then miss 3 turns.";
       if (t.then === "skip2") s += " Then miss 2 turns.";
       if (t.grant === "snakeLeader") s += " You become the Snake Leader.";

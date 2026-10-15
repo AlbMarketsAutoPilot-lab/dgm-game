@@ -18,7 +18,7 @@ describe.each(["long", "short"] as const)("%s board tales", (id) => {
 describe("outcomes follow the rules", () => {
   const L = BOARDS.long.tiles;
   it.each([
-    [10, "Back to Start."], [20, "Jump ahead to square 33."], [97, "Back to the Bog. Stuck there: only a 6 gets you out."],
+    [10, "Back to Start."], [20, "Jump ahead to square 33."], [97, "Back to the Bog. Stuck there: a 6 gets you out, or spend a lantern."],
     [50, "Miss 3 turns."], [5, "Miss your next turn."], [45, "Throw 2 times and move the total."],
     [202, "Only the Snake Leader: back to square 165. Everyone else is safe here."],
   ])("square %i: %s", (n, want) => expect(outcome(BOARDS.long, L[n])).toBe(want));

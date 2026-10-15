@@ -1,5 +1,7 @@
 # U7: sounds and music, the list (for the owner, 15 Oct 2026)
 
+> **Later (owner, 15 Oct): sound and music are on by default; each switch mutes them.**
+>
 > **Built (15 Oct).** The owner chose from a listening page of CC0 sounds: dice A, step A, six A, good A, bad A,
 > bump B, jump-up B, jump-down B, bog A, card A, lantern-out A, lantern-on A, postcard A, tap A, win A, out A,
 > menu A (Ukulele Forest), game B (Short Kalimba Loop). The files are part of the game's package, in `src/assets/sounds/` (sources and

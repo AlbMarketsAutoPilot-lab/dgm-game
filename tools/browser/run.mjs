@@ -25,6 +25,7 @@ try {
     { name: "short board, 1 person and 3 computer players", board: "short", players: 4, people: [0] },
     { name: "long board, 2 people", board: "long", players: 2, people: [0, 1] },
     { name: "short board, 2 people and 1 computer player", board: "short", players: 3, people: [0, 2] },
+    { name: "short board, 3 people who spend lanterns to leave Home and the Bog", board: "short", players: 3, people: [0, 1, 2], spend: true },
   ].slice(0, quick ? 2 : undefined);
   const results = await Promise.all(GAMES.map((g) => playGame(browser, dev.url, g).catch((e) => ({ diffs: [String(e)], errors: [], turns: 0, compared: 0 }))));
   results.forEach((r, i) => {

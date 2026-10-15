@@ -7,8 +7,28 @@ import { OFF, play, tile } from "./helpers";
 
 const trap = { 30: tile({ cat: "P", type: "prison" }) };
 const types = (ev: GameEvent[]) => ev.map((e) => e.type);
-const human = (answers: Partial<Record<"road" | "bonusDefend" | "bonusAttack", string | boolean>>): Decider =>
+const human = (answers: Partial<Record<Decider extends (d: infer D, g: never) => unknown ? D extends { kind: infer K } ? K & string : never : never, string | boolean>>): Decider =>
   (d, g) => (answers[d.kind] ?? simplePlayer(d, g)) as never;
+
+describe("owner 15 Oct: spend a lantern to leave Home or the Bog at once", () => {
+  const spend = human({ spendLantern: true });
+  it("at Home: a lantern goes, the player is on Start and throws to move (4 -> square 4), no 6 needed", () => {
+    const { P, events } = play({ dice: [4], turns: 1, players: 1, decide: spend });
+    expect([P[0].pos, P[0].lanterns, P[0].tries]).toEqual([4, 2, 0]);
+    expect(events.find((e) => e.type === "released")).toMatchObject({ where: "start", bySix: false, paid: true });
+  });
+  it("the throw after spending is a full throw: 6, 3 -> 9", () => expect(play({ dice: [6, 3], turns: 1, players: 1, decide: spend }).P[0].pos).toBe(9));
+  it("in the Bog: out at once and moves by the throw (30 + 5 -> 35)", () => {
+    const { P } = play({ tiles: trap, dice: [5], setup: [{ pos: 30, trapped: true, tries: 2 }], turns: 1, players: 1, decide: spend });
+    expect([P[0].pos, P[0].trapped, P[0].lanterns, P[0].tries]).toEqual([35, false, 2, 0]);
+  });
+  it("never offered with no lantern left", () => {
+    const asked: string[] = [];
+    play({ dice: [3], setup: [{ lanterns: 0 }], turns: 1, players: 1, decide: (d, g) => { asked.push(d.kind); return simplePlayer(d, g); } });
+    expect(asked).not.toContain("spendLantern");
+  });
+  it("not spending: the usual throw for a 6", () => expect(play({ dice: [3], turns: 1, players: 1, decide: human({ spendLantern: false }) }).P[0].pos).toBe(OFF));
+});
 
 describe("R1 entering", () => {
   it("no 6: stays at Home", () => expect(play({ dice: [3], turns: 1 }).P[0].pos).toBe(OFF));
@@ -70,7 +90,12 @@ describe("R6 the trap (prison tile)", () => {
     expect(play({ tiles: trap, dice: [6, 5], setup: [{ pos: 30, trapped: true }], turns: 1, players: 1 }).P[0].pos).toBe(35));
   it("the out-6 counts as the first six: 6, 6, 6 -> move 12", () =>
     expect(play({ tiles: trap, dice: [6, 6, 6], setup: [{ pos: 30, trapped: true }], turns: 1, players: 1 }).P[0].pos).toBe(42));
-  it("Bog boots (free pass) keep you out of the trap, used by themselves", () => {
+  it("owner 15 Oct: the Bog boots are offered; kept, the Bog catches the player and the boots stay", () => {
+    const { P, events } = play({ tiles: trap, dice: [2], setup: [{ pos: 28, jailPass: 1 }], turns: 1, players: 1, decide: human({ bogBoots: false }) });
+    expect([P[0].pos, P[0].jailPass, P[0].trapped]).toEqual([30, 1, true]);
+    expect(types(events)).toContain("trapped");
+  });
+  it("Bog boots (free pass) keep you out of the trap when worn (the computer always wears them)", () => {
     const { P, events } = play({ tiles: trap, dice: [2, 4], setup: [{ pos: 28, jailPass: 1 }], turns: 2, players: 1 });
     expect([P[0].pos, P[0].jailPass, P[0].trapped]).toEqual([34, 0, false]);
     expect(types(events)).toContain("bogBoots");
@@ -328,12 +353,12 @@ describe("R20 two roads", () => {
 });
 
 describe("R21 the only choices", () => {
-  it("a whole game of computer players asks only for roads and the bonus card", async () => {
+  it("a whole game of computer players asks only for roads, the cards and spending a lantern", async () => {
     const { BOARDS, Game, runTurn } = await import("../src/engine");
     const kinds = new Set<string>();
     const game = new Game(BOARDS.long, { players: 4, seed: 7 });
     while (!game.over) runTurn(game, (d, g) => { kinds.add(d.kind); return simplePlayer(d, g); });
-    expect([...kinds].every((k) => ["road", "bonusDefend", "bonusAttack"].includes(k))).toBe(true);
+    expect([...kinds].every((k) => ["road", "bonusDefend", "bonusAttack", "bogBoots", "spendLantern"].includes(k))).toBe(true);
     expect(game.winner).not.toBeNull();
   });
 });
