@@ -540,7 +540,7 @@
   "cards": {
    "bonus": {
     "name": "Bonus card",
-    "story": "Use once: dodge your bad luck, or spoil someone's good luck.",
+    "story": "Cancel a punishment for yourself, or a reward for another player. Once.",
     "icon": "card"
    },
    "jailPass": {

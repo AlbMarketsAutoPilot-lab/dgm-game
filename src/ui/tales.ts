@@ -109,7 +109,7 @@ export function outcome(board: Board, t: Tile): string {
     case "hospital": return `Miss ${t.turns} turns.`;
     case "prison": return "Stuck in the Bog: only a 6 gets you out.";
     case "slowNext": return "Next turn you move exactly 1 square, whatever you roll.";
-    case "card": return t.card === "jailPass" ? "You get Bog boots: they carry you through the Bog once, by themselves." : "You get a Bonus card: once, dodge your own bad luck or spoil another player's good luck.";
+    case "card": return t.card === "jailPass" ? "You get Bog boots: they carry you through the Bog once, by themselves." : "You get a Bonus card: with it you can cancel a punishment for yourself, or cancel a reward for another player. Once, whenever you choose.";
     case "doubleOthers": return "Every other player doubles their next throw.";
     case "extraRoll": return "Throw again!";
     case "rollSum": return `Throw ${t.dice} times and move the total.`;

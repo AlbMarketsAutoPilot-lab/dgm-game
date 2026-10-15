@@ -26,6 +26,9 @@ const REGIONS: Record<string, Postcard> = {
   "Festival Road": { id: "festival-road", icon: "bunting", title: "Festival Road", line: "Almost there. You can hear the music.", how: "Reach Festival Road" },
 };
 
+/** The picture of a region (its postcard), shown on its plain squares and on the sign when you arrive. */
+export const regionIcon = (name: string): string => REGIONS[name]?.icon ?? "flat-path";
+
 const SPECIAL = {
   festival: { id: "festival", icon: "lanterns", title: "Festival of Lights", line: "Made it. Lanterns up!", how: "Win a game" },
   snakeLeader: { id: "snake-leader", icon: "snake-crown", title: "Snake Leader", line: "I rode a sea serpent. Ask me how.", how: "Become the Snake Leader" },

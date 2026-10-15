@@ -20,8 +20,16 @@ Two areas plus the players:
   for everything about that player (place, squares to go, cards, waiting, a tip for the next throw).
 - **Narrative** (`tales.ts`): a tale per event square, Shortcut stone and rule moment, for young adults first. What a
   square does is always derived from the engine's tile (`outcome()`), never written by hand.
-- **Turn** (`app.ts`): Roll (or tap the die) → the move → what happens → "Pass the die to Red ▶". Computer players
-  (GCD §8.6) play by themselves.
+- **Turn** (`app.ts`): Roll (or tap the die) → the move → what happens. A person throws every die themselves: after a
+  6 a popup ("A 6! Roll again!") and a "Roll again" button; after two 6s "One more throw"; "Throw 1 of 3" on the
+  sledge square. The die is passed ("Pass the die to Red ▶") only from one person to another; computer players
+  (GCD §8.6) play by themselves. A line under "Blue's turn" says what the turn is about (At Home: roll a 6…, Stuck in
+  the Bog…, Needs exactly 4…); a waiting player is told why ("landed on …, which says miss turns"). The game opens
+  with "You need a 6 to enter". Only the newest story moment is shown (no list of earlier ones, owner).
+- **Die** (`dice.ts`): the total beside the die is exactly the squares walked; the 6 that lets you in (or out of the
+  Bog) is shown apart ("6 to enter · 2", R15).
+- **Regions** (`stage.ts`): a plain square shows its region's postcard picture; a signboard "Now entering ·
+  Countryside" when a token reaches a new region. Everyone's avatar shows "needs 4" when an exact throw of 1–5 wins.
 - **Spoil question** (`spoil.ts`, R14, owner Step 5b): a person holding a Bonus card is asked "Spoil Blue's luck?"
   for each reward another player lands on: "Spoil it!", "Let it go", or "Don't ask me again this game" (from then
   on that person's answer is "Let it go"; for this game only, nothing is stored). No auto-focus: the game is played by tapping, not by holding Enter.

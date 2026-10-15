@@ -39,10 +39,11 @@ export class Overview {
     const M = L.maze, m = P({ x: M.x, y: M.y });
     let s = `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="${WALL}"/>`;
     // the road: openings in the wall where it steps into the next ring, and on to the festival
+    // An opening is a thin arrow through the wall, not a strip of paper: it must never look like a square (audit).
     const link = (a: Point, b: Point) => {
-      const p = P(a), q = P(b), horiz = Math.abs(q.x - p.x) > Math.abs(q.y - p.y);
-      const x = Math.min(p.x, q.x) - (horiz ? 0 : 46), y = Math.min(p.y, q.y) - (horiz ? 46 : 0);
-      return `<rect x="${x}" y="${y}" width="${horiz ? Math.abs(q.x - p.x) : 92}" height="${horiz ? 92 : Math.abs(q.y - p.y)}" fill="${PAPER}"/>`;
+      const p = P(a), q = P(b), ang = (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI, mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+      return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#f2c230" stroke-width="12" stroke-linecap="round"/>`
+        + `<path d="M-14 -18L6 0-14 18" transform="translate(${mx} ${my}) rotate(${ang})" fill="none" stroke="#f2c230" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>`;
     };
     for (let n = 1; n < board.lastTile; n++) if (Math.hypot(L.squares[n + 1].x - L.squares[n].x, L.squares[n + 1].y - L.squares[n].y) > 1.1) s += link(L.squares[n], L.squares[n + 1]);
     s += link(L.squares[board.lastTile], L.end);
@@ -74,7 +75,7 @@ export class Overview {
     // Start (four squares long: everyone waits here) and the festival
     const sp = P(L.start.centre), sw = L.start.w * U - 4, sh = U - 4;
     s += `<g class="pick" data-pos="0"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
-      + `<text x="${sp.x - sw / 2 + 14}" y="${sp.y - sh / 2 + 32}" class="ov-sub">START · roll a 6 →</text></g>`;
+      + `<text x="${sp.x - sw / 2 + 14}" y="${sp.y - sh / 2 + 32}" class="ov-sub">START: a 6 to enter</text></g>`;
     const e = P(L.end), ew = U - 4;
     s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - ew / 2}" width="${ew}" height="${ew}" rx="10" fill="#f2c230" stroke="${INK}" stroke-width="7"/>`
       + `<path d="M${e.x} ${e.y - 30}l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" fill="#fff6b0" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/></g>`;

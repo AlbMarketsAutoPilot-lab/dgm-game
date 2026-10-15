@@ -15,8 +15,12 @@ describe.each(["long", "short"] as const)("%s board layout", (id) => {
     expect(pointOf(L, B.endTile)).toBe(L.end);
     expect(pointOf(L, OFF)).toEqual(pointOf(L, 0));
   });
-  it("squares never overlap (about one unit apart)", () => {
-    for (let i = 0; i < sq.length; i++) for (let j = i + 1; j < sq.length; j++) expect(box(sq[i], sq[j]), `${i + 1}/${j + 1}`).toBeGreaterThanOrEqual(0.89);
+  it("squares never overlap (about one unit apart), the festival included", () => {
+    const all = [...sq, L.end]; // audit 15 Oct: the short board's festival sat on top of square 100
+    for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) expect(box(all[i], all[j]), `${i + 1}/${j + 1}`).toBeGreaterThanOrEqual(0.89);
+  });
+  it("Shortcut stones never bunch up (audit 15 Oct: they overlapped at the corners)", () => {
+    for (const s of L.shortcuts) for (let i = 1; i < s.stones.length; i++) expect(d(s.stones[i - 1], s.stones[i]), `fork ${s.fork} stone ${i}`).toBeGreaterThan(0.5);
   });
   it("one continuous road: neighbours touch, or step through a wall opening into the next ring", () => {
     for (let n = 2; n <= B.lastTile; n++) expect(d(L.squares[n - 1], L.squares[n]), `square ${n}`).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side

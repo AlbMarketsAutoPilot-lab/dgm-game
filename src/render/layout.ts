@@ -70,7 +70,7 @@ export const START_LEN = 4;
 
 const DESIGNS: Record<string, { w: number; h: number }> = {
   long: { w: 16.5, h: 15 },
-  short: { w: 11.5, h: 10 },
+  short: { w: 11.5, h: 10.5 }, // 10 left the Festival on top of square 100 (audit, 15 Oct)
 };
 
 /** The paper drawings (archived transcription §6.1, §8.1): ladders and snakes, by their long-board squares. */
@@ -110,7 +110,14 @@ export function layoutFor(board: Board): BoardLayout {
   if (hit) return hit;
   const design = DESIGNS[board.id];
   if (!design) throw new Error(`no layout for board "${board.id}"`);
-  const { w, h } = design, last = board.lastTile;
+  const layout = layoutForDesign(board, design.w, design.h);
+  cache.set(board, layout);
+  return layout;
+}
+
+/** The layout on a board of w × h units (tests try other sizes). */
+export function layoutForDesign(board: Board, w: number, h: number): BoardLayout {
+  const last = board.lastTile;
   // The first START_LEN places are the Start square, then squares 1..last, then one more: END.
   // The walls beside a Shortcut are widened; that moves the inner rings, so repeat until it settles.
   let gaps: number[] = [], road = spiral(w, h, START_LEN + last + 1, gaps);
@@ -140,11 +147,21 @@ export function layoutFor(board: Board): BoardLayout {
   const inward = (n: number) => ({ x: -heading[n].y, y: heading[n].x });
   // Each Shortcut runs in the wall beside its Main Road squares, on the inner or the outer side, whichever is clear.
   const shortcuts = board.rules.forks.map((f, k) => {
-    const lane = (side: 1 | -1) => Array.from({ length: f.len }, (_, j) => {
-      const n = f.at + 1 + j, a = inward(n - 1), b = inward(n), d = side * (WALL_WIDE / 2 + 0.5);
-      const off = Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < 0.01 ? a : { x: a.x + b.x, y: a.y + b.y }; // at a corner: the corner of the wall
-      return { x: squares[n].x + off.x * d, y: squares[n].y + off.y * d };
-    });
+    // The wall beside the Main Road squares it replaces; the stones are spread evenly along it, so they never
+    // bunch up at a corner, however few stones the Shortcut has.
+    const lane = (side: 1 | -1) => {
+      const wall = Array.from({ length: f.merge - f.at - 1 }, (_, j) => {
+        const n = f.at + 1 + j, a = inward(n - 1), b = inward(n), d = side * (WALL_WIDE / 2 + 0.5);
+        const off = Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < 0.01 ? a : { x: a.x + b.x, y: a.y + b.y }; // at a corner: the corner of the wall
+        return { x: squares[n].x + off.x * d, y: squares[n].y + off.y * d };
+      });
+      const seg = wall.slice(1).map((q, i) => dist(wall[i], q)), total = seg.reduce((x, y) => x + y, 0);
+      return Array.from({ length: f.len }, (_, j) => {
+        let t = f.len === 1 ? total / 2 : (total * j) / (f.len - 1), i = 0;
+        while (i < seg.length - 1 && t > seg[i]) { t -= seg[i]; i++; }
+        return seg.length ? lerp(wall[i], wall[i + 1], seg[i] ? Math.min(1, t / seg[i]) : 0) : wall[0];
+      });
+    };
     const clear = (st: Point[]) => Math.min(...st.flatMap((p) => squares.slice(1).map((q) => Math.max(Math.abs(p.x - q.x), Math.abs(p.y - q.y)))))
       - (st.some((p) => p.x < -0.5 || p.y < -0.5 || p.x > w + 0.5 || p.y > h + 0.5) ? 9 : 0);
     const inner = lane(1), outer = lane(-1), stones = clear(inner) >= clear(outer) ? inner : outer;
@@ -158,7 +175,6 @@ export function layoutFor(board: Board): BoardLayout {
     legend: { x: 0, y: 0, w: 0, h: 0 },
     bounds: { x: -0.5 - WALL_THIN, y: -0.5 - WALL_THIN, w: w + 1 + 2 * WALL_THIN, h: h + 1 + 2 * WALL_THIN },
   };
-  cache.set(board, layout);
   return layout;
 }
 
