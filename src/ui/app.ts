@@ -98,7 +98,7 @@ export class GameScreen {
     const w = this.game.winner;
     this.overview.setReach(null);
     const m = w === null ? MOMENTS.nobody : this.game.lastStanding ? MOMENTS.winLast : MOMENTS.win;
-    if (w !== null) { this.overview.setCurrent(w); this.stage.celebrate("win"); }
+    if (w !== null) { this.overview.setCurrent(w); this.stage.celebrate("win"); this.stage.stamp("good", "Champion!"); }
     this.setAct([]);
     const again = await this.pops.show({
       kind: "win", tone: "good", art: artFor("lanterns", "Festival of Lights"), kicker: "The end of the journey",
@@ -211,7 +211,7 @@ export class GameScreen {
       case "released":
         if (e.where === "start") { this.places[e.player] = { pos: START, stair: 0 }; st.show(e.player, START, 0); this.overview.setPlace(e.player, START); }
         this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
-        if (e.bySix) st.celebrate("good");
+        if (e.bySix) { st.celebrate("good"); st.stamp("good", e.where === "start" ? "A six!" : "Free!"); }
         await wait(900);
         break;
       case "road":
@@ -247,6 +247,7 @@ export class GameScreen {
         this.places[e.victim] = { pos: START, stair: 0 };
         this.overview.setPlace(e.victim, START);
         st.celebrate("bump");
+        st.stamp("bad", "Bump!");
         this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad");
         this.render();
         await wait(1400);
@@ -254,7 +255,7 @@ export class GameScreen {
       case "roadblockHit": st.celebrate("bad"); this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await wait(1300); break;
       case "trapped": if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
         this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "Only a 6 gets you out.", "bad"); await wait(1100); break;
-      case "bogBoots": st.celebrate("good"); this.story(e.player, { ...M.boots, art: artFor("boots", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await wait(1300); break;
+      case "bogBoots": st.celebrate("good"); st.stamp("good", "Not today, Bog!"); this.story(e.player, { ...M.boots, art: artFor("boots", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await wait(1300); break;
       case "card": this.render(); await wait(300); break;
       case "bonusUsed": {
         const m = e.use === "defend" ? M.bonusDefend : M.bonusAttack;
@@ -276,11 +277,12 @@ export class GameScreen {
       }
       case "lanternLost":
         st.celebrate("bad");
+        st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
         this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad");
         this.render();
         await wait(1600);
         break;
-      case "lanternWon": st.celebrate("good"); this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await wait(1400); break;
+      case "lanternWon": st.celebrate("good"); st.stamp("good", "Three sixes!"); this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await wait(1400); break;
       case "out":
         this.places[e.player] = { pos: OUT, stair: 0 };
         this.overview.setPlace(e.player, OUT);

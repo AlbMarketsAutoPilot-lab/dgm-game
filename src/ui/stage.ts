@@ -125,8 +125,8 @@ export class Stage {
   }
 
   /** A big stamp over the square: "Lucky!", "Don't get mad!" … */
-  stamp(kind: "good" | "bad"): void {
-    const words = kind === "good" ? ["Lucky!", "Yes!", "Woohoo!", "Nice one!"] : ["Don't get mad!", "Oh no!", "Ouch!", "Seriously?!"];
+  stamp(kind: "good" | "bad", say?: string): void {
+    const words = say ? [say] : kind === "good" ? ["Lucky!", "Yes!", "Woohoo!", "Nice one!", "Jackpot!", "Look at you!"] : ["Don't get mad!", "Oh no!", "Ouch!", "Seriously?!", "Not again!", "Typical."];
     const el = document.createElement("div");
     el.className = `stamp ${kind}`;
     el.textContent = words[Math.floor(Math.random() * words.length)];
