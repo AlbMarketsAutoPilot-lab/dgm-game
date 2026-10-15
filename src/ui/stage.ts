@@ -37,7 +37,7 @@ export function describe(board: Board, pos: Pos, stair = 0): { html: string; cls
     const name = story.roads?.wild?.name ?? "The Shortcut";
     if (!t) return { cls: "stone", style: "", caption: name, html: `<span class="cnum small">${esc(name)}</span><div class="cart">${artFor("stones", name)}</div>` };
     return {
-      cls: `ev stone ${t.cat === "R" ? "good" : "bad"}`, style: `--c:${SHORTCUT_COLOURS[t.cat]}`, caption: st?.story ?? t.text,
+      cls: "ev stone", style: `--c:${SHORTCUT_COLOURS[t.cat]}`, caption: st?.story ?? t.text,
       html: `<span class="cnum small">${esc(name)}</span>${chevron(t.cat)}<div class="cart">${artFor(st?.icon ?? "signpost", esc(st?.story ?? t.text))}</div>`,
     };
   }
@@ -53,7 +53,7 @@ export function describe(board: Board, pos: Pos, stair = 0): { html: string; cls
   if (t) {
     const dest = t.type === "jump" && t.to !== undefined ? `<span class="cdest">→ ${t.to === 0 ? "Start" : t.to}</span>` : "";
     return {
-      cls: `ev ${t.cat === "R" ? "good" : "bad"}`, style: `--c:${crayonFor(board, pos, t)}`, caption: t.story ?? t.text,
+      cls: "ev", style: `--c:${crayonFor(board, pos, t)}`, caption: t.story ?? t.text,
       html: `<span class="cnum">${pos}</span>${chevron(t.cat)}<div class="cart">${artFor(t.icon ?? "card", esc(t.story ?? t.text))}</div>${dest}`,
     };
   }

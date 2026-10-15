@@ -233,7 +233,6 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 - Tokens move **square by square** (no teleporting); jumps follow their ladder or snake drawing; the camera follows smoothly, with pan and zoom.
 - Card inventory visible for each player.
 - Inclusive: every event has a colour **and** an icon; big buttons; one-tap play; high contrast; reduced motion; no timers. **No read-aloud** (owner, I-7; C3).
-- **Owner, 15 Oct 2026 (Step 5): a grown-up look replaces the paper / crayon look on screen** (it read as "for small kids" and would keep the 18–34 audience away; P6 is kept as the button tokens and the hand-made labyrinth board): a night-teal journey to the Festival of Lights, glass panels, gold serif titles, lit illustrations at dusk (light, depth, glows), glossy tokens and die. The whole board stays plain (paper squares, green / red frames).
 
 ## 15. Technology ✅ (all free)
 TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Google Play. The rules engine reads the frozen board files (`data/board-long.json`, `data/board-short.json`) and is covered by tests that reproduce the simulator's numbers.

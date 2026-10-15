@@ -1,5 +1,4 @@
-// The four tokens: glossy buttons, each with its own colour AND shape (GCD §8.1, §14: never colour alone).
-import { light } from "../render/art";
+// The four tokens: buttons, each with its own colour AND shape (GCD §8.1, §14: never colour alone).
 
 export interface PlayerStyle {
   name: string;
@@ -37,12 +36,11 @@ function outline(shape: PlayerStyle["shape"]): string {
 /** A token as inline SVG (100 × 100): the button, its rim and four thread holes. `hidden`: the name is written next to it. */
 export function tokenSvg(seat: number, cls = "token", hidden = false): string {
   const p = PLAYERS[seat], o = outline(p.shape);
-  return light(`<svg class="${cls}" viewBox="0 0 100 100" ${hidden ? `aria-hidden="true"` : `role="img" aria-label="${p.name}"`}>`
+  return `<svg class="${cls}" viewBox="0 0 100 100" ${hidden ? `aria-hidden="true"` : `role="img" aria-label="${p.name}"`}>`
     + `<g fill="${INK}" transform="translate(3 4)" opacity=".25">${o}</g>`
     + `<g fill="${p.colour}" stroke="${INK}" stroke-width="5" stroke-linejoin="round">${o}</g>`
     + `<g fill="${p.colour}">${o}</g>`
     + `<circle cx="50" cy="50" r="22" fill="none" stroke="${INK}" stroke-opacity=".35" stroke-width="3"/>`
     + [[42, 42], [58, 42], [42, 58], [58, 58]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.6" fill="#f7f1e3" stroke="${INK}" stroke-width="2"/>`).join("")
-    + `<path d="M26 32q10-14 26-15" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="6" stroke-linecap="round"/>`
-    + `<ellipse cx="62" cy="76" rx="16" ry="6" fill="#000" opacity=".12"/></svg>`);
+    + `<path d="M28 30q8-10 20-12" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="5" stroke-linecap="round"/></svg>`;
 }

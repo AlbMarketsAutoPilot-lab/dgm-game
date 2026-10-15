@@ -38,13 +38,3 @@ describe("illustration motions", () => {
     for (const m of used) expect(KIT_CSS, m).toContain(`.a-${m} {`);
   });
 });
-
-describe("lighting (owner, 15 Oct: lit, grown-up pictures)", () => {
-  it("every colour of every lit picture and token has its gradient in the page's definitions", async () => {
-    const { artDefs, light } = await import("../src/render/art");
-    const { tokenSvg } = await import("../src/ui/players");
-    const defs = artDefs();
-    const used = new Set([...Object.values(ART).map((a) => light(a.svg)), ...[0, 1, 2, 3].map((i) => tokenSvg(i))].flatMap((s) => [...s.matchAll(/url\(#(sh-[0-9a-f]{6})\)/g)].map((m) => m[1])));
-    for (const id of used) expect(defs, id).toContain(`id="${id}"`);
-  });
-});

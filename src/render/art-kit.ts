@@ -145,16 +145,11 @@ export function ground(y: number, fill: string = C.grass): string {
   return `<path d="M-5 ${y}h110v20H-5z" fill="${fill}" ${S}/><path d="M12 ${y}l2-5 2 5M70 ${y}l2-6 2 6M86 ${y}l2-4 2 4" fill="none" ${S2}/>`;
 }
 
-/** A traveller (head at x, y; feet about 24k below): adult proportions, jacket in `body`, dark trousers, hair. */
+/** A small person (head at x, y): body colour. */
 export function person(x: number, y: number, body: string, k = 1): string {
-  const f = (n: number) => +n.toFixed(2), X = (d: number) => f(x + d * k), Y = (d: number) => f(y + d * k);
-  return `<path d="M${X(-3.2)} ${Y(13)}L${X(-3.6)} ${Y(23.5)}h${f(2.6 * k)}l${f(0.9 * k)} ${f(-8 * k)}l${f(0.9 * k)} ${f(8 * k)}h${f(2.6 * k)}L${X(3.2)} ${Y(13)}z" fill="#2c3346" ${S2}/>`
-    + `<path d="M${X(-4.2)} ${Y(23.2)}h${f(3.4 * k)}v${f(1.4 * k)}h${f(-4 * k)}zM${X(0.8)} ${Y(23.2)}h${f(3.4 * k)}l${f(0.6 * k)} ${f(1.4 * k)}h${f(-4 * k)}z" fill="#1d1a24"/>`
-    + `<path d="M${X(-4.6)} ${Y(14)}l${f(0.6 * k)} ${f(-6.4 * k)}q${f(4 * k)} ${f(-2.6 * k)} ${f(8 * k)} 0l${f(0.6 * k)} ${f(6.4 * k)}z" fill="${body}" ${S2}/>`
-    + `<path d="M${X(-4)} ${Y(8)}l${f(-1.6 * k)} ${f(6.4 * k)}M${X(4)} ${Y(8)}l${f(1.6 * k)} ${f(6.4 * k)}" stroke="${body}" stroke-width="${f(2.2 * k)}" stroke-linecap="round"/>`
-    + `<rect x="${X(-0.9)}" y="${Y(3.4)}" width="${f(1.8 * k)}" height="${f(2.4 * k)}" fill="${C.skin}"/>`
-    + `<ellipse cx="${x}" cy="${y}" rx="${f(3.2 * k)}" ry="${f(3.7 * k)}" fill="${C.skin}" ${S2}/>`
-    + `<path d="M${X(-3.3)} ${Y(-0.4)}q${f(0.2 * k)} ${f(-4.2 * k)} ${f(3.3 * k)} ${f(-4 * k)} ${f(3.4 * k)} ${f(0.2 * k)} ${f(3.3 * k)} ${f(3.4 * k)}q${f(-3 * k)} ${f(-1.6 * k)} ${f(-6.6 * k)} ${f(0.6 * k)}z" fill="#3b2a22"/>`;
+  return `<path d="M${x - 6 * k} ${y + 24 * k}l${2 * k} ${-14 * k}c${1 * k} ${-4 * k} ${7 * k} ${-4 * k} ${8 * k} 0l${2 * k} ${14 * k}z" fill="${body}" ${S2}/>`
+    + `<circle cx="${x}" cy="${y}" r="${5.5 * k}" fill="${C.skin}" ${S2}/>`
+    + `<circle cx="${x - 2 * k}" cy="${y - 0.5 * k}" r="${0.9 * k}" fill="${INK}"/><circle cx="${x + 2 * k}" cy="${y - 0.5 * k}" r="${0.9 * k}" fill="${INK}"/>`;
 }
 
 /** Snowflakes / raindrops falling over the whole picture. */

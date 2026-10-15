@@ -1,9 +1,5 @@
 # Game screen (Steps 3–5, owner's design of 14–15 Oct)
 
-**Look (owner, 15 Oct):** grown-up, not childish: a night-teal journey to the Festival of Lights, glass panels, gold
-serif titles (Cinzel), a clean body font (Inter), lit illustrations at dusk, glossy tokens and die, trading cards.
-Fonts are bundled (`@fontsource`), so the game still works offline (C1).
-
 Two areas plus the players:
 
 - **Whole board = the info area** (`overview.ts`): a labyrinth spiral of plain paper squares filling the whole panel

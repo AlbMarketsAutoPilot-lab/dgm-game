@@ -23,8 +23,6 @@ export interface PopupContent {
   /** Small line above the title (who / where). */
   kicker?: string;
   buttons?: PopupButton[];
-  /** Extra class (e.g. "card-view": a trading card shown big). */
-  cls?: string;
   /** "story" (default), "choice" (must be answered), "info" (on top of the rest), "win". */
   kind?: "story" | "choice" | "info" | "win";
 }
@@ -124,7 +122,7 @@ export class Popups {
 
   private build(c: PopupContent): HTMLElement {
     const el = document.createElement("section");
-    el.className = `pop ${c.kind ?? "story"} ${c.tone ?? ""} ${c.cls ?? ""}`;
+    el.className = `pop ${c.kind ?? "story"} ${c.tone ?? ""}`;
     el.setAttribute("role", c.kind === "choice" || c.kind === "win" ? "alertdialog" : "dialog");
     el.setAttribute("aria-live", "polite");
     el.setAttribute("aria-label", c.title);
