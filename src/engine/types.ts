@@ -128,7 +128,7 @@ export interface PlayerState {
   snakeLeader: boolean;
   /** Bonus cards held (R14). */
   bonus: number;
-  /** Free passes (Bog boots) held: used by themselves when the trap would catch the player. */
+  /** Free passes (Bog boots) held: offered when the trap would catch the player (owner, 15 Oct). */
   jailPass: number;
   /** R18 lifelines (story: Lanterns). Can reach 0 and the player still plays; the next loss is out. */
   lanterns: number;
@@ -145,13 +145,20 @@ export interface PlayerState {
   captured: number;
 }
 
-/** A choice the engine needs from a player (R21: only the road and the bonus card). */
+/**
+ * A choice the engine needs from a player (R21: the road and the bonus card; owner, 15 Oct: the Bog boots, and spending
+ * a lantern to leave Home or the Bog at once instead of throwing for a 6).
+ */
 export type Decision =
   | { kind: "road"; player: number; fork: number; square: number }
   | { kind: "bonusDefend"; player: number; square: Pos; tile: Tile }
-  | { kind: "bonusAttack"; player: number; target: number; square: Pos; tile: Tile };
+  | { kind: "bonusAttack"; player: number; target: number; square: Pos; tile: Tile }
+  /** The Bog would catch the player, who holds Bog boots: wear them (true) or keep them (false). */
+  | { kind: "bogBoots"; player: number; square: Pos }
+  /** Waiting at Home or in the Bog with at least one lantern: spend one and leave now (true), or throw for a 6 (false). */
+  | { kind: "spendLantern"; player: number; where: "start" | "trap"; tries: number; lanterns: number };
 
-/** The answer to a Decision: a Road for "road", true / false (use the card or not) for the bonus card. */
+/** The answer to a Decision: a Road for "road", true / false (yes or no) for the others. */
 export type Answer = Road | boolean;
 
 export type Decider = (decision: Decision, game: Readonly<GameView>) => Answer;
@@ -173,8 +180,11 @@ export type GameEvent =
   | { type: "skipTurn"; player: number; turnsLeft: number }
   /** R17: a throw without a 6 at Home ("start") or in the trap; one stair step added. */
   | { type: "noSix"; player: number; where: "start" | "trap"; tries: number }
-  /** R1 / R6 / R17: the player leaves Home or the trap; `bySix` false = third throw, moving anyway. */
-  | { type: "released"; player: number; where: "start" | "trap"; bySix: boolean; stairs: number }
+  /**
+   * R1 / R6 / R17: the player leaves Home or the trap; `bySix` false = third throw, moving anyway; `paid` = left by
+   * spending a lantern (owner, 15 Oct), then throws to move.
+   */
+  | { type: "released"; player: number; where: "start" | "trap"; bySix: boolean; stairs: number; paid?: true }
   | { type: "road"; player: number; fork: number; road: Road }
   /** A move by a throw, square by square. `crossroads` = stopped at a crossroads with squares left (R20). */
   | { type: "move"; player: number; from: Pos; to: Pos; path: Spot[]; crossroads: boolean }

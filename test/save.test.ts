@@ -16,7 +16,7 @@ function played(board: "short" | "long", players: number, seed: number, first: n
     return a;
   });
   const save: SavedGame = {
-    v: 1, board, boardHash: boardHash(BOARDS[board]), players, computer: Array(players).fill(false), seed, first,
+    v: 2, board, boardHash: boardHash(BOARDS[board]), players, computer: Array(players).fill(false), seed, first,
     answers, turns, quiet: [], cards: [], round: g.round,
   };
   return { g, save };
