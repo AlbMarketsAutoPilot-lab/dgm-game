@@ -80,7 +80,7 @@ export class Stage {
   private readonly wrap: HTMLElement;
   private readonly strip: HTMLElement;
   private readonly token: HTMLElement;
-  private readonly cap: HTMLElement;
+  private readonly fx: HTMLElement;
   private cards: HTMLElement[] = [];
   private index = 0;
 
@@ -88,25 +88,65 @@ export class Stage {
     styleArt();
     this.board = board;
     this.index_ = new BoardIndex(board);
-    host.innerHTML = `<div class="strip-wrap"><div class="strip"></div><div class="stage-token"></div></div><p class="caption" aria-live="polite"></p>`;
+    host.innerHTML = `<div class="strip-wrap"><div class="strip"></div><div class="stage-token"></div><div class="fx" aria-hidden="true"></div></div>`;
     this.wrap = host.querySelector(".strip-wrap")!;
     this.strip = host.querySelector(".strip")!;
     this.token = host.querySelector(".stage-token")!;
-    this.cap = host.querySelector(".caption")!;
+    this.fx = host.querySelector(".fx")!;
     new ResizeObserver(() => this.resize()).observe(this.wrap);
   }
 
   /** Shows one place, with this player's token on it. */
-  show(seat: number, pos: Pos, stair = 0, caption = true): void {
+  show(seat: number, pos: Pos, stair = 0): void {
     this.token.innerHTML = tokenSvg(seat);
     this.setCards([{ pos, stair }], 0);
-    if (caption) this.caption(describe(this.board, pos, stair).caption);
   }
 
-  caption(text: string, tone: "" | "good" | "bad" | "info" = ""): void {
-    this.cap.textContent = text;
-    this.cap.className = `caption ${tone}`;
-    this.cap.animate?.([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: reduced() ? 0 : 220 });
+  /** The big moments: a burst of sparks (good), a jolt and a red flash (bad), a bump, confetti (win). */
+  celebrate(kind: "good" | "bad" | "bump" | "win"): void {
+    const card = this.cards[this.index];
+    card?.classList.remove("glow-good", "glow-bad");
+    if (kind === "good" || kind === "bad") { void card?.offsetWidth; card?.classList.add(`glow-${kind}`); }
+    if (reduced()) return;
+    if (kind === "bad" || kind === "bump") this.wrap.animate([{ transform: "none" }, { transform: "translateX(-9px) rotate(-1deg)" }, { transform: "translateX(8px) rotate(1deg)" }, { transform: "translateX(-5px)" }, { transform: "none" }], { duration: 420 });
+    const colours = kind === "bad" ? ["#c0392b", "#7a5c3e", "#4b2377"] : ["#f2c230", "#2e8b3e", "#e8562f", "#3d74c4", "#f08bb4"];
+    const n = kind === "win" ? 70 : kind === "good" ? 26 : 14;
+    const bits = Array.from({ length: n }, (_, i) => {
+      const b = document.createElement("i"), a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 140;
+      b.style.background = colours[i % colours.length];
+      if (kind === "win") { b.style.left = `${Math.random() * 100}%`; b.style.top = "-6%"; }
+      this.fx.append(b);
+      const to = kind === "win" ? `translate(${(Math.random() - 0.5) * 120}px, ${this.wrap.clientHeight * 1.1}px) rotate(${Math.random() * 900}deg)`
+        : `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d + (kind === "bad" ? 60 : 0)}px) rotate(${Math.random() * 600}deg)`;
+      b.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: to + " scale(.6)", opacity: 0 }], { duration: kind === "win" ? 2600 + Math.random() * 1800 : 900 + Math.random() * 500, easing: "cubic-bezier(.15,.7,.4,1)", delay: kind === "win" ? Math.random() * 900 : 0, fill: "forwards" });
+      return b;
+    });
+    setTimeout(() => bits.forEach((b) => b.remove()), kind === "win" ? 5600 : 1600);
+  }
+
+  /** A big stamp over the square: "Lucky!", "Don't get mad!" … */
+  stamp(kind: "good" | "bad"): void {
+    const words = kind === "good" ? ["Lucky!", "Yes!", "Woohoo!", "Nice one!"] : ["Don't get mad!", "Oh no!", "Ouch!", "Seriously?!"];
+    const el = document.createElement("div");
+    el.className = `stamp ${kind}`;
+    el.textContent = words[Math.floor(Math.random() * words.length)];
+    this.fx.append(el);
+    const r = reduced();
+    el.animate(r ? [{ opacity: 1 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }] : [{ transform: "translate(-50%, -50%) scale(2.6) rotate(-14deg)", opacity: 0 }, { transform: "translate(-50%, -50%) scale(1) rotate(-8deg)", opacity: 1, offset: 0.18 },
+      { transform: "translate(-50%, -50%) scale(1.06) rotate(-8deg)", opacity: 1, offset: 0.75 }, { transform: "translate(-50%, -80%) scale(.9) rotate(-8deg)", opacity: 0 }], { duration: 1500, easing: "ease-out", fill: "forwards" });
+    setTimeout(() => el.remove(), 1600);
+  }
+
+  /** The Bonus card flies onto the square and flips away. */
+  cardPlayed(): void {
+    if (reduced()) return;
+    const c = document.createElement("div");
+    c.className = "played-card";
+    c.innerHTML = artFor("card", "");
+    this.fx.append(c);
+    c.animate([{ transform: "translate(-50%, 120%) scale(.4) rotate(-30deg)", opacity: 0 }, { transform: "translate(-50%, -50%) scale(1.2) rotate(6deg)", opacity: 1, offset: 0.4 },
+      { transform: "translate(-50%, -50%) scale(1.1) rotate(-4deg)", opacity: 1, offset: 0.7 }, { transform: "translate(-50%, -160%) scale(.6) rotateY(90deg)", opacity: 0 }], { duration: 1400, easing: "ease-in-out", fill: "forwards" });
+    setTimeout(() => c.remove(), 1500);
   }
 
   /** Throw move: hops square by square along `path` (the squares after the current one). */
@@ -198,7 +238,7 @@ export class Stage {
   private resize(): void {
     const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
     // The token stands half over the card's bottom edge: at most .74 of the height keeps it whole.
-    this.wrap.style.setProperty("--card", `${Math.max(110, Math.min(w * 0.62, h * 0.74))}px`);
+    this.wrap.style.setProperty("--card", `${Math.max(110, Math.min(w * 0.7, h * 0.74))}px`);
     this.moveTo(this.index, 0);
   }
 }
