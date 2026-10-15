@@ -42,6 +42,15 @@ const CARD_INFO = {
   snakeLeader: { icon: "snake-crown", title: "Snake Leader", text: "You rode the sea snake. Careful: if you land on the very last square, the snake wants its ride back." },
 };
 
+/** The "one moment" sign: an hourglass turning in the action area (no motion with "reduce motion"). */
+function hourglass(): HTMLElement {
+  const el = document.createElement("div");
+  el.className = "hourglass";
+  el.setAttribute("role", "status");
+  el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="sand" d="M9.2 7.5h5.6L12 11zM12 15.2l3.6 4.3H8.4z" fill="currentColor"/></svg><span class="sr">One moment…</span>`;
+  return el;
+}
+
 export class GameScreen {
   private readonly game: Game;
   private readonly board: Board;
@@ -304,7 +313,7 @@ export class GameScreen {
       // Owner, 15 Oct: at Home or in the Bog, roll for a 6, or spend a lantern to go at once (then throw to move)
       this.dice.ready(true);
       const v = await Promise.race([
-        this.ask([{ label: "Roll for a 6", value: "roll", primary: true }, { label: `Spend a lantern and go (${p.lanterns} left)`, value: "spend" }]),
+        this.ask([{ label: "Roll for a 6", value: "roll", primary: true }, { label: `Spend a lantern (${p.lanterns} left)`, value: "spend" }]),
         this.dice.tapped().then(() => "roll"),
       ]);
       this.spendNow = v === "spend";
@@ -578,20 +587,26 @@ export class GameScreen {
 
   /** A story moment, in a popup (only the newest one: owner, no list of earlier moments). */
   // Owner, 15 Oct: two popups in a row went too fast to read. A story popup now stays at least as long as it takes to
-  // read it (about 4 words a second, at least 2.5 s, at most 9 s) before the next one replaces it.
+  // read it (about 4 words a second, at least 1.5 s, at most 5 s: owner) before the next one replaces it.
   private async story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = ""): Promise<void> {
     await this.readFirst();
     const c: PopupContent = { title: t.title, text: t.text, art: t.art, outcome: result || undefined, tone, kicker: `${tokenSvg(seat, "kick", true)}${this.name(seat)}` };
     this.told.unshift(c);
     void this.pops.show(c);
     const words = `${t.title} ${t.text} ${result}`.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
-    this.readUntil = Date.now() + Math.min(9000, Math.max(2500, 1000 + words * 250));
+    this.readUntil = Date.now() + Math.min(5000, Math.max(1500, 500 + words * 250));
   }
 
-  /** Waits until the popup on screen has been on long enough to read (a player's tap on a button ends it at once). */
+  /**
+   * Waits until the popup on screen has been on long enough to read (a player's tap on a button ends it at once).
+   * Meanwhile an hourglass turns where the buttons go, so the wait never looks like a frozen screen (owner, 15 Oct).
+   */
   private async readFirst(): Promise<void> {
     const left = this.readUntil - Date.now();
-    if (left > 0) await this.wait(left);
+    if (left <= 0) return;
+    const glass = this.act.childElementCount ? null : this.act.appendChild(hourglass());
+    await this.wait(left);
+    glass?.remove();
   }
 
   private twoTokens(a: number, b: number): string {
