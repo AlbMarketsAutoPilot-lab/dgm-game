@@ -76,7 +76,7 @@ export const MOMENTS = {
   stones: { title: "Stepping Stones", text: "No 6. You lay another stone across the mud. The Bog is patient. So are you. Mostly." },
   leaveHome: { title: "Off You Go!", text: "A 6! The door clicks shut behind you and the road opens up. Throw again." },
   leaveBog: { title: "Free!", text: "A 6! The Bog lets go with a disappointed slurp. Throw again." },
-  thirdThrow: { title: "Third Time Lucky", text: "Three throws and still no 6, but you're not waiting any longer. You set off anyway, two steps slower." },
+  thirdThrow: { title: "Third Time Lucky", text: "Three throws and still no 6, but you're not waiting any longer. You set off anyway, and that third throw moves you." },
   lanternLost: { title: "A Lantern Goes Out", text: "Three throws without a 6. One of {p}'s lanterns flickers and goes dark. Look after the ones that are left." },
   lanternNone: { title: "Last Light", text: "Attention! {p} has no lanterns left. One more slip and the journey is over." },
   lanternWon: { title: "Lantern Relit!", text: "Three 6s in a row. Something like that doesn't go unnoticed: one of {p}'s lanterns flares back to life." },

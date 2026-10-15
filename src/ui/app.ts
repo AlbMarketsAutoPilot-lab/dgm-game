@@ -7,7 +7,7 @@ import { Game, OFF, OUT, START, isShortcut, shortcutOf, simplePlayer, type Answe
 import { artFor } from "../render/art";
 import { cardFace } from "../render/art-modern";
 import { Dice } from "./dice";
-import { Overview } from "./overview";
+import { Overview, reachSteps } from "./overview";
 import { PLAYERS, tokenSvg } from "./players";
 import { Popups, type PopupContent } from "./popup";
 import { SpoilQuestion } from "./spoil";
@@ -145,8 +145,12 @@ export class GameScreen {
     this.dice.clear();
     const pl = this.places[seat];
     this.stage.show(seat, pl.pos, pl.stair);
+    // The round this turn belongs to: the engine counts it only when the throw starts (audit: the prompt showed the
+    // previous round, and no round at all on the first turn).
+    this.round = this.game.round + (seat <= this.game.currentSeat ? 1 : 0);
     this.render();
-    this.overview.setReach(p.skip > 0 || p.trapped || p.pos === OFF ? null : pl.pos);
+    // the Puddle moves exactly 1 whatever the die shows: no die faces then (the line under "Blue's turn" says so)
+    this.overview.setReach(p.skip > 0 || p.trapped || p.pos === OFF || p.slow ? null : pl.pos, p.double);
     if (p.skip > 0) {
       const who = this.name(seat), left = p.skip - 1, cause = this.waitCause[seat];
       this.story(seat, { title: MOMENTS.wait.title, text: cause ? `${who} landed on <b>${cause}</b>, which says “miss turns”. So ${who} skips this turn.` : fill(MOMENTS.wait.text, { p: who }), art: artFor("big-clock", "Waiting") },
@@ -411,11 +415,12 @@ export class GameScreen {
   private squareInfo(pos: Pos): void {
     const B = this.board, here = this.places[this.seat], steps = this.stepsTo(here.pos, pos);
     const kicker = pos === 0 ? "Start" : pos === B.endTile ? "The end of the road" : isShortcut(pos) ? `The Shortcut · stone ${shortcutOf(pos).index}` : `Square ${pos}`;
-    const reach = steps !== null && steps >= 1 && steps <= 6 ? `${this.name(this.seat)} gets here with a ${steps}.` : steps !== null && steps > 6 ? `${steps} squares ahead of ${this.name(this.seat)}.` : "";
+    // a 6 always throws again, so one throw stops 1–5 squares ahead, never 6 (audit, 15 Oct)
+    const reach = steps !== null && steps >= 1 && steps <= 5 ? `${this.name(this.seat)} gets here with a ${steps}.` : steps !== null && steps > 5 ? `${steps} squares ahead of ${this.name(this.seat)}.` : "";
     const x = taleOf(B, pos);
     let c: PopupContent;
     if (x) c = { title: x.tale.title, text: x.tale.text, art: this.pic(x.icon, x.tale.title), outcome: outcome(B, x.tile), tone: x.tile.cat === "R" ? "good" : "bad" };
-    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to leave Home. No 6 in three throws: you go anyway, slower, and a lantern goes out." };
+    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to leave Home. No 6 in three throws: a lantern goes out, and you set off anyway with that third throw." };
     else if (pos === B.endTile) c = { ...MOMENTS.end, art: artFor("lanterns", "Festival"), outcome: "You need the exact number to get in. Too much, and you stay where you are. A 6 can never land here exactly: a 6 always throws again and adds up." };
     else {
       const lm = B.story.landmarks[pos], fork = B.rules.forks.find((f) => f.at === pos), region = B.story.regions.find((r) => pos >= r.from && pos <= r.to)?.name ?? "";
@@ -467,14 +472,16 @@ export class GameScreen {
     if (pos === OFF || p.trapped) return "Tip: only a 6 will do. Three misses cost a lantern.";
     if (isShortcut(pos)) return "";
     const toEnd = B.endTile - pos;
-    if (toEnd <= 5) return `Tip: exactly a ${toEnd} reaches the festival.`;
-    if (toEnd === 6) return "Tip: 6 squares to go, but a 6 can't win: it always throws again, so the total is 7 or more. Get closer first.";
+    if (p.slow) return toEnd === 1 ? "Tip: next turn moves exactly 1 square: straight into the festival." : "Tip: next turn moves exactly 1 square, whatever the die shows.";
+    const fin = this.finish(p, toEnd);
+    if (fin) return `Tip: ${fin}`;
     const notes: string[] = [];
-    for (let k = 1; k <= 6; k++) {
-      const t = B.tiles[pos + k];
-      if (t && !(t.requires && !p.snakeLeader)) notes.push(`a ${k} ${t.cat === "R" ? "▲" : "▼"} ${taleOf(B, pos + k)?.tale.title ?? ""}`);
+    for (const { face, steps } of reachSteps(p.double)) {
+      const sq = pos + steps, t = B.tiles[sq];
+      if (sq < B.endTile && t && !(t.requires && !p.snakeLeader)) notes.push(`a ${face} ${t.cat === "R" ? "▲" : "▼"} ${taleOf(B, sq)?.tale.title ?? ""}`);
     }
-    return notes.length ? `Next throw: ${notes.join("; ")}.` : "Next throw: nothing special within six squares. Enjoy the road.";
+    const dbl = p.double ? " (the throw counts double)" : "";
+    return notes.length ? `Next throw${dbl}: ${notes.join("; ")}. A 6 throws again.` : `Next throw${dbl}: nothing special within reach. Enjoy the road.`;
   }
 
   // ---- The action button, the player row, the current player's things ----
@@ -511,9 +518,25 @@ export class GameScreen {
     if (p.slow) return "Puddle: this turn you move exactly 1 square, whatever you roll.";
     const extra = p.double ? " Your throw counts double this turn." : "";
     if (this.board.rules.forks.some((f) => f.at === pos)) return `At the crossroads: choose your road, then roll.${extra}`;
-    if (!isShortcut(pos) && d >= 1 && d <= 5) return `Needs exactly ${d} to reach the festival.${extra}`;
-    if (!isShortcut(pos) && d === 6) return `6 squares to go, but a 6 can't win (it throws again). Get closer first.${extra}`;
-    return extra.trim();
+    if (isShortcut(pos)) return extra.trim();
+    if (p.double) { // a doubled throw needs half the squares (audit: "needs exactly 3" with a double meant 6 squares)
+      const fin = this.finish(p, d);
+      return fin ? fin.charAt(0).toUpperCase() + fin.slice(1) : extra.trim();
+    }
+    if (d >= 1 && d <= 5) return `Needs exactly ${d} to reach the festival.`;
+    if (d === 6) return "6 squares to go, but a 6 can't win (it throws again). Get closer first.";
+    return "";
+  }
+
+  /** What reaches the festival from `d` squares away with the next throw (doubled or not); "" when it is far. */
+  private finish(p: PlayerState, d: number): string {
+    if (p.double) {
+      if (d < 1 || d > 11) return "";
+      return d % 2 === 0 && d <= 10 ? `your throw counts double: exactly a ${d / 2} reaches the festival.` : `your throw counts double, so no throw lands exactly on the festival this turn (${d} squares to go).`;
+    }
+    if (d >= 1 && d <= 5) return `exactly a ${d} reaches the festival.`;
+    if (d === 6) return "6 squares to go, but a 6 can't win: it always throws again, so the total is 7 or more. Get closer first.";
+    return "";
   }
 
   private render(): void {

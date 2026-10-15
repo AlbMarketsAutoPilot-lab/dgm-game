@@ -1,18 +1,27 @@
 // Offline (Step 7): the game is cached on the device the first time it is opened. Pages come from the network first
 // (so a new version arrives), everything else from the cache first (file names change with every build).
-const CACHE = "dgm-v1";
+// Only caches named "dgm-…" are ours: on GitHub Pages every project of the account shares one origin, and its caches
+// with it (audit, 15 Oct: the first visit deleted every other app's cache). A new name drops our own old files once.
+const PREFIX = "dgm-";
+const CACHE = PREFIX + "v2";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./manifest.webmanifest"])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith(PREFIX) && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
+
+// File names change with every build, so a cached file is the right one whatever the server's Vary header says
+// (audit: with "Vary: Origin" the scripts were never found offline).
+// Only our own cache is searched (caches.match alone would search every app's caches on the origin).
+const match = (req) => caches.open(CACHE).then((c) => c.match(req, { ignoreVary: true }));
 
 // The page sends the files it loaded before this worker was in charge (scripts, styles, fonts), so they are kept too.
 self.addEventListener("message", (e) => {
-  if (e.data && e.data.cache) e.waitUntil(caches.open(CACHE).then((c) => c.addAll(e.data.cache)).catch(() => {}));
+  const files = e.data && Array.isArray(e.data.cache) ? e.data.cache.filter((u) => typeof u === "string" && u.startsWith(self.registration.scope)) : [];
+  if (files.length) e.waitUntil(caches.open(CACHE).then((c) => c.addAll(files)).catch(() => {}));
 });
 
 self.addEventListener("fetch", (e) => {
@@ -20,8 +29,8 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   const keep = (res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; };
   if (req.mode === "navigate") {
-    e.respondWith(fetch(req).then(keep).catch(() => caches.match(req).then((r) => r || caches.match("./"))));
+    e.respondWith(fetch(req).then(keep).catch(() => match(req).then((r) => r || match("./"))));
   } else {
-    e.respondWith(caches.match(req).then((r) => r || fetch(req).then(keep)));
+    e.respondWith(match(req).then((r) => r || fetch(req).then(keep)));
   }
 });

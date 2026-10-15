@@ -2,7 +2,7 @@
 // A labyrinth spiral of plain paper squares with thin ink walls between the rings, as big as the panel allows. No
 // numbers, no colours, no lines: good squares have a green frame (and ▲), bad squares a red frame (and ▼). Tap any
 // square to see what happens there; where squares are small (the long board), the first tap zooms in.
-// The squares the current player can reach with one die show a small die face.
+// The squares the current player can reach with one throw of 1–5 show a small die face.
 import { OFF, OUT, isShortcut, shortcutPos, type Board, type Pos } from "../engine";
 import { WALL_WIDE, type BoardLayout, type Point, designFor, layoutFor, pointOf } from "../render/layout";
 import { INK, PAPER, PUNISH, REWARD } from "../render/palette";
@@ -18,6 +18,13 @@ const PIPS: Record<number, [number, number][]> = {
   1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
   5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
 };
+
+/**
+ * How far one throw of each face moves a token, for the faces that can end a move: 1–5. A 6 always throws again and
+ * adds up (R2), so a token never stops 6 squares ahead (audit, 15 Oct). A doubled throw (R9) moves twice as far.
+ */
+export const reachSteps = (double: boolean): { face: number; steps: number }[] =>
+  [1, 2, 3, 4, 5].map((face) => ({ face, steps: double ? 2 * face : face }));
 
 export class Overview {
   layout!: BoardLayout;
@@ -35,6 +42,7 @@ export class Overview {
   private current = -1;
   private roadblock: number | null = null;
   private reachFrom: Pos | null = null;
+  private reachDouble = false;
   private design = "";
 
   constructor(private readonly host: HTMLElement, board: Board, private readonly players: number, private readonly onPick: (pos: Pos) => void) {
@@ -143,7 +151,7 @@ export class Overview {
     this.layoutTokens();
     if (this.current >= 0) this.setCurrent(this.current);
     this.setRoadblock(this.roadblock);
-    this.setReach(this.reachFrom);
+    this.setReach(this.reachFrom, this.reachDouble);
   }
 
   /** Zooms in around a tap so the squares are big enough to tap (null = the whole board again). */
@@ -160,7 +168,9 @@ export class Overview {
     // the tapped point in board coordinates (the drawing is centred in the svg)
     const ox = (r.width - B.w * fit) / 2, oy = (r.height - B.h * fit) / 2;
     const bx = ((ev.clientX - r.left - ox) / fit) * U, by = ((ev.clientY - r.top - oy) / fit) * U;
-    const x = bx - vw / 2, y = by - vh / 2; // the tapped square in the middle, never under the "Whole board" button
+    // the tapped square in the middle, but never past the board's edge (audit: a top-row tap showed half a panel of nothing)
+    const keep = (v: number, size: number, full: number) => (size >= full ? (full - size) / 2 : Math.max(0, Math.min(full - size, v)));
+    const x = keep(bx - vw / 2, vw, B.w * U), y = keep(by - vh / 2, vh, B.h * U);
     this.svg.setAttribute("viewBox", `${x} ${y} ${vw} ${vh}`);
     this.zoomed = true;
     this.zoomOut.hidden = false;
@@ -187,17 +197,18 @@ export class Overview {
     this.tree.setAttribute("opacity", "1");
   }
 
-  /** Die faces on the squares 1–6 ahead of `pos` (Main Road; null = none). */
-  setReach(pos: Pos | null): void {
+  /** Die faces on the squares one throw reaches from `pos` (null = none), see `reachSteps`. */
+  setReach(pos: Pos | null, double = false): void {
     this.reachFrom = pos;
+    this.reachDouble = double;
     let s = "";
     if (pos !== null && pos !== OFF && pos !== OUT) {
-      for (let k = 1; k <= 6; k++) {
-        const n = this.ahead(pos, k);
+      for (const { face, steps } of reachSteps(double)) {
+        const n = this.ahead(pos, steps);
         if (n === null) break;
         const c = this.px(pointOf(this.layout, n));
         s += `<g transform="translate(${c.x - 30} ${c.y + 6})"><rect x="-17" y="-17" width="34" height="34" rx="8" fill="#fffdf6" stroke="${INK}" stroke-width="4"/>`
-          + PIPS[k].map(([dx, dy]) => `<circle cx="${dx * 8.5}" cy="${dy * 8.5}" r="3.6" fill="${INK}"/>`).join("") + `</g>`;
+          + PIPS[face].map(([dx, dy]) => `<circle cx="${dx * 8.5}" cy="${dy * 8.5}" r="3.6" fill="${INK}"/>`).join("") + `</g>`;
       }
     }
     this.reach.innerHTML = s;
