@@ -10,6 +10,7 @@ import { INK, PAPER, PUNISH, REWARD } from "../render/palette";
 /** Squares smaller than this on screen (px) are zoomed in on first. */
 const TAP = 40;
 import { PLAYERS, tokenSvg } from "./players";
+import { artFor } from "../render/art";
 
 const U = 100;
 const WALL = "#3b1f5e";
@@ -69,7 +70,10 @@ export class Overview {
     };
     // squares touch (at most 1.11 apart); only a step into the next ring crosses a wall (1.14 or more)
     for (let n = 1; n < board.lastTile; n++) if (Math.hypot(L.squares[n + 1].x - L.squares[n].x, L.squares[n + 1].y - L.squares[n].y) > 1.12) s += link(L.squares[n], L.squares[n + 1]);
-    s += link(L.squares[board.lastTile], L.end);
+    { // the last square points into the festival: the arrow stops at its edge
+      const q = L.squares[board.lastTile], E = L.endPad, edge = { x: Math.max(E.centre.x - E.w / 2, Math.min(E.centre.x + E.w / 2, q.x)), y: Math.max(E.centre.y - E.h / 2, Math.min(E.centre.y + E.h / 2, q.y)) };
+      s += link(q, edge);
+    }
     // Shortcut stones (small squares inside the wider walls)
     for (const sc of L.shortcuts) {
       sc.stones.forEach((q, i) => {
@@ -99,11 +103,14 @@ export class Overview {
     const sp = P(L.start.centre), sw = L.start.w * U - 4, sh = U - 4;
     s += `<g class="pick" data-pos="0"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
       + `<text x="${sp.x - sw / 2 + 14}" y="${sp.y - sh / 2 + 32}" class="ov-sub">START: a 6 to enter</text></g>`;
-    // the festival fills the middle of the spiral (it grows into the space the squares leave)
-    const e = P(L.endPad.centre), ew = L.endPad.w * U - 4, eh = L.endPad.h * U - 4, k = Math.min(ew, eh) / 96, big = ew >= 190 && eh >= 150;
-    s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="12" fill="#f2c230" stroke="${INK}" stroke-width="7"/>`
-      + `<path d="M0 -30l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" transform="translate(${e.x} ${e.y - (big ? 18 : 0)}) scale(${Math.min(k, big ? 1.6 : 2.4)})" fill="#fff6b0" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`
-      + (big ? `<text x="${e.x}" y="${e.y + eh / 2 - 22}" text-anchor="middle" class="ov-sub">Festival of Lights</text>` : "") + `</g>`;
+    // The Festival of Lights: the destination, a golden plaza in the middle of the spiral with its lanterns
+    const e = P(L.endPad.centre), ew = L.endPad.w * U - 8, eh = L.endPad.h * U - 8, pic = Math.min(ew * 0.8, eh * 0.62), big = ew >= 180 && eh >= 150;
+    s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="24" fill="#f2c230" stroke="${INK}" stroke-width="8"/>`
+      + `<rect x="${e.x - ew / 2 + 14}" y="${e.y - eh / 2 + 14}" width="${ew - 28}" height="${eh - 28}" rx="14" fill="#fff4c8" stroke="${INK}" stroke-width="3" stroke-dasharray="10 8"/>`
+      + (big ? artFor("lanterns", "Festival of Lights").replace("<svg ", `<svg x="${e.x - pic / 2}" y="${e.y - eh / 2 + 22}" width="${pic}" height="${pic}" `)
+        + `<text x="${e.x}" y="${e.y + eh / 2 - 30}" text-anchor="middle" class="ov-fest" style="font-size:${Math.min(46, (ew - 40) / 7.6)}px">Festival of Lights</text>`
+        : `<path d="M0 -30l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" transform="translate(${e.x} ${e.y})" fill="#f2c230" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`)
+      + `</g>`;
     const markup = `<svg class="overview-board" viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The whole board">`
       + s
       + `<g class="reach" aria-hidden="true"></g>`

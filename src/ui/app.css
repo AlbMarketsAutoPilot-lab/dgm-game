@@ -37,6 +37,7 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .overview-board .pick { cursor: pointer; }
 .overview-board .sq:hover rect:first-child { fill: #fff8e6; }
 .ov-sub { font-size: 40px; fill: var(--ink); }
+.ov-fest { font-size: 46px; fill: var(--ink); }
 .zoom-out { position: absolute; left: 8px; bottom: 8px; z-index: 0; font-size: 1.05rem; min-height: 44px; padding: 4px 12px; }
 .overview-board .flow { animation: flow 1.6s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -64; } }

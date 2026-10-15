@@ -63,19 +63,19 @@ export interface BoardLayout {
 }
 
 /** Walls between rings: thin, and wider where a Shortcut runs inside them. */
-export const WALL_THIN = 0.14;
+export const WALL_THIN = 0.38; // owner, 15 Oct: a clear purple wall between the rings, as on the first boards
 export const WALL_WIDE = 0.44;
 /** How long the Start square is (it holds up to four tokens side by side). */
 export const START_LEN = 4;
 
 /**
- * Board sizes (w × h units) where the spiral fills the board with (almost) no empty space in the middle (owner,
- * 15 Oct: no empty space, bigger squares). Each suits a different panel shape, from tall to wide; the board view
- * takes the one that gives the biggest squares in its panel. The first is the default.
+ * Board sizes (w × h units) where the spiral, with a clear wall between the rings, leaves a well-shaped plaza in
+ * the middle for the Festival of Lights and no other empty space (owner, 15 Oct). The board view takes the one that
+ * gives the biggest squares in its panel. The first is the default.
  */
 const DESIGNS: Record<string, [number, number][]> = {
-  long: [[16.25, 12.5], [12.5, 16.25], [12.75, 16], [14.25, 15.25], [15.5, 14.25], [15.5, 13.5], [17.75, 13.25], [19.5, 13], [20, 12.75], [19.5, 10.25]],
-  short: [[11, 9.75], [8.25, 12], [9.5, 11.75], [10, 10.25], [10.25, 10], [11.5, 9.25], [12.5, 9.25], [12, 8], [15, 9.25], [15.25, 9]],
+  long: [[16.25, 15.75]],
+  short: [[12.25, 11], [11.25, 12]],
 };
 
 /** The paper drawings (archived transcription §6.1, §8.1): ladders and snakes, by their long-board squares. */
@@ -162,9 +162,10 @@ export function layoutForDesign(board: Board, w: number, h: number): BoardLayout
     return { x0: p.x - bw / 2, x1: p.x + bw / 2, y0: p.y - bh / 2, y1: p.y + bh / 2 };
   });
   type Box = { x0: number; x1: number; y0: number; y1: number };
+  const g = WALL_THIN; // the festival keeps a wall's width from the squares around it
   const clear = (q: Box) => q.x0 >= -0.5 && q.y0 >= -0.5 && q.x1 <= w + 0.5 && q.y1 <= h + 0.5
-    && boxes.every((b) => b.x1 <= q.x0 + 1e-6 || b.x0 >= q.x1 - 1e-6 || b.y1 <= q.y0 + 1e-6 || b.y0 >= q.y1 - 1e-6);
-  let pad: Box = { x0: roadEnd.x - 0.45, x1: roadEnd.x + 0.45, y0: roadEnd.y - 0.45, y1: roadEnd.y + 0.45 };
+    && boxes.every((b) => b.x1 + g <= q.x0 + 1e-6 || b.x0 - g >= q.x1 - 1e-6 || b.y1 + g <= q.y0 + 1e-6 || b.y0 - g >= q.y1 - 1e-6);
+  let pad: Box = { x0: roadEnd.x - 0.3, x1: roadEnd.x + 0.3, y0: roadEnd.y - 0.3, y1: roadEnd.y + 0.3 };
   for (let grew = clear(pad); grew;) {
     grew = false;
     for (const [k, d] of [["x0", -0.05], ["x1", 0.05], ["y0", -0.05], ["y1", 0.05]] as const) {

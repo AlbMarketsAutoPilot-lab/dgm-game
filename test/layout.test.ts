@@ -2,7 +2,7 @@
 // Shortcuts inside the walls, a big Start pad and the festival in the middle.
 import { describe, expect, it } from "vitest";
 import { BOARDS, OFF, shortcutPos } from "../src/engine";
-import { layoutFor, pointOf, type Point } from "../src/render/layout";
+import { WALL_THIN, layoutFor, pointOf, type Point } from "../src/render/layout";
 
 const d = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 /** Chebyshev distance: squares are axis-aligned, so this says whether they overlap. */
@@ -26,7 +26,7 @@ describe.each(["long", "short"] as const)("%s board layout", (id) => {
     for (let n = 2; n <= B.lastTile; n++) expect(d(L.squares[n - 1], L.squares[n]), `square ${n}`).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side
     // the festival fills the middle (owner: no empty space); the last square touches it
     const E = L.endPad, q = L.squares[B.lastTile];
-    expect(Math.max(0, Math.abs(q.x - E.centre.x) - E.w / 2) + Math.max(0, Math.abs(q.y - E.centre.y) - E.h / 2)).toBeLessThanOrEqual(0.75);
+    expect(Math.max(0, Math.abs(q.x - E.centre.x) - E.w / 2) + Math.max(0, Math.abs(q.y - E.centre.y) - E.h / 2)).toBeLessThanOrEqual(0.5 + WALL_THIN + 0.05); // one wall away
   });
   it("the long Start square at the top left (room for four tokens), then square 1, going right", () => {
     expect(L.start.w).toBeGreaterThan(3.5);
