@@ -11,18 +11,19 @@ export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setu
   const computer = last ? [...last.computer] : [false, true, true, true];
   const render = () => {
     const album = loadAlbum(), saved = loadGame();
+    // Groups, so the screen can lay them out in one column (portrait) or two (sideways phones, tablets, PC).
     root.innerHTML = `
       <div class="setup">
-        <h1>Don't Get Mad!</h1>
-        <p class="sub">A hand-drawn journey to the Festival of Lights</p>
+        <header class="s-head"><h1>Don't Get Mad!</h1><p class="sub">A hand-drawn journey to the Festival of Lights</p></header>
         ${saved ? `<button class="continue primary">Continue game<small>${BOARDS[saved.board].story.title} · ${saved.players} players · round ${saved.round}</small></button>` : ""}
-        <h2>Which journey?</h2>
-        <div class="row">${(["short", "long"] as BoardId[]).map((id) => `<button class="pick" data-board="${id}" aria-pressed="${board === id}">${BOARDS[id].story.title}<small>${id === "short" ? "100 squares, about 30 rounds" : "202 squares, about 50 rounds"}</small></button>`).join("")}</div>
-        <h2>Players</h2>
-        <div class="row">${[2, 3, 4].map((n) => `<button class="pick num" data-players="${n}" aria-pressed="${players === n}">${n}</button>`).join("")}</div>
-        <div class="seats">${PLAYERS.slice(0, players).map((p, i) => `<button class="seat" data-seat="${i}">${tokenSvg(i, "mini")}<span>${p.name}</span><b>${computer[i] ? "Computer" : "Person"}</b></button>`).join("")}</div>
-        <button class="go primary">Let's go!</button>
-        <p><button class="album-open">Postcards · ${POSTCARDS.filter((p) => album.has(p.id)).length} / ${POSTCARDS.length}</button></p>
+        <section class="s-journey"><h2>Which journey?</h2>
+          <div class="row">${(["short", "long"] as BoardId[]).map((id) => `<button class="pick" data-board="${id}" aria-pressed="${board === id}">${BOARDS[id].story.title}<small>${id === "short" ? "100 squares, about 30 rounds" : "202 squares, about 50 rounds"}</small></button>`).join("")}</div>
+        </section>
+        <section class="s-players"><h2>Players</h2>
+          <div class="row">${[2, 3, 4].map((n) => `<button class="pick num" data-players="${n}" aria-pressed="${players === n}">${n}</button>`).join("")}</div>
+          <div class="seats">${PLAYERS.slice(0, players).map((p, i) => `<button class="seat" data-seat="${i}">${tokenSvg(i, "mini")}<span>${p.name}</span><b>${computer[i] ? "Computer" : "Person"}</b></button>`).join("")}</div>
+        </section>
+        <footer class="s-go"><button class="go primary">Let's go!</button><button class="album-open">Postcards · ${POSTCARDS.filter((p) => album.has(p.id)).length} / ${POSTCARDS.length}</button></footer>
       </div>`;
     root.querySelectorAll<HTMLButtonElement>("[data-board]").forEach((b) => b.onclick = () => { board = b.dataset.board as BoardId; render(); });
     root.querySelectorAll<HTMLButtonElement>("[data-players]").forEach((b) => b.onclick = () => { players = Number(b.dataset.players); render(); });

@@ -49,6 +49,13 @@ Two areas plus the players:
   try / catch; blocked storage = no album, same game). "New postcard!" stamp when one is earned; the win popup names
   the new ones; the album opens from the start screen ("Postcards · 5 / 16") and the win popup.
 
+**Every screen size** (owner, 15 Oct): all sizes in `app.css` are rem, and the root size grows on big screens (PC).
+A popup that does not fit over the board moves over everything above the controls (or the whole screen, when it has
+its own buttons), then gets compact with only its words scrolling; its buttons are never cut (`popup.ts`, `fit`). The
+start screen fits without scrolling in one column (portrait) or two (wider than tall). The turn panel sizes itself by
+its own width (container query). Checked at 19 sizes from 280 × 653 to 2560 × 1440: see
+`docs/analysis/audit-code-2026-10-15.md` §6.
+
 Every rule comes from the engine (`src/engine`); this folder only shows its events and answers its decisions.
 Accessibility: tokens differ by colour and shape, good/bad by colour and ▲/▼, big buttons, no timers for people,
 "reduce motion" stops the animations (reading pauses stay). `?fast` in the address fast-forwards games (testing).

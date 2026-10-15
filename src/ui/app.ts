@@ -100,7 +100,7 @@ export class GameScreen {
       </div>`;
     const ov = root.querySelector<HTMLElement>(".overview")!;
     this.overview = new Overview(ov, board, players, (pos) => this.squareInfo(pos));
-    this.pops = new Popups(ov);
+    this.pops = new Popups(ov, root.querySelector(".game")!, root.querySelector(".controls")!);
     this.stage = new Stage(root.querySelector(".stage")!, board);
     this.dice = new Dice(root.querySelector(".dice")!);
     this.bar = root.querySelector(".players")!;
@@ -654,12 +654,12 @@ export class GameScreen {
 
   private render(): void {
     const P = this.game.players, cur = this.seat;
-    this.bar.innerHTML = P.map((p, i) => `<button class="avatar${i === cur ? " now" : ""}${p.out ? " gone" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${p.lanterns} lanterns${p.bonus ? `, ${p.bonus} Bonus card` : ""}. Tap for details">`
+    this.bar.innerHTML = `<div class="avs">` + P.map((p, i) => `<button class="avatar${i === cur ? " now" : ""}${p.out ? " gone" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${p.lanterns} lanterns${p.bonus ? `, ${p.bonus} Bonus card` : ""}. Tap for details">`
       + `${tokenSvg(i, "tok", true)}<span class="badge l">${lanternSvg}${p.out ? "✕" : p.lanterns}</span>`
       + (p.bonus || p.jailPass ? `<span class="badge c">${artFor(p.bonus ? "card" : "boots", "")}${p.bonus + p.jailPass}</span>` : "")
       + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">${robotSvg}</span>` : "")
       + (this.need(i) ? `<span class="need" aria-hidden="true">needs ${this.need(i)}</span>` : "") + `</button>`).join("")
-      + `<button class="leave" aria-label="Leave game">${leaveSvg}<span>Leave</span></button>`;
+      + `</div><button class="leave" aria-label="Leave game">${leaveSvg}<span>Leave</span></button>`;
     const p: PlayerState = P[cur];
     // The cards: always both slots, so everyone knows what exists; the ones held glow and can be tapped.
     const slot = (k: keyof typeof CARD_INFO, n: number) => `<button class="gcard ${k}${n ? " held" : ""}" data-card="${k}" aria-label="${CARD_INFO[k].title}: ${n ? `you hold ${n}` : "not held"}. Tap to see what it does">`

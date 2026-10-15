@@ -144,3 +144,34 @@ button is cut in half at the bottom of the board panel (it can still be tapped).
 After the build: 181 / 181 tests, `npm run test:sim` 6 / 6, typecheck and build clean. 12 more whole games in the
 browser (reloads, Leave, computer and person players) checked turn by turn against the engine: 0 differences; 18 more
 (production build with the security policy, and the spoil checks) with no errors.
+
+## 6. Every screen size (owner's report, 15 Oct: "buttons cut or almost invisible, you need to scroll")
+
+Checked automatically: 13 screens and popups (start screen, album, a turn, the start popup, a story, the Bonus card
+choice, the spoil question, player / card / square info, Leave, the win, Welcome back) × 19 screen sizes, from a folded
+phone (280 × 653) and an iPhone SE held sideways (568 × 320) to tablets, laptops and PC screens up to 2560 × 1440:
+247 combinations. Each is checked for buttons off screen or cut, popups that need scrolling, the page scrolling,
+buttons overlapping, words squeezed, anything spilling out of the turn panel, and buttons under 40 px.
+
+| | Before | After |
+|---|---|---|
+| Combinations with a problem | **65 of 247** (the start popup's "Let's go!" and the win popup's buttons cut on nearly every phone, also the largest; the start screen scrolling on phones, sideways phones and 1366 × 768 laptops; the start screen wider than a folded phone) | **0 of 247** |
+
+What changed:
+
+- **Popups fit wherever they are.** A popup stays over the board when it fits (the owner's design). When it does not,
+  it moves over everything above the die and the action button (so a choice's buttons stay in view); a popup with its
+  own buttons (start, win, Leave, Welcome back) or an info popup may use the whole screen. If even that is too small,
+  it gets compact and only its words scroll: **its buttons are always in view**. Fitted again when the screen turns.
+- **Start screen without scrolling**, on every size: one column in portrait, sized by the screen's height (players
+  in two columns, name over Person / Computer, on short phones); two columns when the screen is wider than tall
+  (phones sideways, tablets, PC).
+- **PC screens:** every size in the game grows with the screen (one base size, in rem): 16 px on phones, tablets and
+  small laptops, about 20 px on 1920 × 1080, 27 px on 2560 × 1440. The board and the stage size themselves already.
+- **Narrow turn panel** (phones held sideways): the turn line, cards, die and buttons size themselves by the panel's
+  own width, and the three spoil choices stack instead of becoming slivers.
+- **Players' bar:** Leave has its own place (it was under Blue's avatar on a 320 px phone); avatars shrink to fit.
+
+Regression after the change: 181 / 181 tests; 4 more whole games in the production build (reload, Leave, people and
+computer players) checked turn by turn against the engine: 0 differences, 0 security-policy violations; tokens 0 px
+off their squares in portrait, landscape and zoomed in; offline start works.
