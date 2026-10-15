@@ -2,7 +2,7 @@
 import "@fontsource/patrick-hand";
 import "./ui/app.css";
 import { ART, artCss, artFor } from "./render/art";
-import { CARD_DESIGNS, MODERN, cardFace } from "./render/art-modern";
+import { SNAKE_DOWN_DRAFTS } from "./render/art-modern";
 
 const style = document.createElement("style");
 style.textContent = artCss() + `
@@ -14,14 +14,10 @@ document.head.append(style);
 document.querySelector("#gallery")!.innerHTML = Object.keys(ART).sort().map((name) =>
   `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart">${artFor(name, name)}</div></div><figcaption>${name}</figcaption></figure>`).join("");
 
-// ?compare: the owner's review of the draft redraws, current picture on the left, draft on the right; then the cards
+// ?compare: the owner's review of the snake-down drafts, the current picture first
 if (new URLSearchParams(location.search).has("compare")) {
-  style.textContent += `#gallery { grid-template-columns: repeat(4, 200px); justify-content: center; } .card { --card: 180px; }
-    figure.pair-new figcaption { font-weight: bold; } .card-face { width: 180px; display: block; margin: 0 auto 4px; }`;
-  const names = Object.keys(ART).sort();
-  document.querySelector("#gallery")!.innerHTML = names.map((name) => {
-    const a = MODERN[name];
-    return `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart">${artFor(name, name)}</div></div><figcaption>${name} · now</figcaption></figure>`
-      + `<figure class="pair-new"><div class="card ev" style="--c:#e8c25a"><div class="cart">${a ? `<svg class="art" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${name}">${a.svg}</svg>` : "missing"}</div></div><figcaption>${name} · new</figcaption></figure>`;
-  }).join("") + Object.keys(CARD_DESIGNS).map((k) => `<figure>${cardFace(k as keyof typeof CARD_DESIGNS, k)}<figcaption>card · ${k}</figcaption></figure>`).join("");
+  style.textContent += "#gallery { grid-template-columns: repeat(3, 280px); justify-content: center; } .card { --card: 260px; }";
+  const draw = (svg: string, box = "6 6 88 88") => `<svg class="art" viewBox="${box}" role="img">${svg}</svg>`;
+  document.querySelector("#gallery")!.innerHTML = `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart">${artFor("snake-down", "snake-down")}</div></div><figcaption>snake-down · now</figcaption></figure>`
+    + Object.entries(SNAKE_DOWN_DRAFTS).map(([name, a]) => `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart">${draw(a.svg, a.box)}</div></div><figcaption>${name}</figcaption></figure>`).join("");
 }

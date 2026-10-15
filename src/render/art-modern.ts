@@ -448,6 +448,27 @@ export const MODERN: Record<string, Art> = {
   },
 };
 
+/** Two drafts for the owner (snake-down: the long way back; also the Snake Leader's ride back). */
+export const SNAKE_DOWN_DRAFTS: Record<string, Art> = {
+  "A · whirlpool": { // A whirlpool pulls a rowing boat back the way it came
+    svg: sea(44)
+      + `<ellipse cx="56" cy="70" rx="32" ry="11" fill="#5fb0e8" ${S2}/><ellipse cx="56" cy="70" rx="20" ry="7" fill="${C.water}" ${S2}/><ellipse cx="56" cy="70" rx="9" ry="3.2" fill="${C.deep}" ${S2}/>`
+      + `<path d="M28 70a28 9.6 0 0 1 56 0" fill="none" stroke="${W}" stroke-width="2.2" stroke-dasharray="6 6"${A("dash", { d: 0.9 })}/><path d="M42 70a14 5 0 0 1 28 0" fill="none" stroke="${W}" stroke-width="2" stroke-dasharray="4 4"${A("dash", { d: 0.7 })}/>`
+      + `<g${A("slide", { x: 8, y: 3, d: 2 })}><g transform="translate(26 58) scale(1.5) translate(-26 -58)"><g${A("tilt", { r: 12, d: 1.2, o: [26, 58] })}><path d="M14 54h24l-4 7H18z" fill="#a0683f" ${S}/><path d="M34.7 55.3h1.6l-3 4.6h-1.4z" fill="#7d4f2e"/><path d="M20 50l14 10M32 48l-8 14" ${S2}/></g></g></g>`
+      + `<g${A("slide", { x: -5, d: 1 })}><path d="M80 32Q52 12 24 30" fill="none" stroke="${C.red}" stroke-width="5" stroke-linecap="round"/><path d="M22 20l2 10 10-1" fill="none" stroke="${C.red}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>`,
+    css: "",
+  },
+  "B · the tail": { // The sea serpent's tail rises from the bay: it wants its ride back
+    svg: sea(62)
+      + `<g${A("sway", { r: 6, d: 2.2, o: [52, 66] })}><path d="M45 68l3-22h8l3 22z" fill="#2a9d8f" ${S}/><path d="M54 47.3h1l2.4 19.4h-1.6z" fill="#1f7a6f"/>`
+      + `<path d="M52 48C46 32 26 22 10 28c12 4 26 14 42 26 16-12 30-22 42-26-16-6-36 4-42 20z" fill="#2a9d8f" ${S}/><path d="M53 51c12-12 26-19 37-22-7 0-15 3-22 7-6 4-11 9-15 15z" fill="#1f7a6f"/></g>`
+      + `<path d="M36 66q16-8 32 0" fill="none" stroke="${W}" stroke-width="2.4"${A("ripple", { s: 1.3, d: 1.6, o: [52, 66] })}/>`
+      + [[34, 58], [70, 56], [62, 50]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="2" fill="${C.water}" ${S2}${A("hop", { a: 6, d: 1.2, dl: i * 0.3 })}/>`).join("")
+      + `<g${A("slide", { x: -5, d: 1 })}><path d="M88 22H62" stroke="${C.red}" stroke-width="5" stroke-linecap="round"/><path d="M70 14l-8 8 8 8" fill="none" stroke="${C.red}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>`,
+    css: "",
+  },
+};
+
 /** The cards a player holds: each has its own card design (owner, 15 Oct). Card faces on a 100 × 140 grid. */
 export const CARD_DESIGNS: Record<string, { frame: string; panel: string; pattern: string; art: string; corner: string }> = {
   bonus: { frame: "#fffdf6", panel: "#4b2377", pattern: "#5d2f8f", art: "card", corner: C.gold },

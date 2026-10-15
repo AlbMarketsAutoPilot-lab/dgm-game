@@ -8,6 +8,7 @@
 import { KIT_CSS } from "./art-kit";
 import { PLACES } from "./art-places";
 import { TRAVEL } from "./art-travel";
+import { MODERN } from "./art-modern";
 import { ICONS } from "./icons";
 
 const INK = "#4b2377";
@@ -230,6 +231,10 @@ ART["two-keys"] = { // "Forgot your keys AGAIN!!!"
 };
 
 Object.assign(ART, TRAVEL, PLACES);
+
+// The grown-up redraws (owner, 15 Oct: "all new icons", except these three, which keep their first drawing).
+const KEEP = new Set(["cable-car", "maze", "swap-arrows"]);
+for (const [name, a] of Object.entries(MODERN)) if (!KEEP.has(name)) ART[name] = a;
 
 /** Every illustration's CSS (and the shared motions), to inject once. */
 export function artCss(): string {
