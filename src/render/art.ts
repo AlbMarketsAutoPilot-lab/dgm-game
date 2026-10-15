@@ -281,7 +281,7 @@ export function light(svg: string): string {
 export function artDefs(): string {
   const colours = new Set<string>();
   for (const a of Object.values(ART)) for (const m of a.svg.matchAll(/fill="(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})"/g)) colours.add(toHex(hex(m[1])));
-  for (const extra of ["#ffffff", "#4b2377", "#f2c230", "#3d74c4", "#d8433b", "#3c9d4f", "#f7f1e3"]) colours.add(extra); // + the tokens
+  for (const extra of ["#ffffff", "#4b2377", "#f2c230", "#3d74c4", "#d8433b", "#3c9d4f", "#f7f1e3", "#000000"]) colours.add(extra); // + the tokens
   const W = [255, 255, 255], K = [10, 4, 24];
   const grads = [...colours].map((h) => {
     const c = hex(h);
