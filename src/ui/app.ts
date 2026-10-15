@@ -99,10 +99,10 @@ export class GameScreen {
     const w = this.game.winner;
     this.overview.setReach(null);
     const m = w === null ? MOMENTS.nobody : this.game.lastStanding ? MOMENTS.winLast : MOMENTS.win;
-    const champ = w !== null ? (this.overview.setCurrent(w), this.stage.celebrate("win"), this.stage.stamp("good", "Champion!")) : undefined;
+    if (w !== null) { this.overview.setCurrent(w); this.stage.celebrate("win"); this.stage.stamp("good", "Champion!"); }
     this.setAct([]);
     const again = await this.pops.show({
-      kind: "win", tone: "good", shout: champ, art: artFor("lanterns", "Festival of Lights"), kicker: "The end of the journey",
+      kind: "win", tone: "good", art: artFor("lanterns", "Festival of Lights"), kicker: "The end of the journey",
       title: fill(m.title, { p: w === null ? "" : this.name(w) }), text: fill(m.text, { p: w === null ? "" : this.name(w) }),
       buttons: [{ label: "Play again", value: "again", primary: true }, { label: "New game", value: "new" }],
     });
@@ -213,8 +213,8 @@ export class GameScreen {
       case "released": {
         if (e.where === "start") { this.places[e.player] = { pos: START, stair: 0 }; st.show(e.player, START, 0); this.overview.setPlace(e.player, START); }
         if (e.bySix) st.celebrate("good");
-        const six = e.bySix ? st.stamp("good", e.where === "start" ? "A six!" : "Free!") : undefined;
-        this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good", six);
+        if (e.bySix) st.stamp("good", e.where === "start" ? "A six!" : "Free!");
+        this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
         await wait(900);
         break;
       }
@@ -236,8 +236,8 @@ export class GameScreen {
         const tl = this.taleAt(e.square, e.tile), tone = e.tile.cat === "R" ? "good" : "bad";
         st.pulse();
         st.celebrate(tone);
-        const word = st.stamp(tone);
-        this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone, word);
+        st.stamp(tone);
+        this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone);
         await wait(1700);
         break;
       }
@@ -251,25 +251,28 @@ export class GameScreen {
         this.places[e.victim] = { pos: START, stair: 0 };
         this.overview.setPlace(e.victim, START);
         st.celebrate("bump");
-        this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad", st.stamp("bad", "Bump!"));
+        st.stamp("bad", "Bump!");
+        this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad");
         this.render();
         await wait(1400);
         break;
       case "roadblockHit": st.celebrate("bad"); this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await wait(1300); break;
       case "trapped": if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
         this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "Only a 6 gets you out.", "bad"); await wait(1100); break;
-      case "bogBoots": st.celebrate("good"); this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good", st.stamp("good", "Not today, Bog!")); this.render(); await wait(1300); break;
+      case "bogBoots": st.celebrate("good"); st.stamp("good", "Not today, Bog!");
+        this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await wait(1300); break;
       case "card": this.render(); await wait(300); break;
       case "bonusUsed": {
         const m = e.use === "defend" ? M.bonusDefend : M.bonusAttack;
         st.cardPlayed();
-        this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad", st.stamp(e.use === "defend" ? "good" : "bad", e.use === "defend" ? "Dodged it!" : "Spoiled!"));
+        this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad");
         this.render();
         await wait(1500);
         break;
       }
       case "doubleNext": this.render(); break;
-      case "snakeLeader": this.render(); this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good", st.stamp("good", "Snake Leader!")); await wait(1200); break;
+      case "snakeLeader": this.render();
+        this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good"); await wait(1200); break;
       case "swap": {
         const mine = this.places[e.player];
         this.places[e.other] = { ...mine };
@@ -280,11 +283,13 @@ export class GameScreen {
       }
       case "lanternLost":
         st.celebrate("bad");
-        this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad", st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!"));
+        st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
+        this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad");
         this.render();
         await wait(1600);
         break;
-      case "lanternWon": st.celebrate("good"); this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good", st.stamp("good", "Three sixes!")); this.render(); await wait(1400); break;
+      case "lanternWon": st.celebrate("good"); st.stamp("good", "Three sixes!");
+        this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await wait(1400); break;
       case "out":
         this.places[e.player] = { pos: OUT, stair: 0 };
         this.overview.setPlace(e.player, OUT);
@@ -309,8 +314,8 @@ export class GameScreen {
   }
 
   /** A story moment: the popup shows it on top, with this turn's earlier moments below. */
-  private story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = "", shout?: string): void {
-    const c: PopupContent = { title: t.title, text: t.text, art: t.art, outcome: result || undefined, tone, shout, kicker: `${tokenSvg(seat, "kick", true)}${this.name(seat)}` };
+  private story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = ""): void {
+    const c: PopupContent = { title: t.title, text: t.text, art: t.art, outcome: result || undefined, tone, kicker: `${tokenSvg(seat, "kick", true)}${this.name(seat)}` };
     const earlier = this.told.map((o) => `<li class="${o.tone ?? ""}"><b>${o.title}</b>${o.outcome ? ` · ${o.outcome}` : ""}</li>`).join("");
     this.told.unshift(c);
     void this.pops.show({ ...c, more: earlier ? `<p class="pop-sub">Earlier this turn</p><ul class="pop-earlier">${earlier}</ul>` : undefined });
