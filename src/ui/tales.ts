@@ -30,7 +30,7 @@ export const SQUARE_TALES: Record<string, Tale> = {
   "cable-car": { title: "The Cable Car", text: "The cable car glides up over the treetops, quiet as a held breath. Below you: the river, the lake, the whole valley. Above you: the Mountain Lodge and a very good hot chocolate." },
   sailboat: { title: "Free Boat Ride", text: "A sailor with a spare seat and a suspicious amount of sea shanties offers you a ride. The wind is perfect. The harbour arrives far too soon." },
   boots: { title: "Bog Boots", text: "Bright yellow boots, two sizes too big and absolutely perfect. Next time the Bog tries to swallow you, it gets a mouthful of rubber instead." },
-  duck: { title: "The Duck Bridge", text: "Six ducks sit on the bridge in a perfect row. They are not moving. They have never moved. You weigh your options and accept defeat." },
+  "big-clock": { title: "The Ferry Timetable", text: "The river ferry left four minutes ago. The next one, says a timetable last updated in another decade, leaves 'shortly'. You sit on the pier and watch the clock." },
   "slide-mud": { title: "The Riverbank Selfie", text: "The light was perfect. The angle was perfect. The riverbank was wet. The photo is now a blur of sky, and the Bog is your new postcode." },
   "boat-leaving": { title: "Missed the Boat", text: "You reach the harbour just in time to watch the boat pull away. Someone on deck waves. You wave back, because what else can you do?" },
   suitcase: { title: "Spontaneous Weekend", text: "You look at your bag, look at the calendar, and decide life is short. A shuttle bus takes you straight up the mountain, no questions asked." },

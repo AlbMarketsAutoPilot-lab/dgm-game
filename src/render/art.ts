@@ -85,24 +85,7 @@ export const ART: Record<string, Art> = {
       @keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }`,
   },
 
-  duck: {
-    svg: `
-      <rect x="0" y="70" width="100" height="30" fill="#7fc8f8" opacity=".55"/>
-      <g class="duck d1">
-        <path d="M24 66c-4-10 4-14 12-12 6 1 10 2 14-2-4-4-3-12 4-15 7-3 14 2 13 9l9 3c-3 4-7 4-10 4 3 8-2 16-14 17-11 1-24 2-28-4z" fill="#f2c230" ${S}/>
-        <path d="M66 43l10 3-9 3" fill="#e8862f" ${S2}/>
-        <circle cx="60" cy="42" r="2" fill="${INK}"/>
-        <path d="M34 60c6 5 14 5 19 0" fill="none" ${S2}/>
-      </g>
-      <g class="wave"><path d="M-20 72q5-5 10 0t10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0" fill="none" stroke="#3d74c4" stroke-width="3" stroke-linecap="round"/></g>
-      <g class="wave w2"><path d="M-20 84q5-4 10 0t10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0 10 0" fill="none" stroke="#3d74c4" stroke-width="2.4" stroke-linecap="round" opacity=".7"/></g>`,
-    css: `
-      .art-duck .d1 { transform-origin: 50% 90%; animation: duck-bob 1.8s ease-in-out infinite alternate; }
-      .art-duck .wave { animation: wave 1.6s linear infinite; }
-      .art-duck .w2 { animation-duration: 2.4s; animation-direction: reverse; }
-      @keyframes duck-bob { from { transform: translateY(1px) rotate(-4deg); } to { transform: translateY(-2px) rotate(4deg); } }
-      @keyframes wave { from { transform: translateX(0); } to { transform: translateX(20px); } }`,
-  },
+
 
   fog: {
     svg: `
