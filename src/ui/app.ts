@@ -10,6 +10,7 @@ import { Dice } from "./dice";
 import { Overview } from "./overview";
 import { PLAYERS, tokenSvg } from "./players";
 import { Popups, type PopupContent } from "./popup";
+import { SpoilQuestion } from "./spoil";
 import { Stage } from "./stage";
 import { MOMENTS, fill, outcome, taleOf, type Tale } from "./tales";
 import { loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
@@ -47,6 +48,8 @@ export class GameScreen {
   private readonly album = loadAlbum();
   private readonly newCards: Postcard[] = [];
   private seat = 0;
+  /** Who said "Don't ask me again this game" to the spoil question (Step 5b). */
+  private readonly spoil = new SpoilQuestion();
   /** This turn's story so far (newest first): the popup shows the newest, with the earlier ones below it. */
   private told: PopupContent[] = [];
   /** Where each token is shown (follows the events, one step behind the engine's final state). */
@@ -177,8 +180,10 @@ export class GameScreen {
   /** A person's choice (R21: the road, the bonus card), in a popup. */
   private async decide(d: Decision): Promise<Answer> {
     if (this.setup.computer[d.player]) return simplePlayer(d, this.game);
+    if (d.kind === "bonusAttack" && !this.spoil.asks(d.player)) return false;
     const v = await this.choose(d);
     this.pops.clear();
+    if (d.kind === "bonusAttack") return this.spoil.answer(d.player, v);
     return d.kind === "road" ? (v as Answer) : v === "yes";
   }
 
@@ -212,7 +217,7 @@ export class GameScreen {
           title: `Spoil ${them}'s luck?`, text: `${them} just landed on <b>${tl.title}</b>. Your Bonus card can cancel it. You only have it once.`,
           outcome: `If you let it go: ${them} gets "${outcome(this.board, d.tile)}"`,
         });
-        return this.ask([{ label: "Spoil it!", value: "yes", primary: true }, { label: "Let it go", value: "no" }]);
+        return this.ask([{ label: "Spoil it!", value: "yes", primary: true }, { label: "Let it go", value: "no" }, { label: "Don't ask me again this game", value: "never" }]);
       }
     }
   }

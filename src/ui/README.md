@@ -21,7 +21,10 @@ Two areas plus the players:
 - **Narrative** (`tales.ts`): a tale per event square, Shortcut stone and rule moment, for young adults first. What a
   square does is always derived from the engine's tile (`outcome()`), never written by hand.
 - **Turn** (`app.ts`): Roll (or tap the die) → the move → what happens → "Pass the die to Red ▶". Computer players
-  (GCD §8.6) play by themselves. No auto-focus: the game is played by tapping, not by holding Enter.
+  (GCD §8.6) play by themselves.
+- **Spoil question** (`spoil.ts`, R14, owner Step 5b): a person holding a Bonus card is asked "Spoil Blue's luck?"
+  for each reward another player lands on: "Spoil it!", "Let it go", or "Don't ask me again this game" (from then
+  on that person's answer is "Let it go"; for this game only, nothing is stored). No auto-focus: the game is played by tapping, not by holding Enter.
 
 - **Stamps** (`stage.ts`): a big word on the square for the big moments ("Woohoo!", "Ouch!", "Bump!", "Dodged it!",
   "New postcard!", …), one at a time; never in the popups (owner).
