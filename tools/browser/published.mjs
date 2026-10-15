@@ -60,9 +60,13 @@ export async function checkPublished(browser, pub, report) {
     page.on("response", (r) => { const n = soundOf(r.url()); if (n && r.ok()) loaded.add(n); });
     await page.goto(url + "/?fast");
     await page.waitForSelector(".setup .go");
-    const offAtFirst = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].map((b) => b.getAttribute("aria-pressed")).join() === "false,false");
-    await page.click('[data-snd="fx"]'); await page.click('[data-snd="music"]');
-    const on = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].every((b) => b.getAttribute("aria-pressed") === "true"));
+    const pressed = () => page.evaluate(() => [...document.querySelectorAll("[data-snd]")].map((b) => b.getAttribute("aria-pressed")).join());
+    const onAtFirst = (await pressed()) === "true,true"; // on by default (owner, 15 Oct)
+    await page.waitForTimeout(300);
+    const beforeTap = loaded.size; // browsers allow sound only after a tap: nothing before it
+    await page.click('[data-snd="fx"]'); const muted = (await pressed()) === "false,true";
+    await page.click('[data-snd="fx"]');
+    const on = muted && (await pressed()) === "true,true";
     const broken = await page.evaluate(async (files) => {
       const ac = new AudioContext(), bad = [];
       for (const f of files) {
@@ -72,7 +76,7 @@ export async function checkPublished(browser, pub, report) {
       return bad;
     }, SOUND_FILES);
     await page.waitForTimeout(500);
-    const ready = SOUNDS.filter((n) => !loaded.has(n)); // all prepared when sound is switched on
+    const ready = SOUNDS.filter((n) => !loaded.has(n)); // all prepared at the first tap
     await page.click('[data-players="2"]');
     await page.click('[data-seat="1"]'); // both people: the test taps every turn
     await page.click(".setup .go");
@@ -84,10 +88,12 @@ export async function checkPublished(browser, pub, report) {
     await page.locator(".pop button", { hasText: "Done" }).click();
     await page.reload();
     await page.waitForSelector(".setup .go");
-    const kept = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].map((b) => b.getAttribute("aria-pressed")).join() === "true,false");
-    const ok = offAtFirst && on && !broken.length && !ready.length && switched && kept && !errors.length;
-    report.add(G, `sound: off at first; the switches; all ${SOUNDS.length} sounds play and are ready when switched on; the speaker; kept after a reload`, ok,
-      [!offAtFirst && "not off at first", !on && "switches", ...broken, ready.length && `not prepared: ${ready.join(", ")}`, !switched && "speaker popup", !kept && "not kept", ...errors].filter(Boolean).join(", "));
+    const kept = (await pressed()) === "true,false";
+    await page.click('[data-snd="fx"]'); await page.reload(); await page.waitForSelector(".setup .go");
+    const mutedKept = (await pressed()) === "false,false";
+    const ok = onAtFirst && beforeTap === 0 && on && !broken.length && !ready.length && switched && kept && mutedKept && !errors.length;
+    report.add(G, `sound: on at first, starting at the first tap; all ${SOUNDS.length} sounds play and are ready; mute and unmute; the speaker; the choice kept after a reload`, ok,
+      [!onAtFirst && "not on at first", beforeTap && "sound loaded before the first tap", !on && "switches", !mutedKept && "mute not kept", ...broken, ready.length && `not prepared: ${ready.join(", ")}`, !switched && "speaker popup", !kept && "not kept", ...errors].filter(Boolean).join(", "));
     await ctx.close();
   }
 
@@ -129,8 +135,8 @@ export async function checkPublished(browser, pub, report) {
         await page.goto(url + "/"); // opening the game again, offline, as a player would
         offline = await page.locator(".setup .go").waitFor({ timeout: 8000 }).then(() => true, () => false);
         if (offline) {
-          // sound switched on for the first time with the site gone: every sound must come from the device
-          await page.click('[data-snd="fx"]'); await page.click('[data-snd="music"]');
+          // sound (on by default) starting for the first time with the site gone: every sound must come from the device
+          await page.click(".setup h1");
           sounds = await page.evaluate(async (files) => {
             const ac = new AudioContext(), bad = [];
             for (const f of files) { try { await ac.decodeAudioData(await (await fetch(f)).arrayBuffer()); } catch (e) { bad.push(f); } }
@@ -151,7 +157,7 @@ export async function checkPublished(browser, pub, report) {
       }
     }
     const failed = errors.filter((e) => !/^(net::|Failed to fetch)/.test(e));
-    report.add(G, "offline (the site gone): the game opens, sound switched on for the first time plays every sound, a game is played, the copyright and privacy pages open", offline && starts && !sounds.length && !legal.length && !failed.length, why || failed.slice(0, 3).join(" | "));
+    report.add(G, "offline (the site gone): the game opens, sound starting for the first time plays every sound, a game is played, the copyright and privacy pages open", offline && starts && !sounds.length && !legal.length && !failed.length, why || failed.slice(0, 3).join(" | "));
     await ctx.close();
     await own.close().catch(() => {});
   }

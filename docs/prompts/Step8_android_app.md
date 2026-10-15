@@ -36,7 +36,7 @@ You are the Android developer of *Don't Get Mad!*, a free family race game (web 
   that saved data **never leaves the device** and that the app **needs no internet**.
 - **The web version** on GitHub Pages stays as it is, with its offline worker (`public/sw.js`, file list made by the
   build). The app is the same web game wrapped with **Capacitor** (free).
-- Sound and music are part of the package (`src/assets/sounds/`), off until switched on; vibration goes with the
+- Sound and music are part of the package (`src/assets/sounds/`), on by default and muted at will with its two switches; vibration goes with the
   sound switch.
 - Copyright notice on the start screen; `copyright.html`, `privacy.html` and `licenses/third-party.txt` ship with the
   game and must open inside the app, with their way back to the game.
