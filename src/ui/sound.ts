@@ -1,7 +1,10 @@
-// Sound, music and vibration (U7, sounds chosen by the owner on 15 Oct; files and credits in public/sounds/).
+// Sound, music and vibration (U7, sounds chosen by the owner on 15 Oct; files and credits in src/assets/sounds/).
+// The sound files are part of the game itself (owner, 15 Oct: "all sound should be part of the package"): the build
+// puts them with the game's other files, the Android app carries them, and the offline worker stores every one of them
+// when the game is installed, so sound works fully offline from the first start.
 // Off until a player switches them on (two switches: sound effects with vibration, and music); the choice is kept on
-// this device. Web Audio: browsers allow sound only after a tap, so nothing plays (or loads) before the first one.
-// Every call is safe when sound is off, blocked or missing: the game never waits for a sound and never fails on one.
+// this device. Web Audio: browsers allow sound only after a tap, so all sounds are prepared at the first one.
+// The game never waits for a sound.
 
 export type Effect =
   | "dice" | "step" | "six" | "good" | "bad" | "bump" | "jump-up" | "jump-down" | "bog" | "card"
@@ -15,6 +18,12 @@ const MUSIC_LEVEL: Record<Music, number> = { menu: 0.4, game: 0.28 };
 const LOOP: Record<string, number> = { "menu-loop": 8.428844, game: 46.836893 };
 /** Short buzzes on phones, with the sound switch (milliseconds: buzz, pause, buzz …). */
 const BUZZ: Partial<Record<Effect, number | number[]>> = { six: 60, bad: [40, 60, 40], bump: [40, 60, 40], bog: 120, out: [80, 80, 80], win: 300 };
+
+/** Every sound file of the game, by name (the build gives each its address inside the package). */
+const FILES: Record<string, string> = Object.fromEntries(
+  Object.entries(import.meta.glob<string>("../assets/sounds/*.mp3", { eager: true, query: "?url", import: "default" }))
+    .map(([path, url]) => [path.slice(path.lastIndexOf("/") + 1, -4), url]),
+);
 
 const KEY = "dgm.sound.v1";
 interface Settings { fx: boolean; music: boolean }
@@ -129,6 +138,7 @@ class Sound {
         this.ctx = new AC();
         this.fxGain = this.ctx.createGain();
         this.fxGain.connect(this.ctx.destination);
+        Object.keys(FILES).forEach((n) => void this.buffer(n)); // all of them ready before they are needed
       }
       if (this.ctx.state === "suspended" && !document.hidden) void this.ctx.resume().then(() => this.music(this.want));
       return this.ctx;
@@ -137,17 +147,17 @@ class Sound {
     }
   }
 
-  /** A sound file, loaded and decoded once (the offline worker keeps it after the first time). */
+  /** A sound file from the package, decoded once. */
   private buffer(name: string): Promise<AudioBuffer | null> {
     let p = this.buffers.get(name);
-    if (!p) {
-      p = fetch(`./sounds/${name}.mp3`)
+    if (!p && FILES[name]) {
+      p = fetch(FILES[name])
         .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
         .then((a) => this.ctx!.decodeAudioData(a))
-        .catch(() => { this.buffers.delete(name); return null; }); // missing or offline the first time: try again later
+        .catch(() => { this.buffers.delete(name); return null; }); // could not be decoded now: tried again next time
       this.buffers.set(name, p);
     }
-    return p;
+    return p ?? Promise.resolve(null);
   }
 }
 

@@ -55,11 +55,12 @@ top, the album and the guide; the whole board is one Tab stop, the arrow keys wa
 square does. All text from data is escaped once, in `src/render/html.ts` (S3).
 
 **Sound and music** (`sound.ts`, `sound-switch.ts`, U7, sounds chosen by the owner 15 Oct): 16 effects and two
-music pieces in `public/sounds/` (CC0, sources in `CREDITS.txt`). Two switches, both off until a player turns them
-on, kept on the device: sound effects (with a buzz on phones) and music. On the start screen beside "Let's go!", and
-in the game behind the speaker beside the die. Web Audio, nothing loaded before the first switch; a missing or
-blocked sound is skipped, never waited for; quiet when the app is in the background. Each file is loaded the first
-time it plays and then kept by the offline worker.
+music pieces in `src/assets/sounds/` (CC0, sources in `CREDITS.txt`), part of the game's package like its scripts
+and fonts: the Android app carries them, and the offline worker stores them with every other file when the game is
+installed, so sound works fully offline. Two switches, both off until a player turns them on, kept on the device:
+sound effects (with a buzz on phones) and music. On the start screen beside "Let's go!", and in the game behind the
+speaker beside the die. Web Audio; all sounds are prepared at the first tap with sound on; the game never waits for a
+sound; quiet when the app is in the background.
 
 **Every screen size** (owner, 15 Oct): all sizes in `app.css` are rem, and the root size grows on big screens (PC).
 A popup that does not fit over the board moves over everything above the controls (or the whole screen, when it has

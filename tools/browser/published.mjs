@@ -1,4 +1,4 @@
-// The game as it is published (its security policy and offline worker), plus the first visit, the keyboard and an
+// The game as it is published (its security policy and offline worker, which stores every file, sounds included), plus the first visit, the keyboard and an
 // accessibility scan. The test build is the published build with `?fast` allowed (S4: never in the real one).
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -40,35 +40,44 @@ export async function checkPublished(browser, pub, report) {
     await ctx.close();
   }
 
-  // 1b. Sound (U7): off at first; the two switches on the start screen; every file there and playable; sounds load
-  // as the game is played; the speaker in the game; the choice kept after a reload
+  // The build's own list of the game's files, as the offline worker has it (vite.config.ts, `offline`)
+  const sw = fs.readFileSync(`${ROOT}node_modules/.browsertest/sw.js`, "utf8");
+  const CACHE = "dgm-" + (/const CACHE = PREFIX \+ "([^"]+)"/.exec(sw)?.[1] ?? "");
+  const FILES = JSON.parse(/const FILES = (\[.*?\]);/.exec(sw)?.[1] ?? "[]");
+  const SOUNDS = ["dice", "step", "six", "good", "bad", "bump", "jump-up", "jump-down", "bog", "card", "lantern-out", "lantern-on", "postcard", "tap", "win", "out", "menu-intro", "menu-loop", "game"];
+  const soundOf = (u) => /\/assets\/([a-z-]+)-[\w-]{8}\.mp3$/.exec(u)?.[1];
+  // the sound files as they are in the build folder (not taken from the worker's list, which is what is checked)
+  const SOUND_FILES = fs.readdirSync(`${ROOT}node_modules/.browsertest/assets`).filter((f) => f.endsWith(".mp3")).map((f) => `./assets/${f}`);
+  const packed = SOUNDS.filter((n) => !FILES.some((f) => soundOf(f) === n) || !SOUND_FILES.some((f) => soundOf(f) === n));
+  report.add(G, `the package holds every file of the game for offline, all ${SOUNDS.length} sounds included (${FILES.length} files)`,
+    CACHE.length > 4 && CACHE !== "dgm-dev" && !packed.length && FILES.includes("./index.html") && FILES.some((f) => f.endsWith(".js")), packed.length ? `missing: ${packed.join(", ")}` : CACHE);
+
+  // 1b. Sound (U7): off at first; the two switches on the start screen; every sound of the package plays; the sounds
+  // are used in the game; the speaker in the game; the choice kept after a reload
   {
     const { ctx, page, errors } = await newPage(browser);
     const loaded = new Set();
-    page.on("response", (r) => { const m = /\/sounds\/([\w-]+)\.mp3$/.exec(r.url()); if (m && r.ok()) loaded.add(m[1]); });
+    page.on("response", (r) => { const n = soundOf(r.url()); if (n && r.ok()) loaded.add(n); });
     await page.goto(url + "/?fast");
     await page.waitForSelector(".setup .go");
     const offAtFirst = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].map((b) => b.getAttribute("aria-pressed")).join() === "false,false");
-    const before = loaded.size;
     await page.click('[data-snd="fx"]'); await page.click('[data-snd="music"]');
     const on = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].every((b) => b.getAttribute("aria-pressed") === "true"));
-    const files = ["dice", "step", "six", "good", "bad", "bump", "jump-up", "jump-down", "bog", "card", "lantern-out", "lantern-on", "postcard", "tap", "win", "out", "menu-intro", "menu-loop", "game"];
-    const broken = await page.evaluate(async (names) => {
+    const broken = await page.evaluate(async (files) => {
       const ac = new AudioContext(), bad = [];
-      for (const n of names) {
-        try { const b = await ac.decodeAudioData(await (await fetch(`./sounds/${n}.mp3`)).arrayBuffer()); if (!(b.duration > 0.05 && b.duration < 60)) bad.push(`${n} ${b.duration}s`); }
-        catch (e) { bad.push(`${n}: ${e}`); }
+      for (const f of files) {
+        try { const b = await ac.decodeAudioData(await (await fetch(f)).arrayBuffer()); if (!(b.duration > 0.05 && b.duration < 60)) bad.push(`${f} ${b.duration}s`); }
+        catch (e) { bad.push(`${f}: ${e}`); }
       }
       return bad;
-    }, files);
-    const atStart = ["tap", "menu-intro", "menu-loop"].filter((n) => !loaded.has(n)); // a button's click and the start screen's music
-    loaded.clear();
+    }, SOUND_FILES);
+    await page.waitForTimeout(500);
+    const ready = SOUNDS.filter((n) => !loaded.has(n)); // all prepared when sound is switched on
     await page.click('[data-players="2"]');
     await page.click('[data-seat="1"]'); // both people: the test taps every turn
     await page.click(".setup .go");
     await page.locator(".pop button", { hasText: "Let's go" }).click();
     await someTurns(page, 40);
-    const inGame = ["dice", "step", "game"].filter((n) => !loaded.has(n));
     await page.click(".snd-open");
     await page.locator(".pop button", { hasText: "Music: on" }).click();
     const switched = await page.locator(".pop button", { hasText: "Music: off" }).count() === 1;
@@ -76,9 +85,9 @@ export async function checkPublished(browser, pub, report) {
     await page.reload();
     await page.waitForSelector(".setup .go");
     const kept = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].map((b) => b.getAttribute("aria-pressed")).join() === "true,false");
-    const ok = offAtFirst && before === 0 && on && !broken.length && !atStart.length && !inGame.length && switched && kept && !errors.length;
-    report.add(G, `sound: off at first, nothing loaded before; ${files.length} files play; the sounds load as they play; the speaker; kept after a reload`, ok,
-      [!offAtFirst && "not off at first", before && "loaded before the switch", !on && "switches", ...broken, atStart.length && `not loaded on the start screen: ${atStart.join(", ")}`, inGame.length && `not loaded in the game: ${inGame.join(", ")}`, !switched && "speaker popup", !kept && "not kept", ...errors].filter(Boolean).join(", "));
+    const ok = offAtFirst && on && !broken.length && !ready.length && switched && kept && !errors.length;
+    report.add(G, `sound: off at first; the switches; all ${SOUNDS.length} sounds play and are ready when switched on; the speaker; kept after a reload`, ok,
+      [!offAtFirst && "not off at first", !on && "switches", ...broken, ready.length && `not prepared: ${ready.join(", ")}`, !switched && "speaker popup", !kept && "not kept", ...errors].filter(Boolean).join(", "));
     await ctx.close();
   }
 
@@ -106,26 +115,38 @@ export async function checkPublished(browser, pub, report) {
     const caches = await page.evaluate(() => caches.keys());
     report.add(G, "security policy: no violation in a game with a reload and Continue", !errors.length, errors.slice(0, 3).join(" | "));
     report.add(G, "another app's cache on the same address is left alone", caches.includes("another-app"), caches.join(", "));
-    // offline only once the worker has the page and its script stored (it stores them in the background)
-    const stored = await page.waitForFunction(async () => {
-      const c = await caches.open("dgm-v2"), keys = (await c.keys()).map((r) => new URL(r.url).pathname);
-      const script = document.querySelector("script[type=module]")?.getAttribute("src")?.replace(/^\./, "");
-      return !!navigator.serviceWorker.controller && keys.includes("/") && !!script && keys.includes(script);
-    }, null, { timeout: 30000, polling: 500 }).then(() => true, () => false);
-    let offline = false, starts = false, why = stored ? "" : "the offline worker did not store the game within 30 s";
+    // offline once the worker is installed: it has then stored every file of the game (sound was never switched on here)
+    const stored = await page.waitForFunction(async ([name, files]) => {
+      if (!navigator.serviceWorker.controller || !(await caches.has(name))) return false;
+      const keys = new Set((await (await caches.open(name)).keys()).map((r) => new URL(r.url).pathname));
+      return files.every((f) => keys.has(f.slice(1)));
+    }, [CACHE, FILES.map((f) => f.replace(/^\./, ""))], { timeout: 30000, polling: 500 }).then(() => true, () => false);
+    let offline = false, starts = false, sounds = [], why = stored ? "" : `the offline worker did not store all ${FILES.length} files within 30 s`;
     if (stored) {
       await own.close(); // the site is gone
       errors.length = 0; // from now on, failed downloads are expected (the worker answers instead)
       try {
         await page.goto(url + "/"); // opening the game again, offline, as a player would
         offline = await page.locator(".setup .go").waitFor({ timeout: 8000 }).then(() => true, () => false);
-        if (offline) { await page.click(".setup .go"); starts = await page.locator(".pop button", { hasText: "Let's go" }).waitFor({ timeout: 8000 }).then(() => true, () => false); }
+        if (offline) {
+          // sound switched on for the first time with the site gone: every sound must come from the device
+          await page.click('[data-snd="fx"]'); await page.click('[data-snd="music"]');
+          sounds = await page.evaluate(async (files) => {
+            const ac = new AudioContext(), bad = [];
+            for (const f of files) { try { await ac.decodeAudioData(await (await fetch(f)).arrayBuffer()); } catch (e) { bad.push(f); } }
+            return bad;
+          }, SOUND_FILES);
+          await page.click(".setup .go"); starts = await page.locator(".pop button", { hasText: "Let's go" }).waitFor({ timeout: 8000 }).then(() => true, () => false);
+          if (starts) { await page.locator(".pop button", { hasText: "Let's go" }).click(); await someTurns(page, 20); }
+        }
+        if (sounds.length) why = `sounds not on the device: ${sounds.join(", ")}`;
       } catch (e) {
-        const state = await page.evaluate(async () => ({ controlled: !!navigator.serviceWorker.controller, keys: (await (await caches.open("dgm-v2")).keys()).map((r) => new URL(r.url).pathname + new URL(r.url).search) })).catch((x) => String(x));
+        const state = await page.evaluate(async (name) => ({ controlled: !!navigator.serviceWorker.controller, keys: (await (await caches.open(name)).keys()).map((r) => new URL(r.url).pathname + new URL(r.url).search) }), CACHE).catch((x) => String(x));
         why = `${String(e).split("\n")[0]}; worker: ${JSON.stringify(state)}`;
       }
     }
-    report.add(G, "offline (the site gone): the game opens and a new game starts", offline && starts, why);
+    const failed = errors.filter((e) => !/^(net::|Failed to fetch)/.test(e));
+    report.add(G, "offline (the site gone): the game opens, sound switched on for the first time plays every sound, a game is played", offline && starts && !sounds.length && !failed.length, why || failed.slice(0, 3).join(" | "));
     await ctx.close();
     await own.close().catch(() => {});
   }

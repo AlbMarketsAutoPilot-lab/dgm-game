@@ -2,8 +2,8 @@
 
 > **Built (15 Oct).** The owner chose from a listening page of CC0 sounds: dice A, step A, six A, good A, bad A,
 > bump B, jump-up B, jump-down B, bog A, card A, lantern-out A, lantern-on A, postcard A, tap A, win A, out A,
-> menu A (Ukulele Forest), game B (Short Kalimba Loop). The files are in `public/sounds/` (sources and licences in
-> `public/sounds/CREDITS.txt`), the code in `src/ui/sound.ts`; what was built and tested is in
+> menu A (Ukulele Forest), game B (Short Kalimba Loop). The files are part of the game's package, in `src/assets/sounds/` (sources and
+> licences in `src/assets/sounds/CREDITS.txt`), stored for offline with the rest of the game at install; the code in `src/ui/sound.ts`; what was built and tested is in
 > `docs/analysis/audit-code-2026-10-15.md` §8. Differences from the list below: `dice-land` was not needed (the
 > chosen roll lands); no separate win music (the win jingle plays and the music stops); two switches (sound effects
 > with vibration, and music) instead of one. The rest of this page is the original list, kept for reference.

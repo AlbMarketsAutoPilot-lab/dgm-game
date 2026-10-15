@@ -2,6 +2,7 @@ Sounds and music of Don't Get Mad! (U7, chosen by the owner on 15 Oct 2026)
 
 Every file is CC0 (public domain, https://creativecommons.org/publicdomain/zero/1.0/): free to use, no credit needed.
 Credit is given anyway. Files were trimmed (no silence at the start), set to the same loudness and converted to MP3.
+They are part of the game's package (built in with its other files and stored for offline at install).
 
 dice.mp3         Kenney, Casino Audio: dice-throw-3                  https://kenney.nl/assets/casino-audio
 card.mp3         Kenney, Casino Audio: card-fan-1                    https://kenney.nl/assets/casino-audio
