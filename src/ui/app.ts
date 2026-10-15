@@ -25,9 +25,9 @@ const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, fast ? Math.
 const lanternSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6M12 2v2M8 7h8l-1 11H9zM8 7c0-2 8-2 8 0M9.5 18h5v2.5h-5z" fill="#f2c230" stroke="#4b2377" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 const CARD_INFO = {
-  bonus: { icon: "card", title: "Bonus card", text: "Use it once, whenever the moment is right. <b>Defend:</b> when you land on bad luck, the game asks if you want to dodge it. <b>Spoil:</b> when another player lands on good luck, you can cancel it." },
-  jailPass: { icon: "boots", title: "Bog boots", text: "They work by themselves: the next time the Bog would catch you, you walk straight through. Then they're worn out." },
-  snakeLeader: { icon: "snake-crown", title: "Snake Leader", text: "You rode the sea snake. Careful: if you land on the very last square, the snake wants its ride back." },
+  bonus: { icon: "card", short: "Bonus", title: "Bonus card", text: "Use it once, whenever the moment is right. <b>Defend:</b> when you land on bad luck, the game asks if you want to dodge it. <b>Spoil:</b> when another player lands on good luck, you can cancel it." },
+  jailPass: { icon: "boots", short: "Boots", title: "Bog boots", text: "They work by themselves: the next time the Bog would catch you, you walk straight through. Then they're worn out." },
+  snakeLeader: { icon: "snake-crown", short: "Crown", title: "Snake Leader", text: "You rode the sea snake. Careful: if you land on the very last square, the snake wants its ride back." },
 };
 
 export class GameScreen {
@@ -113,7 +113,11 @@ export class GameScreen {
   private async turn(): Promise<void> {
     const seat = (this.seat = this.nextSeat()), p = this.game.players[seat], comp = this.setup.computer[seat];
     this.told = [];
-    if (!comp) this.pops.clear(); // a person's turn starts with the whole board in view
+    if (!comp) { // a person's turn: the hand-over
+      const where = p.pos === OFF ? "At Home: a 6 sets you off" : p.trapped ? "In the Bog: a 6 gets you out" : p.pos === 0 ? "On Start"
+        : isShortcut(p.pos) ? "On the Shortcut" : `Square ${p.pos} · ${this.board.endTile - p.pos} to the festival`;
+      void this.pops.show({ title: `${this.name(seat)}, it's your turn!`, art: `<div class="one">${tokenSvg(seat, "tok", true)}</div>`, kicker: `Round ${this.round || 1}`, text: `${where}. Tap the die, or close this to look at the board first.` });
+    }
     this.overview.setCurrent(seat);
     this.dice.clear();
     const pl = this.places[seat];
@@ -340,7 +344,10 @@ export class GameScreen {
     const n = k === "bonus" ? p.bonus : k === "jailPass" ? p.jailPass : Number(p.snakeLeader);
     const where = (cat: "card" | "boots") => Object.entries(this.board.tiles).filter(([, t]) => t.icon === cat).map(([q]) => q).join(", ");
     const have = n ? `${this.name(this.seat)} holds ${n === 1 ? "this card" : `${n} of these`}.` : k === "snakeLeader" ? "" : `${this.name(this.seat)} doesn't have one yet. Land on square ${where(k === "bonus" ? "card" : "boots")} to get it.`;
-    void this.pops.show({ kind: "info", title: c.title, text: c.text, art: artFor(c.icon, c.title), kicker: "Card", outcome: have || undefined, tone: n ? "good" : "" });
+    void this.pops.show({
+      kind: "info", cls: "card-view", title: c.title, text: c.text, kicker: "Card", outcome: have || undefined, tone: n ? "good" : "",
+      art: `<div class="tcard ${k}"><div class="tc-art">${artFor(c.icon, c.title)}</div><div class="tc-name">${c.title}</div></div>`,
+    });
   }
 
   private playerInfo(seat: number): void {
@@ -406,7 +413,7 @@ export class GameScreen {
     const p: PlayerState = P[cur];
     // The cards: always both slots, so everyone knows what exists; the ones held glow and can be tapped.
     const slot = (k: keyof typeof CARD_INFO, n: number) => `<button class="gcard ${k}${n ? " held" : ""}" data-card="${k}" aria-label="${CARD_INFO[k].title}: ${n ? `you hold ${n}` : "not held"}. Tap to see what it does">`
-      + `<span class="gc-art">${artFor(CARD_INFO[k].icon, "")}</span><span class="gc-name">${CARD_INFO[k].title}</span>${n > 1 ? `<span class="gc-n">×${n}</span>` : ""}</button>`;
+      + `<span class="gc-art">${artFor(CARD_INFO[k].icon, "")}</span><span class="gc-name">${CARD_INFO[k].short}</span>${n > 1 ? `<span class="gc-n">×${n}</span>` : ""}</button>`;
     const status = [p.double ? "×2 next throw" : "", p.slow ? "moves 1 next turn" : "", p.skip ? `waits ${p.skip}` : ""].filter(Boolean).join(" · ");
     this.hud.innerHTML = `<div class="who">${tokenSvg(cur, "tok", true)}<div><b>${this.name(cur)}'s turn</b>${this.round ? `<span class="st">Round ${this.round}</span>` : ""}${status ? `<span class="st">${status}</span>` : ""}</div></div>`
       + `<div class="hand">${slot("bonus", p.bonus)}${slot("jailPass", p.jailPass)}${p.snakeLeader ? slot("snakeLeader", 1) : ""}</div>`;

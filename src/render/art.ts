@@ -8,6 +8,7 @@
 import { KIT_CSS } from "./art-kit";
 import { PLACES } from "./art-places";
 import { TRAVEL } from "./art-travel";
+import { HERO } from "./art-hero";
 import { ICONS } from "./icons";
 
 const INK = "#4b2377";
@@ -19,6 +20,8 @@ interface Art {
   css: string;
   /** The part of the 100 × 100 grid to show (default a little cropped, so the drawing fills its window). */
   box?: string;
+  /** Draws its own background (no dusk sky behind it). */
+  bare?: boolean;
 }
 
 export const ART: Record<string, Art> = {
@@ -246,20 +249,68 @@ ART["two-keys"] = { // "Forgot your keys AGAIN!!!"
     .art-two-keys .bang { animation: bang 1.2s ease-in-out infinite; }`,
 };
 
-Object.assign(ART, TRAVEL, PLACES);
+Object.assign(ART, TRAVEL, PLACES, HERO);
 
 /** Every illustration's CSS (and the shared motions), to inject once. */
 export function artCss(): string {
   return KIT_CSS + Object.values(ART).map((a) => a.css).join("\n");
 }
 
+// ---- Lighting (owner, 15 Oct: "real feel, 3D effect by working with light", for young adults) ----
+// Every flat colour becomes a lit gradient (light from the top left, shade at the bottom right), the thick ink
+// outlines become thin soft edges, and a sheen of light and a soft vignette lie over the whole picture. The shapes
+// stay the same, so every illustration keeps its motion.
+
+const hex = (h: string) => {
+  const v = h.replace("#", ""), f = v.length === 3 ? v.split("").map((c) => c + c).join("") : v;
+  return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16));
+};
+const toHex = (c: number[]) => "#" + c.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+const mix = (a: number[], b: number[], t: number) => a.map((v, i) => v + (b[i] - v) * t);
+const gid = (h: string) => `sh-${toHex(hex(h)).slice(1)}`;
+
+/** Lights an illustration's markup: gradients for fills, soft thin outlines. */
+export function light(svg: string): string {
+  return svg
+    .replace(/fill="(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})"/g, (_, h: string) => `fill="url(#${gid(h)})"`)
+    .replace(/stroke="#4b2377" stroke-width="(2\.6|2|1\.7|1\.8)"/g, (_, w: string) => `stroke="#1d0f33" stroke-opacity=".45" stroke-width="${(Number(w) * 0.55).toFixed(2)}"`)
+    .replace(/stroke="#4b2377"/g, `stroke="#2a1640"`);
+}
+
+/** The gradients and light layers every lit illustration uses (added to the page once, in a hidden svg). */
+export function artDefs(): string {
+  const colours = new Set<string>();
+  for (const a of Object.values(ART)) for (const m of a.svg.matchAll(/fill="(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})"/g)) colours.add(toHex(hex(m[1])));
+  for (const extra of ["#ffffff", "#4b2377", "#f2c230", "#3d74c4", "#d8433b", "#3c9d4f", "#f7f1e3"]) colours.add(extra); // + the tokens
+  const W = [255, 255, 255], K = [10, 4, 24];
+  const grads = [...colours].map((h) => {
+    const c = hex(h);
+    return `<linearGradient id="${gid(h)}" x1="0" y1="0" x2=".85" y2="1"><stop offset="0" stop-color="${toHex(mix(c, W, 0.34))}"/><stop offset=".45" stop-color="${h}"/><stop offset="1" stop-color="${toHex(mix(c, K, 0.45))}"/></linearGradient>`;
+  }).join("");
+  return `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${grads}`
+    + `<radialGradient id="sh-light" cx=".25" cy=".15" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".45" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>`
+    + `<radialGradient id="sh-vig" cx=".5" cy=".45" r=".75"><stop offset=".6" stop-color="#0a0418" stop-opacity="0"/><stop offset="1" stop-color="#0a0418" stop-opacity=".45"/></radialGradient>`
+    + `<linearGradient id="sh-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f3442"/><stop offset=".55" stop-color="#2c6b70"/><stop offset=".85" stop-color="#e9b46a"/><stop offset="1" stop-color="#f6d58f"/></linearGradient>`
+    + `<radialGradient id="sh-sun" cx=".7" cy=".78" r=".5"><stop offset="0" stop-color="#ffe7a3" stop-opacity=".8"/><stop offset="1" stop-color="#ffe7a3" stop-opacity="0"/></radialGradient>`
+    + `</defs></svg>`;
+}
+
+/** The dusk behind every picture: a deep teal sky, a warm glow on the horizon, a few stars. */
+const STARS = [[14, 12, 0], [32, 22, 0.6], [58, 9, 1.2], [80, 18, 0.3], [90, 34, 0.9], [8, 38, 1.5]];
+const BACKDROP = `<rect x="-10" y="-10" width="120" height="120" fill="url(#sh-sky)"/><rect x="-10" y="-10" width="120" height="120" fill="url(#sh-sun)"/>`
+  + STARS.map(([x, y, dl]) => `<circle cx="${x}" cy="${y}" r=".9" fill="#fff8dc" class="a-twinkle" style="--d:2.6;--dl:${dl}"/>`).join("");
+
 /** Whether `name` has its own illustration (otherwise `artFor` draws the line icon). */
 export const hasArt = (name: string): boolean => name in ART;
+
+const litCache = new Map<string, string>();
+const lit = (name: string) => litCache.get(name) ?? (litCache.set(name, light(ART[name].svg)), litCache.get(name)!);
 
 /** Inline SVG for an icon name: its illustration (the line icon only as a safety net for an unknown name). */
 export function artFor(name: string, label: string): string {
   const a = ART[name];
-  if (a) return `<svg class="art art-${name}" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${label}">${a.svg}</svg>`;
+  if (a) return `<svg class="art art-${name}" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${label}">${a.bare ? "" : BACKDROP}${lit(name)}`
+    + `<rect x="-10" y="-10" width="120" height="120" fill="url(#sh-light)" opacity=".55" class="sheen"/><rect x="-10" y="-10" width="120" height="120" fill="url(#sh-vig)" class="vig"/></svg>`;
   const d = ICONS[name] ?? ICONS.card;
   return `<svg class="art art-icon" viewBox="0 0 24 24" role="img" aria-label="${label}"><path class="bob" d="${d}" fill="none" stroke="${INK}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }

@@ -2,6 +2,7 @@
 import { BOARDS, type BoardId } from "../engine";
 import type { Setup } from "./app";
 import { PLAYERS, tokenSvg } from "./players";
+import { artFor } from "../render/art";
 
 export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setup) => void): void {
   let board: BoardId = (last?.board.id as BoardId) ?? "short", players = last?.players ?? 2;
@@ -9,8 +10,9 @@ export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setu
   const render = () => {
     root.innerHTML = `
       <div class="setup">
+        <div class="hero">${artFor("lanterns", "The Festival of Lights")}</div>
         <h1>Don't Get Mad!</h1>
-        <p class="sub">A hand-drawn journey to the Festival of Lights</p>
+        <p class="sub">A race to the Festival of Lights. Anything can happen on the way.</p>
         <h2>Which journey?</h2>
         <div class="row">${(["short", "long"] as BoardId[]).map((id) => `<button class="pick" data-board="${id}" aria-pressed="${board === id}">${BOARDS[id].story.title}<small>${id === "short" ? "100 squares, about 30 rounds" : "202 squares, about 50 rounds"}</small></button>`).join("")}</div>
         <h2>Players</h2>
