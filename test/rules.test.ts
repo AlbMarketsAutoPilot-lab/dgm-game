@@ -91,6 +91,15 @@ describe("R8 END", () => {
     expect(P[0].pos).toBe(200);
     expect(events).toContainEqual({ type: "overshoot", player: 0, squares: 5 });
   });
+  it("owner's rule: a 6 can never finish (6 squares to go: 6, 1 = 7 is too far, stay)", () => {
+    const { P, events } = play({ dice: [6, 1], setup: [{ pos: 197 }], turns: 1, players: 1 });
+    expect(P[0].pos).toBe(197);
+    expect(events).toContainEqual({ type: "overshoot", player: 0, squares: 7 });
+  });
+  it("6 squares to go: a 1 first, then exactly 5 next turn wins", () => {
+    const { game } = play({ dice: [1, 5], setup: [{ pos: 197 }], turns: 2, players: 1 });
+    expect(game.winner).toBe(0);
+  });
   it("exact: win, and the game is over", () => {
     const { P, game, events } = play({ dice: [3], setup: [{ pos: 200 }], turns: 1, players: 2 });
     expect([P[0].pos, game.winner, game.over]).toEqual([203, 0, true]);

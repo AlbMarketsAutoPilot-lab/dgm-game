@@ -300,7 +300,8 @@ export class GameScreen {
         break;
       case "overshoot": {
         const need = this.board.endTile - this.places[e.player].pos;
-        this.story(e.player, { ...M.overshoot, art: artFor("lanterns", "Festival"), text: fill(M.overshoot.text, { n: need }) });
+        this.story(e.player, { ...M.overshoot, art: artFor("lanterns", "Festival"), text: fill(M.overshoot.text, { n: need }) },
+          `Rolled ${e.squares}, needed exactly ${need}: you stay where you are.${need === 6 ? " A 6 can never finish: a 6 always throws again, so the total is at least 7." : ""}`, "bad");
         await wait(1100);
         break;
       }
