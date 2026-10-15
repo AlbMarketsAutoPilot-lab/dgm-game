@@ -1,5 +1,13 @@
 # U7: sounds and music, the list (for the owner, 15 Oct 2026)
 
+> **Built (15 Oct).** The owner chose from a listening page of CC0 sounds: dice A, step A, six A, good A, bad A,
+> bump B, jump-up B, jump-down B, bog A, card A, lantern-out A, lantern-on A, postcard A, tap A, win A, out A,
+> menu A (Ukulele Forest), game B (Short Kalimba Loop). The files are in `public/sounds/` (sources and licences in
+> `public/sounds/CREDITS.txt`), the code in `src/ui/sound.ts`; what was built and tested is in
+> `docs/analysis/audit-code-2026-10-15.md` §8. Differences from the list below: `dice-land` was not needed (the
+> chosen roll lands); no separate win music (the win jingle plays and the music stops); two switches (sound effects
+> with vibration, and music) instead of one. The rest of this page is the original list, kept for reference.
+
 Sound and vibration are **off until a player switches them on** (one switch on the start screen and in the game:
 "Sound: off / on"). Every sound below already has its moment in the game: the engine tells the screen when each one
 happens, so adding a sound is only a file and one line.

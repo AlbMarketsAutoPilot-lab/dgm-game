@@ -11,6 +11,8 @@ import { Dice } from "./dice";
 import { Overview, reachSteps } from "./overview";
 import { PLAYERS, tokenSvg } from "./players";
 import { Popups, type PopupContent } from "./popup";
+import { sound } from "./sound";
+import { switchIcon } from "./sound-switch";
 import { SpoilQuestion } from "./spoil";
 import { Stage } from "./stage";
 import { MOMENTS, fill, outcome, taleOf, type Tale } from "./tales";
@@ -98,7 +100,7 @@ export class GameScreen {
         <section class="stage-panel">
           <div class="hud"></div>
           <div class="stage"></div>
-          <div class="controls"><div class="dice"></div><div class="act"></div></div>
+          <div class="controls"><div class="dice"></div><div class="act"></div><button class="snd-open" aria-label="Sound and music"></button></div>
         </section>
       </div>`;
     const ov = root.querySelector<HTMLElement>(".overview")!;
@@ -117,6 +119,13 @@ export class GameScreen {
       const b = (e.target as Element).closest<HTMLElement>("[data-seat]");
       if (b) this.playerInfo(Number(b.dataset.seat));
     });
+    // U7: the speaker beside the die opens the two sound switches
+    const sndBtn = root.querySelector<HTMLButtonElement>(".snd-open")!;
+    const showSnd = () => { sndBtn.innerHTML = switchIcon("fx", sound.settings.fx || sound.settings.music); };
+    showSnd();
+    sound.onChange(showSnd);
+    sndBtn.addEventListener("click", () => void this.soundSwitches());
+    sound.music("game");
     this.hud.addEventListener("click", (e) => {
       const b = (e.target as Element).closest<HTMLElement>("[data-card]");
       if (b) this.cardInfo(b.dataset.card as keyof typeof CARD_INFO);
@@ -176,6 +185,8 @@ export class GameScreen {
     const w = this.game.winner;
     this.overview.setReach(null);
     const m = w === null ? MOMENTS.nobody : this.game.lastStanding ? MOMENTS.winLast : MOMENTS.win;
+    sound.music(null);
+    sound.play(w === null ? "out" : "win");
     if (w !== null) { this.overview.setCurrent(w); this.stage.celebrate("win"); this.stage.stamp("good", "Champion!"); }
     this.setAct([]);
     const cards = this.newCards.length ? `<p class="pop-sub">New postcard${this.newCards.length > 1 ? "s" : ""}: <b>${this.newCards.map((c) => esc(c.title)).join(", ")}</b></p>` : "";
@@ -212,6 +223,25 @@ export class GameScreen {
   private roundOf(seat: number): number {
     const n = this.game.players.length, rel = (s: number) => (s - this.game.first + n) % n;
     return this.game.round + (rel(seat) <= rel(this.game.currentSeat) ? 1 : 0);
+  }
+
+  /** U7: the sound switches, in a popup; each tap switches one and shows the popup again with the new state. */
+  private async soundSwitches(): Promise<void> {
+    for (;;) {
+      const fx = sound.settings.fx, music = sound.settings.music;
+      const v = await this.pops.show({
+        kind: "info", kicker: "Settings", title: "Sound and music", art: `<div class="one snd-art">${switchIcon("fx", true)}</div>`,
+        text: "Sound effects and the buzz on phones, and quiet music under the game. Saved on this device.",
+        buttons: [
+          { label: `Sound effects: ${fx ? "on" : "off"}`, value: "fx", primary: fx },
+          { label: `Music: ${music ? "on" : "off"}`, value: "music", primary: music },
+          { label: "Done", value: "done" },
+        ],
+      });
+      if (v === "fx") sound.set("fx", !fx);
+      else if (v === "music") sound.set("music", !music);
+      else return;
+    }
   }
 
   /** U2: leave the game, after "Are you sure?". It stays saved, so "Continue game" brings it back. */
@@ -315,6 +345,7 @@ export class GameScreen {
       this.newCards.push(c);
       saveAlbum(this.album);
       this.stage.stamp("good", "New postcard!"); // waits for the square's own stamp
+      sound.play("postcard");
     }
   }
 
@@ -330,6 +361,7 @@ export class GameScreen {
 
   /** A 6 for a person: a popup and a stamp, then they roll again themselves. */
   private sixParty(seat: number): void {
+    sound.play("six");
     this.stage.celebrate("good");
     this.stage.stamp("good", "A six!");
     this.story(seat, { title: "A 6!", text: "Lucky you: a 6 always gives you one more throw, and the throws add up. Roll again!", art: artFor("lanterns", "A six") }, "Three 6s in a row win a lantern.", "good");
@@ -378,7 +410,7 @@ export class GameScreen {
       case "round": this.round = e.round; this.render(); break;
       case "roadblockPlaced": this.overview.setRoadblock(e.square); break;
       case "roadblockRemoved": this.overview.setRoadblock(null); break;
-      case "roll": await this.dice.roll(e.value); break;
+      case "roll": sound.play("dice"); await this.dice.roll(e.value); break;
       case "skipTurn": await this.wait(500); break;
       case "noSix":
         this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`);
@@ -388,14 +420,14 @@ export class GameScreen {
         if (e.where === "start") { this.places[e.player] = START; st.show(e.player, START); this.overview.setPlace(e.player, START); }
         if (e.bySix) this.dice.released(e.where); // R15: the 6 that lets you in (or out of the Bog) moves nobody
         this.render();
-        if (e.bySix) st.celebrate("good");
+        if (e.bySix) { st.celebrate("good"); sound.play("six"); }
         if (e.bySix) st.stamp("good", e.where === "start" ? "A six!" : "Free!");
         this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
         await this.wait(900);
         break;
       }
       case "move":
-        await st.walk(e.path.map((s) => s.pos), (pos) => { this.places[e.player] = pos; this.overview.setPlace(e.player, pos); });
+        await st.walk(e.path.map((s) => s.pos), (pos) => { sound.play("step"); this.places[e.player] = pos; this.overview.setPlace(e.player, pos); });
         this.arrived(e.from, e.to);
         this.dice.moved();
         break;
@@ -407,6 +439,7 @@ export class GameScreen {
         break;
       }
       case "tile": {
+        sound.play(e.tile.cat === "R" ? "good" : "bad");
         const tl = this.taleAt(e.square, e.tile), tone = e.tile.cat === "R" ? "good" : "bad";
         st.pulse();
         st.celebrate(tone);
@@ -417,6 +450,7 @@ export class GameScreen {
         break;
       }
       case "jump":
+        sound.play(e.to >= e.from ? "jump-up" : "jump-down");
         await st.fly(e.to);
         this.places[e.player] = e.to;
         this.overview.setPlace(e.player, e.to);
@@ -424,6 +458,7 @@ export class GameScreen {
         await this.wait(400);
         break;
       case "capture":
+        sound.play("bump");
         this.places[e.victim] = START;
         this.overview.setPlace(e.victim, START);
         st.celebrate("bump");
@@ -433,12 +468,13 @@ export class GameScreen {
         await this.wait(1400);
         break;
       case "roadblockHit": st.celebrate("bad"); this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await this.wait(1300); break;
-      case "trapped": if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
+      case "trapped": sound.play("bog"); if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
         this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "Only a 6 gets you out.", "bad"); await this.wait(1100); break;
-      case "bogBoots": st.celebrate("good"); st.stamp("good", "Not today, Bog!");
+      case "bogBoots": sound.play("card"); st.celebrate("good"); st.stamp("good", "Not today, Bog!");
         this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await this.wait(1300); break;
-      case "card": this.render(); await this.wait(300); break;
+      case "card": sound.play("card"); this.render(); await this.wait(300); break;
       case "bonusUsed": {
+        sound.play("card");
         const m = e.use === "defend" ? M.bonusDefend : M.bonusAttack;
         st.cardPlayed();
         st.stamp(e.use === "defend" ? "good" : "bad", e.use === "defend" ? "Dodged it!" : "Spoiled!");
@@ -459,15 +495,17 @@ export class GameScreen {
         break;
       }
       case "lanternLost":
+        sound.play("lantern-out");
         st.celebrate("bad");
         st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
         this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad");
         this.render();
         await this.wait(1600);
         break;
-      case "lanternWon": st.celebrate("good"); st.stamp("good", "Three sixes!");
+      case "lanternWon": sound.play("lantern-on"); st.celebrate("good"); st.stamp("good", "Three sixes!");
         this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await this.wait(1400); break;
       case "out":
+        sound.play("out");
         this.places[e.player] = OUT;
         this.overview.setPlace(e.player, OUT);
         this.story(e.player, { ...M.out, text: fill(M.out.text, { p: this.name(e.player) }), art: artFor("lantern", "Lights out") }, "Out of the game.", "bad");

@@ -40,6 +40,48 @@ export async function checkPublished(browser, pub, report) {
     await ctx.close();
   }
 
+  // 1b. Sound (U7): off at first; the two switches on the start screen; every file there and playable; sounds load
+  // as the game is played; the speaker in the game; the choice kept after a reload
+  {
+    const { ctx, page, errors } = await newPage(browser);
+    const loaded = new Set();
+    page.on("response", (r) => { const m = /\/sounds\/([\w-]+)\.mp3$/.exec(r.url()); if (m && r.ok()) loaded.add(m[1]); });
+    await page.goto(url + "/?fast");
+    await page.waitForSelector(".setup .go");
+    const offAtFirst = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].map((b) => b.getAttribute("aria-pressed")).join() === "false,false");
+    const before = loaded.size;
+    await page.click('[data-snd="fx"]'); await page.click('[data-snd="music"]');
+    const on = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].every((b) => b.getAttribute("aria-pressed") === "true"));
+    const files = ["dice", "step", "six", "good", "bad", "bump", "jump-up", "jump-down", "bog", "card", "lantern-out", "lantern-on", "postcard", "tap", "win", "out", "menu-intro", "menu-loop", "game"];
+    const broken = await page.evaluate(async (names) => {
+      const ac = new AudioContext(), bad = [];
+      for (const n of names) {
+        try { const b = await ac.decodeAudioData(await (await fetch(`./sounds/${n}.mp3`)).arrayBuffer()); if (!(b.duration > 0.05 && b.duration < 60)) bad.push(`${n} ${b.duration}s`); }
+        catch (e) { bad.push(`${n}: ${e}`); }
+      }
+      return bad;
+    }, files);
+    const atStart = ["tap", "menu-intro", "menu-loop"].filter((n) => !loaded.has(n)); // a button's click and the start screen's music
+    loaded.clear();
+    await page.click('[data-players="2"]');
+    await page.click('[data-seat="1"]'); // both people: the test taps every turn
+    await page.click(".setup .go");
+    await page.locator(".pop button", { hasText: "Let's go" }).click();
+    await someTurns(page, 40);
+    const inGame = ["dice", "step", "game"].filter((n) => !loaded.has(n));
+    await page.click(".snd-open");
+    await page.locator(".pop button", { hasText: "Music: on" }).click();
+    const switched = await page.locator(".pop button", { hasText: "Music: off" }).count() === 1;
+    await page.locator(".pop button", { hasText: "Done" }).click();
+    await page.reload();
+    await page.waitForSelector(".setup .go");
+    const kept = await page.evaluate(() => [...document.querySelectorAll("[data-snd]")].map((b) => b.getAttribute("aria-pressed")).join() === "true,false");
+    const ok = offAtFirst && before === 0 && on && !broken.length && !atStart.length && !inGame.length && switched && kept && !errors.length;
+    report.add(G, `sound: off at first, nothing loaded before; ${files.length} files play; the sounds load as they play; the speaker; kept after a reload`, ok,
+      [!offAtFirst && "not off at first", before && "loaded before the switch", !on && "switches", ...broken, atStart.length && `not loaded on the start screen: ${atStart.join(", ")}`, inGame.length && `not loaded in the game: ${inGame.join(", ")}`, !switched && "speaker popup", !kept && "not kept", ...errors].filter(Boolean).join(", "));
+    await ctx.close();
+  }
+
   // 2. Security policy and offline: a game with a reload, then the site gone; another app's cache on the same address
   // survives. Offline is tested by really stopping this check's own server (the browser tool's "offline" switch can
   // bypass the game's offline worker, which is not what a player's phone does).

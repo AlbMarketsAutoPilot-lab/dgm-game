@@ -450,3 +450,12 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup .s-more { display: flex; gap: .5rem; justify-content: center; flex: 1 1 100%; }
 .setup .s-more button { flex: 0 1 auto; font-size: 1.05rem; padding-inline: .75rem; white-space: nowrap; }
 @media (max-width: 360px) { .setup .s-more button { font-size: .95rem; padding-inline: .5rem; } }
+
+/* ---- Sound switches (U7) ---- */
+.setup .s-go .snd { min-width: 2.75rem; width: 2.75rem; padding: 0; display: grid; place-items: center; }
+.snd svg, .snd-open svg { width: 1.5rem; height: 1.5rem; display: block; }
+.setup .snd[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.snd-open { flex: 0 0 auto; min-width: 2.75rem; width: 2.75rem; min-height: 2.75rem; height: 2.75rem; padding: 0; display: grid; place-items: center; border-radius: 50%; box-shadow: none; border-width: .125rem; }
+.pop-art .snd-art svg { width: 55%; height: 55%; color: var(--ink); }
+/* A folded phone: "Let's go!" and the two switches stay on one line */
+@media (max-width: 340px) { .setup .go { padding-inline: 1rem; } .setup .s-go { gap: .5rem; } }

@@ -189,7 +189,7 @@ off their squares in portrait, landscape and zoomed in; offline start works.
 | U4 | Tokens waiting on Start are smaller and in the lower half; "START: a 6 to enter" is centred above them | seen on screen |
 | U5 | Escape closes the popup on top (and the album, and the guide); the board is one Tab stop, the arrow keys walk it, Enter or Space tells what a square does, with a yellow ring on the square; a page heading; the album is a dialog that takes the focus | browser test: keyboard; accessibility scan with no serious or critical problem on the guide, start screen, album and game screen |
 | Guide | "How to play": 4 short pages (the race, a 6 to set off, good and bad squares, lanterns and the exact finish), shown once on a device before the start screen, Skip / Back / Next, arrow keys, Escape; and from "How to play" on the start screen. **Texts are a draft for the owner's approval** (`src/ui/guide.ts`) | browser test: first visit; all sizes |
-| U7 | Not built (as asked): the list of 17 sound effects, 3 music pieces and the vibration, with formats, licences and free sources, is in `docs/U7_sounds.md`. The sound websites are blocked by this session's network settings | – |
+| U7 | Built with the owner's choices (§8) | §8 |
 
 Found and fixed while building:
 
@@ -205,3 +205,15 @@ Found and fixed while building:
   server switches the whole Node process to "development", so the test build made after it left out the offline
   worker (which only production builds register). Builds in the tests are now always production builds, a check
   confirms the worker is in the test build, and offline is tested by really stopping the site's server.
+
+## 8. U7: sound and music (owner's choices, 15 Oct)
+
+| What | Built | Tested |
+|---|---|---|
+| Sounds | The owner picked 16 effects and 2 music pieces from a listening page of CC0 sounds (Kenney, OpenGameArt). Trimmed, set to the same loudness, MP3; 1.1 MB in all, in `public/sounds/`, sources in `CREDITS.txt` (no credit needed, given anyway) | the browser test decodes all 19 files; full run 20 of 20 checks, 304 screen / size combinations, no problem |
+| When | dice on each throw; step on each square; six; good / bad square; bump (a player sent back); jump up / down (rides and snakes); bog; card (won, played, Bog boots); lantern out / lit again; new postcard; a soft tap on every button; win; out of the game. Menu music on the start screen (its own beginning once, then the loop), calmer music in the game, stopped at the end | browser test: the sounds load as the game plays |
+| Switches | Two, both **off** until a player turns them on, kept on the device: sound effects (with a short buzz on phones for a 6, a bump, bad luck, the Bog, out, the win) and music. Start screen: two buttons beside "Let's go!"; game: the speaker beside the die opens "Sound and music" | browser test: off at first, nothing downloaded before; on; the speaker; kept after a reload. All sizes (16 screens × 19 sizes) |
+| Safety | Web Audio after the first tap (browsers allow sound only then); a sound that is missing, blocked or offline the first time is skipped and never holds the game; the security policy needs no change (same-site files); silent while the app is in the background | security-policy check (no violation) |
+
+Found and fixed while building: on a folded phone (280 px) the two switches pushed "Postcards" and "How to play" off
+the start screen; "Let's go!" is narrower there, so all stay on one line.

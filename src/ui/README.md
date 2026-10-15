@@ -54,6 +54,13 @@ to play" on the start screen (texts: draft for the owner's approval). **Keyboard
 top, the album and the guide; the whole board is one Tab stop, the arrow keys walk the road, Enter / Space tells what a
 square does. All text from data is escaped once, in `src/render/html.ts` (S3).
 
+**Sound and music** (`sound.ts`, `sound-switch.ts`, U7, sounds chosen by the owner 15 Oct): 16 effects and two
+music pieces in `public/sounds/` (CC0, sources in `CREDITS.txt`). Two switches, both off until a player turns them
+on, kept on the device: sound effects (with a buzz on phones) and music. On the start screen beside "Let's go!", and
+in the game behind the speaker beside the die. Web Audio, nothing loaded before the first switch; a missing or
+blocked sound is skipped, never waited for; quiet when the app is in the background. Each file is loaded the first
+time it plays and then kept by the offline worker.
+
 **Every screen size** (owner, 15 Oct): all sizes in `app.css` are rem, and the root size grows on big screens (PC).
 A popup that does not fit over the board moves over everything above the controls (or the whole screen, when it has
 its own buttons), then gets compact with only its words scrolling; its buttons are never cut (`popup.ts`, `fit`). The
