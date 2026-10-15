@@ -66,6 +66,27 @@ normalise them, and show you the list to approve. Good sources:
 | freesound.org, filter "Creative Commons 0" | CC0 (check each) | 8, 9, 10, 12, 13 |
 | opengameart.org, filter "CC0" | CC0 (check each) | M1, M2 (search "cozy", "acoustic", "loop") |
 
+### Links found for each sound (found by web search, 15 Oct; licences not yet checked page by page)
+
+I could search the web but not open the pages, so check each page's licence field before downloading.
+
+| Sounds | Link | Licence (as listed) |
+|---|---|---|
+| 1, 2 dice, 11 cards | [54 Casino sound effects (cards, dice, chips), Kenney](https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips): 12 dice, 23 card, 19 chip sounds | CC0 |
+| 1, 2 dice | [2 dice roll (29 throws)](https://lpc.opengameart.org/content/2-dice-roll-29-throws): many dice rolls, for board games | CC0 |
+| 3 step, 15 tap, maybe 14 | [Interface Sounds, Kenney](https://opengameart.org/content/interface-sounds): 100 clicks, snaps, confirmations | CC0 |
+| 7 bump, 6 bad | [Boings](https://opengameart.org/node/183317), [Silly Sound Effects](https://opengameart.org/node/183321) | CC0 |
+| 6, 7, 8, 9, 17 | [Cartoon Comic Sound Pack, Morphonaut](https://morphonaut.itch.io/cartoon-comic-sound-pack): 129 sounds incl. boings, springs | CC0 (donation optional) |
+| 16 win, M3 | [victory, Umplix](https://opengameart.org/content/victory) · [Victory Fanfare Short](https://opengameart.org/content/victory-fanfare-short) (CC0, but the author asks to be contacted) · [Victory 4](https://opengameart.org/content/victory-4) | CC0 (check each) |
+| 17 out | [sad game over](https://opengameart.org/content/sad-game-over) | not seen: check |
+| 8, 9 whoosh | the [CC0 sound effects collection](https://opengameart.org/content/cc0-sound-effects) (includes a CC0 swish / whoosh pack) | CC0 |
+| 10 bog | "25 CC0 mud sfx" by rubberduck (search on opengameart.org) | CC0 |
+| M1, M2 music | [Etirwer, Kistol](https://opengameart.org/content/etirwer): acoustic nylon-guitar loop · [Ukulele Forest (beginning, loop, end)](https://opengameart.org/content/ukulele-forest-beginning-loop-and-end) | CC0 · not seen: check |
+| 4, 5, 6, 16, 17, M3 | Kenney "Music Jingles" (85 short jingles), on kenney.nl | CC0 (reported) |
+
+Not found as CC0 yet: **12** candle blown out, **13** match strike, **14** rubber stamp. Freesound.org has many of
+these: search there with the licence filter "Creative Commons 0".
+
 A third way, needing no files at all: I can make the short effects (3, 4, 5, 6, 15, 7) in the game itself with the
 browser's sound synthesiser. They would sound clean and simple ("bleep" style) rather than real dice and paper.
 Real recordings suit the hand-made look better, so I recommend files at least for 1, 11, 14 and 16.
