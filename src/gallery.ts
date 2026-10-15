@@ -2,6 +2,7 @@
 import "@fontsource/patrick-hand";
 import "./ui/app.css";
 import { ART, artCss, artFor } from "./render/art";
+import { MODERN } from "./render/art-modern";
 
 const style = document.createElement("style");
 style.textContent = artCss() + `
@@ -12,3 +13,11 @@ style.textContent = artCss() + `
 document.head.append(style);
 document.querySelector("#gallery")!.innerHTML = Object.keys(ART).sort().map((name) =>
   `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart">${artFor(name, name)}</div></div><figcaption>${name}</figcaption></figure>`).join("");
+
+// ?compare: the owner's review of the draft redraws, current picture on the left, draft on the right
+if (new URLSearchParams(location.search).has("compare")) {
+  style.textContent += "#gallery { grid-template-columns: repeat(2, 300px); justify-content: center; } .card { --card: 280px; }";
+  document.querySelector("#gallery")!.innerHTML = Object.entries(MODERN).map(([name, a]) =>
+    `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart">${artFor(name, name)}</div></div><figcaption>${name} · now</figcaption></figure>`
+    + `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart"><svg class="art" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${name}">${a.svg}</svg></div></div><figcaption>${name} · new</figcaption></figure>`).join("");
+}
