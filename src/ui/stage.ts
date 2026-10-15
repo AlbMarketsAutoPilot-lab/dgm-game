@@ -3,6 +3,7 @@
 // (ladders, snakes, "go back to 6"), passing the squares in between quickly.
 import { BoardIndex, OFF, OUT, isShortcut, shortcutOf, type Board, type Pos, type Spot } from "../engine";
 import { artCss, artFor } from "../render/art";
+import { cardFace } from "../render/art-modern";
 import { PUNISH, REGION_WASH, REWARD, SHORTCUT_COLOURS, crayonFor, regionOf } from "../render/palette";
 import { tokenSvg } from "./players";
 
@@ -54,7 +55,7 @@ export function describe(board: Board, pos: Pos, stair = 0): { html: string; cls
     const dest = t.type === "jump" && t.to !== undefined ? `<span class="cdest">→ ${t.to === 0 ? "Start" : t.to}</span>` : "";
     return {
       cls: "ev", style: `--c:${crayonFor(board, pos, t)}`, caption: t.story ?? t.text,
-      html: `<span class="cnum">${pos}</span>${chevron(t.cat)}<div class="cart">${artFor(t.icon ?? "card", esc(t.story ?? t.text))}</div>${dest}`,
+      html: `<span class="cnum">${pos}</span>${chevron(t.cat)}<div class="cart">${t.icon === "card" ? cardFace("bonus", esc(t.story ?? t.text)) : t.icon === "boots" ? cardFace("jailPass", esc(t.story ?? t.text)) : artFor(t.icon ?? "card", esc(t.story ?? t.text))}</div>${dest}`,
     };
   }
   const lm = board.story.landmarks[pos];
@@ -125,16 +126,17 @@ export class Stage {
   }
 
   /** A big stamp over the square: "Lucky!", "Don't get mad!" … */
-  stamp(kind: "good" | "bad", say?: string): void {
+  stamp(kind: "good" | "bad", say?: string): string {
     const words = say ? [say] : kind === "good" ? ["Lucky!", "Yes!", "Woohoo!", "Nice one!", "Jackpot!", "Look at you!"] : ["Don't get mad!", "Oh no!", "Ouch!", "Seriously?!", "Not again!", "Typical."];
     const el = document.createElement("div");
     el.className = `stamp ${kind}`;
-    el.textContent = words[Math.floor(Math.random() * words.length)];
+    const word = (el.textContent = words[Math.floor(Math.random() * words.length)]);
     this.fx.append(el);
     const r = reduced();
     el.animate(r ? [{ opacity: 1 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }] : [{ transform: "translate(-50%, -50%) scale(2.6) rotate(-14deg)", opacity: 0 }, { transform: "translate(-50%, -50%) scale(1) rotate(-8deg)", opacity: 1, offset: 0.18 },
       { transform: "translate(-50%, -50%) scale(1.06) rotate(-8deg)", opacity: 1, offset: 0.75 }, { transform: "translate(-50%, -80%) scale(.9) rotate(-8deg)", opacity: 0 }], { duration: 1500, easing: "ease-out", fill: "forwards" });
     setTimeout(() => el.remove(), 1600);
+    return word;
   }
 
   /** The Bonus card flies onto the square and flips away. */
@@ -142,7 +144,7 @@ export class Stage {
     if (reduced()) return;
     const c = document.createElement("div");
     c.className = "played-card";
-    c.innerHTML = artFor("card", "");
+    c.innerHTML = cardFace("bonus", "");
     this.fx.append(c);
     c.animate([{ transform: "translate(-50%, 120%) scale(.4) rotate(-30deg)", opacity: 0 }, { transform: "translate(-50%, -50%) scale(1.2) rotate(6deg)", opacity: 1, offset: 0.4 },
       { transform: "translate(-50%, -50%) scale(1.1) rotate(-4deg)", opacity: 1, offset: 0.7 }, { transform: "translate(-50%, -160%) scale(.6) rotateY(90deg)", opacity: 0 }], { duration: 1400, easing: "ease-in-out", fill: "forwards" });

@@ -20,6 +20,8 @@ export interface PopupContent {
   tone?: "good" | "bad" | "";
   /** More below the outcome (HTML: e.g. this turn's earlier moments). */
   more?: string;
+  /** An exclamation in the stamp style ("Woohoo!", "Ouch!"), on the picture's corner. */
+  shout?: string;
   /** Small line above the title (who / where). */
   kicker?: string;
   buttons?: PopupButton[];
@@ -129,6 +131,7 @@ export class Popups {
     el.innerHTML = `
       <button class="pop-x" aria-label="${c.kind === "choice" ? "Look at the board first" : "Close"}">✕</button>
       ${c.art ? `<div class="pop-art">${c.art}</div>` : ""}
+      ${c.shout ? `<span class="pop-shout ${c.tone === "bad" ? "bad" : "good"}">${c.shout}</span>` : ""}
       <div class="pop-head">
         ${c.kicker ? `<p class="pop-kicker">${c.kicker}</p>` : ""}
         <h2 class="pop-title">${c.title}</h2>

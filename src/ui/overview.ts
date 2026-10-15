@@ -113,6 +113,11 @@ export class Overview {
   }
 
   /** Zooms in around a tap so the squares are big enough to tap (null = the whole board again). */
+  /** Back to the whole board (a new turn). */
+  zoomOutAll(): void {
+    if (this.zoomed) this.zoom(null);
+  }
+
   private zoom(ev: MouseEvent | null): void {
     if (!ev) { this.svg.setAttribute("viewBox", this.full); this.zoomed = false; this.zoomOut.hidden = true; return; }
     const r = this.svg.getBoundingClientRect(), B = this.layout.bounds;
@@ -121,7 +126,7 @@ export class Overview {
     // the tapped point in board coordinates (the drawing is centred in the svg)
     const ox = (r.width - B.w * fit) / 2, oy = (r.height - B.h * fit) / 2;
     const bx = ((ev.clientX - r.left - ox) / fit) * U, by = ((ev.clientY - r.top - oy) / fit) * U;
-    const x = Math.max(0, Math.min(B.w * U - vw, bx - vw / 2)), y = Math.max(0, Math.min(B.h * U - vh, by - vh / 2));
+    const x = bx - vw / 2, y = by - vh / 2; // the tapped square in the middle, never under the "Whole board" button
     this.svg.setAttribute("viewBox", `${x} ${y} ${vw} ${vh}`);
     this.zoomed = true;
     this.zoomOut.hidden = false;
