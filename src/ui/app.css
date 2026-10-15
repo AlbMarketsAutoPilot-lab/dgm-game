@@ -477,3 +477,9 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   .setup .s-legal { grid-area: auto; grid-column: 2; grid-row: 1 / -1; align-self: end; }
 }
 @media (orientation: portrait) and (max-width: 300px) { .setup .s-legal { font-size: .75rem; } .setup .s-legal a { padding-block: 0; } }
+
+/* ---- "One moment": an hourglass where the buttons go while a popup is being read (owner, 15 Oct) ---- */
+.act .hourglass { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 3.875rem; color: var(--ink); opacity: .75; }
+.hourglass svg { width: 2.25rem; height: 2.25rem; animation: hourglass-turn 1.6s ease-in-out infinite; }
+@keyframes hourglass-turn { 0%, 55% { transform: rotate(0); } 85%, 100% { transform: rotate(180deg); } }
+@media (prefers-reduced-motion: reduce) { .hourglass svg { animation: none; } }

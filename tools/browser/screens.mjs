@@ -85,7 +85,7 @@ const SETUP_GAME = async (kind) => {
     case "leave": s.gone = false; void s.leave(); break;
     case "win": s.pops.show({ kind: "win", tone: "good", art: "", kicker: "The end of the journey", title: "Yellow made it!", text: "Thousands of lanterns rise over the square as Yellow walks into the Festival of Lights. Music, food stalls, and a very well-earned sit-down.", more: `<p class="pop-sub">New postcards: <b>Home Town, Countryside, Forest, River &amp; Lake, The Bog, Three Sixes</b></p>`, buttons: [{ label: "Play again: same players", value: "again", primary: true }, { label: "New game: change players or board", value: "new" }, { label: "Postcard album", value: "album" }] }); break;
     case "sound": void s.soundSwitches(); break;
-    case "home": Object.assign(p, { pos: -1, skip: 0, double: false, lanterns: 3 }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Roll for a 6", value: "roll", primary: true }, { label: "Spend a lantern and go (3 left)", value: "spend" }]); s.dice.ready(true); break;
+    case "home": Object.assign(p, { pos: -1, skip: 0, double: false, lanterns: 3 }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Roll for a 6", value: "roll", primary: true }, { label: "Spend a lantern (3 left)", value: "spend" }]); s.dice.ready(true); break;
     case "boots": void s.choose({ kind: "bogBoots", player: 0, square: 30 }); break;
     case "welcome": s.pops.show({ kind: "info", art: "", kicker: "Saved game", title: "Welcome back!", text: "The journey goes on where you left it: round 23, <b>Yellow</b> plays next.", buttons: [{ label: "Let's go on!", value: "ok", primary: true }] }); break;
   }

@@ -51,7 +51,8 @@ Two areas plus the players:
 
 **Choices** (owner, 15 Oct): at Home or in the Bog with a lantern left, a person picks "Roll for a 6" or "Spend a
 lantern and go"; the Bog boots are offered ("Wear your Bog boots?"), as the Bonus card is. A story popup stays up long
-enough to read (about 4 words a second) before the next one replaces it.
+enough to read (about 4 words a second, 1.5–5 s) before the next one replaces it, with an hourglass turning where the
+buttons go meanwhile.
 
 **How to play** (`guide.ts`, owner 15 Oct): four short pages, once per device before the start screen, and from "How
 to play" on the start screen (texts: draft for the owner's approval). **Keyboard** (U5): Escape closes the popup on

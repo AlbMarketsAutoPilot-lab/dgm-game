@@ -136,7 +136,7 @@ export class Popups {
   }
 
   private closeInfos(): void {
-    for (const o of this.infos) this.drop(o, "close");
+    for (const o of this.infos) this.drop(o, "replaced"); // not "close": that is the player's own ✕ or Escape
     this.infos = [];
   }
 
