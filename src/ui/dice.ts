@@ -5,12 +5,15 @@ const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 export class Dice {
   private readonly die: HTMLElement;
   private readonly list: HTMLElement;
+  /** What a screen reader hears: every throw, and the total. */
+  private readonly said: HTMLElement;
   private throws: number[] = [];
 
   constructor(host: HTMLElement) {
-    host.innerHTML = `<div class="die" role="img" aria-label="Die"></div><span class="throws" aria-live="polite"></span>`;
+    host.innerHTML = `<button class="die" aria-label="Die" disabled></button><span class="throws" aria-hidden="true"></span><span class="sr" aria-live="polite"></span>`;
     this.die = host.querySelector(".die")!;
     this.list = host.querySelector(".throws")!;
+    this.said = host.querySelector(".sr")!;
     this.face(6);
   }
 
@@ -19,9 +22,22 @@ export class Dice {
     this.die.setAttribute("aria-label", `Die shows ${n}`);
   }
 
+  /** The die can be tapped to roll (it bounces, inviting). */
+  ready(on: boolean): void {
+    (this.die as HTMLButtonElement).disabled = !on;
+    this.die.classList.toggle("ready", on);
+    if (on) this.die.setAttribute("aria-label", "Tap the die to roll");
+  }
+
+  /** Resolves when the die is tapped. */
+  tapped(): Promise<void> {
+    return new Promise((r) => this.die.addEventListener("click", () => r(), { once: true }));
+  }
+
   clear(): void {
     this.throws = [];
     this.list.textContent = "";
+    this.said.textContent = "";
   }
 
   /** Tumbles and lands on `n`. */
@@ -35,9 +51,13 @@ export class Dice {
       this.die.classList.remove("tumble");
     }
     this.face(n);
+    this.die.classList.remove("landed");
+    void this.die.offsetWidth;
+    if (!reduced()) this.die.classList.add("landed");
     this.throws.push(n);
     const total = this.throws.reduce((a, b) => a + b, 0);
     this.list.textContent = this.throws.length > 1 ? `${this.throws.join(" + ")} = ${total}` : "";
+    this.said.textContent = this.throws.length > 1 ? `Rolled ${n}. ${this.throws.join(" + ")} = ${total}` : `Rolled ${n}`;
     await new Promise((r) => setTimeout(r, reduced() ? 50 : n === 6 ? 650 : 380));
   }
 }

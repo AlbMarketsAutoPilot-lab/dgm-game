@@ -150,8 +150,8 @@
    "type": "skip",
    "turns": 1,
    "text": "Robbery! Wait 1 turn here",
-   "story": "Ducks on the bridge. They're not moving. Wait one turn.",
-   "icon": "duck"
+   "story": "Missed the river ferry by four minutes. Next one: \"shortly\". Wait one turn.",
+   "icon": "big-clock"
   },
   "97": {
    "cat": "P",

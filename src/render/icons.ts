@@ -21,7 +21,6 @@ export const ICONS: Record<string, string> = {
   compass: c(12, 12, 8.5) + "M15.5 8.5l-2.5 4.5-4.5 2.5 2.5-4.5z",
   "crossed-bed": "M3 19V8M3 14h18v5M10 11h10v3M7 11.5h.5M3 4l18 18",
   "door-key": "M4 21V4h9v17M10 12.5h1" + c(18, 8, 2.5) + "M18 10.5V19M18 15h2M18 17.5h2",
-  duck: "M7 9a3 3 0 1 1 5 2c4-1 8 0 9 3-1 4-5 6-9 6s-8-2-8-5c0-2 2-3 3-3M6 8l-4 1.5 4 1M8.5 8h.5",
   "fallen-tree": "M2 19l15-7M3 21.5l15-7M17 12c3-2 5 0 3 3M10 15.5l-2-5M13 14l1-4M2 19l1 2.5",
   ferry: "M3 15h18l-3 5H6zM6 15v-4h12v4M9 11V8h5v3M8 13h1M11.5 13h1M15 13h1",
   "flat-path": "M8 21L11 3M16 21L13 3M12 19v-2.5M12 13.5v-2M12 8.5V7",

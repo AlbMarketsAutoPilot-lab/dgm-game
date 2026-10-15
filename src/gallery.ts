@@ -2,6 +2,7 @@
 import "@fontsource/patrick-hand";
 import "./ui/app.css";
 import { ART, artCss, artFor } from "./render/art";
+import { POSTCARDS, postcardHtml } from "./ui/postcards";
 
 const style = document.createElement("style");
 style.textContent = artCss() + `
@@ -12,3 +13,9 @@ style.textContent = artCss() + `
 document.head.append(style);
 document.querySelector("#gallery")!.innerHTML = Object.keys(ART).sort().map((name) =>
   `<figure><div class="card ev" style="--c:#e8c25a"><div class="cart">${artFor(name, name)}</div></div><figcaption>${name}</figcaption></figure>`).join("");
+
+// ?postcards: every postcard, collected and not yet collected
+if (new URLSearchParams(location.search).has("postcards")) {
+  style.textContent += "body { background: #f7f1e3; } #gallery { grid-template-columns: repeat(2, 330px); justify-content: center; gap: 16px; }";
+  document.querySelector("#gallery")!.innerHTML = POSTCARDS.map((p) => postcardHtml(p, true)).join("") + postcardHtml(POSTCARDS[5], false);
+}

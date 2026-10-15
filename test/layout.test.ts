@@ -1,84 +1,61 @@
-// Board layout (Step 3): every square has a place, nothing overlaps, the long board follows the paper path.
+// Whole-board layout (owner, 15 Oct): a labyrinth spiral of touching squares, walls between the rings, the
+// Shortcuts inside the walls, a big Start pad and the festival in the middle.
 import { describe, expect, it } from "vitest";
 import { BOARDS, OFF, shortcutPos } from "../src/engine";
 import { layoutFor, pointOf, type Point } from "../src/render/layout";
 
 const d = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
-const minGap = (ps: Point[], qs: Point[] = ps, same = qs === ps) => {
-  let m = Infinity;
-  ps.forEach((p, i) => qs.forEach((q, j) => { if (!(same && j <= i)) m = Math.min(m, d(p, q)); }));
-  return m;
-};
+/** Chebyshev distance: squares are axis-aligned, so this says whether they overlap. */
+const box = (a: Point, b: Point) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 
 describe.each(["long", "short"] as const)("%s board layout", (id) => {
-  const L = layoutFor(BOARDS[id]);
-  it("a place for Start, every square and END", () => {
-    expect(L.squares).toHaveLength(BOARDS[id].lastTile + 1);
-    expect(pointOf(L, BOARDS[id].endTile)).toBe(L.end);
-    expect(pointOf(L, OFF)).toBe(L.home);
+  const B = BOARDS[id], L = layoutFor(B), sq = L.squares.slice(1);
+  it("a place for every square, END, Home and Start (Home and Start share the big pad)", () => {
+    expect(L.squares).toHaveLength(B.lastTile + 1);
+    expect(pointOf(L, B.endTile)).toBe(L.end);
+    expect(pointOf(L, OFF)).toEqual(pointOf(L, 0));
   });
-  it("squares never overlap (centres at least 0.88 apart, tiles 0.84 wide)", () => {
-    expect(minGap([...L.squares, L.end])).toBeGreaterThanOrEqual(0.88);
+  it("squares never overlap (about one unit apart)", () => {
+    for (let i = 0; i < sq.length; i++) for (let j = i + 1; j < sq.length; j++) expect(box(sq[i], sq[j]), `${i + 1}/${j + 1}`).toBeGreaterThanOrEqual(0.89);
   });
-  it("neighbouring squares are close (one continuous path; the short board's rows are 1.6 apart)", () => {
-    const max = id === "long" ? 1.0001 : 1.6001;
-    for (let n = 1; n < L.squares.length; n++) expect(d(L.squares[n - 1], L.squares[n]), `square ${n}`).toBeLessThanOrEqual(max);
-    expect(d(L.squares.at(-1)!, L.end)).toBeLessThanOrEqual(max);
+  it("one continuous road: neighbours touch, or step through a wall opening into the next ring", () => {
+    for (let n = 2; n <= B.lastTile; n++) expect(d(L.squares[n - 1], L.squares[n]), `square ${n}`).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side
+    expect(d(L.squares[B.lastTile], L.end)).toBeLessThanOrEqual(1.45); // a ring gap, or a short inner side
   });
-  it("Shortcut stones sit in the corridors, clear of the Main Road", () => {
+  it("the long Start square at the top left (room for four tokens), then square 1, going right", () => {
+    expect(L.start.w).toBeGreaterThan(3.5);
+    expect(L.squares[1].y).toBe(0);
+    expect(L.squares[1].x).toBeGreaterThan(L.start.centre.x + L.start.w / 2 - 0.1);
+    expect(L.squares[2].x).toBeGreaterThan(L.squares[1].x);
+  });
+  it("no empty margin: the board is the labyrinth", () => expect(L.bounds).toEqual(L.maze));
+  it("the festival is inside the labyrinth", () => {
+    expect(L.end.x).toBeGreaterThan(1);
+    expect(L.end.y).toBeGreaterThan(1);
+  });
+  it("Shortcut stones sit in the walls, clear of every square", () => {
     for (const s of L.shortcuts) {
-      expect(s.stones).toHaveLength(BOARDS[id].rules.forks[s.fork].len);
-      expect(minGap(s.stones, L.squares, false)).toBeGreaterThanOrEqual(0.7);
-      expect(minGap(s.stones)).toBeGreaterThanOrEqual(0.5); // stones are drawn 0.46 wide
+      expect(s.stones).toHaveLength(B.rules.forks[s.fork].len);
+      for (const st of s.stones) for (const q of sq) expect(box(st, q)).toBeGreaterThanOrEqual(0.6);
       expect(pointOf(L, shortcutPos(s.fork, 1))).toBe(s.stones[0]);
     }
   });
-  it("ladders and snakes join their squares", () => {
+  it("cable cars go forward and rivers go back, joining their squares", () => {
     expect(L.drawings.length).toBeGreaterThan(0);
     for (const dr of L.drawings) {
+      expect(dr.kind).toBe(dr.to > dr.from ? "cable" : "river");
       expect(dr.path[0]).toEqual(L.squares[dr.from]);
       expect(dr.path.at(-1)).toEqual(L.squares[dr.to]);
     }
   });
 });
 
-describe("long board = the paper path", () => {
-  const L = layoutFor(BOARDS.long);
-  const dir = (a: number, b: number) => {
-    const p = L.squares[a], q = L.squares[b];
-    return Math.abs(q.x - p.x) > Math.abs(q.y - p.y) ? (q.x > p.x ? "right" : "left") : (q.y > p.y ? "down" : "up");
-  };
-  it.each([
-    [0, 19, "right"], [20, 36, "down"], [37, 55, "left"], [56, 70, "up"], [71, 88, "right"], [89, 101, "down"],
-    [102, 116, "left"], [117, 127, "up"], [128, 141, "right"], [142, 150, "down"], [151, 161, "left"], [162, 168, "up"],
-    [169, 178, "right"], [179, 183, "down"], [184, 190, "left"], [191, 193, "up"], [194, 198, "right"], [199, 200, "down"],
-    [201, 202, "left"],
-  ])("%i → %i goes %s", (a, b, want) => expect(dir(a, b)).toBe(want));
-  it("END is above 202", () => expect(L.end.y).toBeLessThan(L.squares[202].y));
-  it("the seven paper drawings: ladders 40, 80, 113, 188; snakes 138, 158, 202", () => {
-    expect(L.drawings.map((x) => `${x.kind} ${x.from}→${x.to}`)).toEqual([
-      "ladder 40→103", "ladder 80→135", "ladder 113→50", "ladder 188→157", "snake 138→195", "snake 158→48", "snake 202→165",
-    ]);
+describe("drawings: the paper's ladders and snakes", () => {
+  it("long board: the seven paper drawings", () => {
+    expect(layoutFor(BOARDS.long).drawings.map((x) => `${x.from}→${x.to}`)).toEqual(["40→103", "80→135", "113→50", "188→157", "138→195", "158→48", "202→165"]);
   });
-});
-
-describe("short board drawings come from the same paper events", () => {
-  it("balloon and cable car are ladders; the Snake Leader snakes", () => {
+  it("short board: the same paper events", () => {
     expect(layoutFor(BOARDS.short).drawings.map((x) => `${x.kind} ${x.from}→${x.to}`)).toEqual(
-      expect.arrayContaining(["ladder 20→51", "ladder 40→67", "snake 69→97", "snake 100→82"]));
-  });
-});
-
-describe("short board = a snakes-and-ladders grid", () => {
-  const L = layoutFor(BOARDS.short);
-  it("1 bottom left, 10 bottom right, 11 above 10, 100 top left, END above 100", () => {
-    const at = (n: number) => [L.squares[n].x, L.squares[n].y];
-    expect(at(1)[0]).toBe(0);
-    expect(at(10)[0]).toBe(9);
-    expect(at(11)[0]).toBe(9);
-    expect(at(11)[1]).toBeLessThan(at(10)[1]);
-    expect(at(100)[0]).toBe(0);
-    expect(L.end.y).toBeLessThan(at(100)[1]);
-    expect(Math.min(...L.squares.map((p) => p.y))).toBe(at(100)[1]);
+      expect.arrayContaining(["cable 20→51", "cable 40→67", "cable 69→97", "river 100→82"]));
   });
 });
