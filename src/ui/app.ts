@@ -25,6 +25,8 @@ export interface Setup {
 // `?fast` in the address fast-forwards whole games (for testing). "Reduce motion" only stops the animations.
 const fast = new URLSearchParams(location.search).has("fast");
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, fast ? Math.min(ms, 40) : ms));
+/** A computer player's badge on the avatar (owner, Step 7: a robot instead of "CPU"). */
+const robotSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6V3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.6" r="1.7" fill="currentColor"/><rect x="4.5" y="6" width="15" height="13" rx="4" fill="currentColor"/><rect x="2" y="10" width="2" height="5" rx="1" fill="currentColor"/><rect x="20" y="10" width="2" height="5" rx="1" fill="currentColor"/><circle cx="9.2" cy="11.6" r="1.9" fill="var(--ink)"/><circle cx="14.8" cy="11.6" r="1.9" fill="var(--ink)"/><rect x="9" y="15.2" width="6" height="1.7" rx=".85" fill="var(--ink)"/></svg>`;
 const lanternSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6M12 2v2M8 7h8l-1 11H9zM8 7c0-2 8-2 8 0M9.5 18h5v2.5h-5z" fill="#f2c230" stroke="#4b2377" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 const CARD_INFO = {
@@ -443,7 +445,7 @@ export class GameScreen {
     this.bar.innerHTML = P.map((p, i) => `<button class="avatar${i === cur ? " now" : ""}${p.out ? " gone" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${p.lanterns} lanterns${p.bonus ? `, ${p.bonus} Bonus card` : ""}. Tap for details">`
       + `${tokenSvg(i, "tok", true)}<span class="badge l">${lanternSvg}${p.out ? "✕" : p.lanterns}</span>`
       + (p.bonus || p.jailPass ? `<span class="badge c">${artFor(p.bonus ? "card" : "boots", "")}${p.bonus + p.jailPass}</span>` : "")
-      + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">CPU</span>` : "") + `</button>`).join("");
+      + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">${robotSvg}</span>` : "") + `</button>`).join("");
     const p: PlayerState = P[cur];
     // The cards: always both slots, so everyone knows what exists; the ones held glow and can be tapped.
     const slot = (k: keyof typeof CARD_INFO, n: number) => `<button class="gcard ${k}${n ? " held" : ""}" data-card="${k}" aria-label="${CARD_INFO[k].title}: ${n ? `you hold ${n}` : "not held"}. Tap to see what it does">`
