@@ -82,24 +82,24 @@ Each one is small enough to be one step. Nothing here changes the rules.
 | # | Proposal | Why | Effort |
 |---|---|---|---|
 | C1 ✅ built | Run the 100,000-game check (`npm run test:sim`, 1 minute) in the GitHub workflow, at least weekly | It was red for a whole day without anyone seeing it (fix 11) | Small |
-| C2 | Remove the dead code of the Shortcut and the stair steps from the screen (choosing a road, crossroads texts, stair drawing); keep it in the engine only as long as the old reports must be reproducible | About 150 lines no player can reach; every later change has to keep them right | Medium |
-| C3 | Add the real-browser game check used for this audit (whole games, board vs engine every turn) to the repository as `npm run test:browser` | It found no differences today; it would catch a screen that drifts from the rules in a later change | Medium |
+| C2 ✅ built | Remove the dead code of the Shortcut and the stair steps from the screen (choosing a road, crossroads texts, stair drawing); keep it in the engine only as long as the old reports must be reproducible | About 150 lines no player can reach; every later change has to keep them right | Medium |
+| C3 ✅ built | Add the real-browser game check used for this audit (whole games, board vs engine every turn) to the repository as `npm run test:browser` | It found no differences today; it would catch a screen that drifts from the rules in a later change | Medium |
 
 ### 3.2 Security
 
 | # | Proposal | Why | Effort |
 |---|---|---|---|
 | S1 ✅ built | Switch on the strict Content-Security-Policy tested in 2.3 (one line in `index.html`) | If a future change ever put outside text into the page, the browser would refuse to run it | Small, tested |
-| S2 | Pin the GitHub Actions to exact commits (and let Dependabot update them) | A tag can be moved by whoever controls that action; a commit cannot | Small |
-| S3 | Write player-visible text through one escaping helper | Today all text is our own, so nothing can go wrong. The day player names, custom boards or the Android app arrive, it matters | Small |
-| S4 | Make `?fast` (fast-forward, for testing) work only in the development build | Harmless today; a player who finds it just gets a fast game. Tidier without it | Small |
+| S2 ✅ built | Pin the GitHub Actions to exact commits (and let Dependabot update them) | A tag can be moved by whoever controls that action; a commit cannot | Small |
+| S3 ✅ built | Write player-visible text through one escaping helper | Today all text is our own, so nothing can go wrong. The day player names, custom boards or the Android app arrive, it matters | Small |
+| S4 ✅ built | Make `?fast` (fast-forward, for testing) work only in the development build | Harmless today; a player who finds it just gets a fast game. Tidier without it | Small |
 
 ### 3.3 Performance
 
 | # | Proposal | Why | Effort |
 |---|---|---|---|
 | P1 ✅ built | Draw the board's paper and walls once as a picture, with only tokens and markers live on top | Turning a cheap phone costs ~1 s of work today; this would make it near instant and lighten every board update | Medium |
-| P2 | Redraw the player row and the cards only when they change (today they are rebuilt many times per turn) | Small gain on cheap phones (~15–20 ms per update at 6× slower) | Small |
+| P2 ✅ built | Redraw the player row and the cards only when they change (today they are rebuilt many times per turn) | Small gain on cheap phones (~15–20 ms per update at 6× slower) | Small |
 
 ### 3.4 User experience
 
@@ -108,10 +108,10 @@ Each one is small enough to be one step. Nothing here changes the rules.
 | U1 ✅ built | **Continue a game after closing the app.** The game is fully decided by its seed and the choices made, so saving those two lets it be replayed to the same spot | A long game is ~50 rounds (30–60 min). Today a reload, a phone call or a closed tab loses it | Medium |
 | U2 ✅ built | A "Leave game" button (back to the start screen, with "Are you sure?") | Today the only way out of a game is to finish it or reload | Small |
 | U3 ✅ built | Pick the first player at random (a short "who starts" moment) | The first seat wins 25.4% on the short board (0.4 points above fair); random order spreads that, and it is a nice moment at the table | Small |
-| U4 | Move the "START: a 6 to enter" label so the waiting tokens do not cover it | Visible on every game start | Small |
-| U5 | Keyboard and screen reader: Escape closes a popup, the board's squares can be reached with Tab, the game screen gets a heading | The 2 moderate scan findings plus the keyboard gaps (2.4) | Small |
+| U4 ✅ built | Move the "START: a 6 to enter" label so the waiting tokens do not cover it | Visible on every game start | Small |
+| U5 ✅ built | Keyboard and screen reader: Escape closes a popup, the board's squares can be reached with Tab, the game screen gets a heading | The 2 moderate scan findings plus the keyboard gaps (2.4) | Small |
 | U6 ✅ reworded | Story texts "One more step down the porch" / "You lay another stone" still describe stair steps, which no longer exist. Keep as story, or reword? | The owner's narrative; not changed without approval | Owner's words |
-| U7 | Optional sound and vibration for the die, a 6, a bump and the win (off by default, one switch) | Phones at a family table; the 6 party is silent today | Medium |
+| U7 📋 list ready (docs/U7_sounds.md) | Optional sound and vibration for the die, a 6, a bump and the win (off by default, one switch) | Phones at a family table; the 6 party is silent today | Medium |
 
 ## 4. How the tests were run
 
@@ -175,3 +175,33 @@ What changed:
 Regression after the change: 181 / 181 tests; 4 more whole games in the production build (reload, Leave, people and
 computer players) checked turn by turn against the engine: 0 differences, 0 security-policy violations; tokens 0 px
 off their squares in portrait, landscape and zoomed in; offline start works.
+
+## 7. The second round of approvals (owner, 15 Oct): C2, C3, S2–S4, P2, U4, U5, a first-time guide; U7 listed
+
+| # | Built | Tested |
+|---|---|---|
+| C2 | The Shortcut and stair-step code is gone from the screen (board drawing, stage, popups, tips, postcards; about 240 lines). The engine keeps the rules (the simulator comparison and the old reports need them). A board with a Shortcut is refused with a clear message, never half drawn | `test/layout.test.ts` |
+| C3 | `npm run test:browser` (`tools/browser/`), also a job in the GitHub checks: whole games checked against the engine turn by turn (reload and Leave included), 15 screens × 19 sizes, the published build (security policy, offline with the site really gone, other apps' caches, tampered storage, guide, keyboard, accessibility, no fast-forward) | Full run: **19 of 19 checks pass**: 5 whole games, 560 turns compared with the engine, 0 differences; 285 screen / size combinations, no problem; every published-build check |
+| S2 | Every GitHub Action pinned to an exact commit (same versions as before); Dependabot proposes updates weekly as pull requests | `.github/` |
+| S3 | `src/render/html.ts` `esc()`: board text, region and landmark names, player names, postcard text and picture labels go through it; plain-text places (button labels, stamps) get the plain name | `test/html.test.ts` (markup in a board file is shown as text) |
+| S4 | `?fast` only in development and the test build | the browser test checks the published build has no fast-forward |
+| P2 | The players' bar, the turn line and the hand are drawn again only when they change | the browser games |
+| U4 | Tokens waiting on Start are smaller and in the lower half; "START: a 6 to enter" is centred above them | seen on screen |
+| U5 | Escape closes the popup on top (and the album, and the guide); the board is one Tab stop, the arrow keys walk it, Enter or Space tells what a square does, with a yellow ring on the square; a page heading; the album is a dialog that takes the focus | browser test: keyboard; accessibility scan with no serious or critical problem on the guide, start screen, album and game screen |
+| Guide | "How to play": 4 short pages (the race, a 6 to set off, good and bad squares, lanterns and the exact finish), shown once on a device before the start screen, Skip / Back / Next, arrow keys, Escape; and from "How to play" on the start screen. **Texts are a draft for the owner's approval** (`src/ui/guide.ts`) | browser test: first visit; all sizes |
+| U7 | Not built (as asked): the list of 17 sound effects, 3 music pieces and the vibration, with formats, licences and free sources, is in `docs/U7_sounds.md`. The sound websites are blocked by this session's network settings | – |
+
+Found and fixed while building:
+
+- **✕ on the win popup started a new game.** ✕ means "close", and the end of the game treated anything but "New game"
+  as "Play again". Now ✕ (and Escape) puts the results aside, with "Back to the results".
+- The new guide first used the class name `guide`, which the turn line already had: the turn line floated over every
+  popup and blocked the start popup's button. Caught by the browser test; the guide is now `howto`.
+- The accessibility scan found the Start square's spoken name ("Home and Start") did not include its visible words;
+  now "START: a 6 to enter (Home and Start)".
+- The test of "no fast-forward in the published build" first looked for `"fast"`, but the build writes `` `fast` ``;
+  it now accepts any quote (the build was right; the test would have missed a mistake).
+- The browser test's offline check failed only in the full run. Traced to the test, not the game: Vite's development
+  server switches the whole Node process to "development", so the test build made after it left out the offline
+  worker (which only production builds register). Builds in the tests are now always production builds, a check
+  confirms the worker is in the test build, and offline is tested by really stopping the site's server.

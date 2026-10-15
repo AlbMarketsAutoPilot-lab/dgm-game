@@ -1,6 +1,6 @@
-// The narrative (owner, 15 Oct): every event square and Shortcut stone tells a tale, and says what it does.
+// The narrative (owner, 15 Oct): every event square tells a tale, and says what it does.
 import { describe, expect, it } from "vitest";
-import { BOARDS, shortcutPos } from "../src/engine";
+import { BOARDS } from "../src/engine";
 import { SQUARE_TALES, outcome, taleOf } from "../src/ui/tales";
 
 describe.each(["long", "short"] as const)("%s board tales", (id) => {
@@ -12,11 +12,6 @@ describe.each(["long", "short"] as const)("%s board tales", (id) => {
       if (!t.requires) expect(SQUARE_TALES[t.icon!], `square ${k} (${t.icon})`).toBeDefined();
       expect(outcome(B, t).length).toBeGreaterThan(5);
     }
-  });
-  it("every Shortcut stone with an event has a tale", () => {
-    B.rules.forks.forEach((f, k) => {
-      for (const i of Object.keys(f.tiles)) expect(taleOf(B, shortcutPos(k, Number(i)))?.tale.title).not.toBe("The Shortcut");
-    });
   });
 });
 

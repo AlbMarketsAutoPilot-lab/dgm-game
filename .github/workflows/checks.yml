@@ -1,6 +1,6 @@
 # C1 (owner approved, 15 Oct): every push and pull request runs all the checks, including the slow 100,000-game one
 # (`npm run test:sim`, about a minute) that once stayed red for a day unseen. Also weekly, so a red check shows up even
-# when nothing is pushed.
+# when nothing is pushed. Actions pinned to exact commits (S2).
 name: Checks
 
 on:
@@ -17,8 +17,8 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -27,3 +27,17 @@ jobs:
       - run: npm test
       - run: npm run test:sim
       - run: npm run build
+
+  # C3: the game in a real browser (whole games checked against the engine, every screen size, the published build)
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser

@@ -64,6 +64,14 @@ export class Popups {
       screen.style.setProperty("--ctl", `${controls.offsetHeight}px`);
       this.refit();
     }).observe(screen);
+    // U5: Escape closes the popup on top (a choice or the results are put aside, as with ✕). Ends with the screen.
+    const onKey = (e: KeyboardEvent) => {
+      if (!screen.isConnected) return document.removeEventListener("keydown", onKey);
+      if (e.key !== "Escape" || document.querySelector(".album, .howto")) return;
+      const top = this.infos.at(-1) ?? (this.base && !this.base.el.hidden ? this.base : null);
+      if (top) { e.preventDefault(); this.answer(top, "close"); }
+    };
+    document.addEventListener("keydown", onKey);
     this.back = document.createElement("button");
     this.back.className = "pop-back primary";
     this.back.textContent = "Back to your choice";
@@ -146,8 +154,9 @@ export class Popups {
       if (top) { top.el.hidden = false; this.fit(top.el); }
       return;
     }
-    if (o.c.kind === "choice" && v === "close") { // put aside, not answered
+    if ((o.c.kind === "choice" || o.c.kind === "win") && v === "close") { // put aside, not answered (the win: not "Play again"!)
       o.el.hidden = true;
+      this.back.textContent = o.c.kind === "win" ? "Back to the results" : "Back to your choice";
       this.back.hidden = false;
       this.back.focus({ preventScroll: true });
       return;
@@ -164,7 +173,7 @@ export class Popups {
     el.setAttribute("aria-live", "polite");
     el.setAttribute("aria-label", c.title);
     el.innerHTML = `
-      <button class="pop-x" aria-label="${c.kind === "choice" ? "Look at the board first" : "Close"}">✕</button>
+      <button class="pop-x" aria-label="${c.kind === "choice" || c.kind === "win" ? "Look at the board first" : "Close"}">✕</button>
       ${c.art ? `<div class="pop-art">${c.art}</div>` : ""}
       <div class="pop-head">
         ${c.kicker ? `<p class="pop-kicker">${c.kicker}</p>` : ""}

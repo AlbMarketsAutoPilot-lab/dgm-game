@@ -4,8 +4,8 @@ Two areas plus the players:
 
 - **Whole board = the info area** (`overview.ts`): a labyrinth spiral of plain paper squares filling the whole panel
   (layout in `src/render/layout.ts`), thin ink walls between the rings, no numbers, no colours, no lines, no legend.
-  Good squares have a green frame and ▲, bad squares a red frame and ▼. The Shortcuts run inside wider walls as small
-  stones. Start is four squares long at the top left (everyone waits there); the festival (gold, a star) is in the
+  Good squares have a green frame and ▲, bad squares a red frame and ▼. (No Shortcut and no stair steps since the owner's
+  rules of 15 Oct; their screen code was removed, C2; a board with a Shortcut is refused.) Start is four squares long at the top left (everyone waits there); the festival (gold, a star) is in the
   middle. **Tap any square** to see its tale, what it does and which throw gets the current player there; on the long
   board the first tap zooms in ("Whole board" zooms out). Small die faces 1–5 mark where one throw stops (a 6 always
   throws again; a doubled throw marks 2, 4 … 10 squares; none on the Puddle). The tokens are page elements laid over
@@ -21,7 +21,7 @@ Two areas plus the players:
   choice is explained in the popup; its buttons wait in the action area.
 - **Players** (`app.ts`): round avatars on top (portrait) or on the right (landscape), with lanterns and cards (a computer player wears a small robot badge); tap one
   for everything about that player (place, squares to go, cards, waiting, a tip for the next throw).
-- **Narrative** (`tales.ts`): a tale per event square, Shortcut stone and rule moment, for young adults first. What a
+- **Narrative** (`tales.ts`): a tale per event square and rule moment, for young adults first. What a
   square does is always derived from the engine's tile (`outcome()`), never written by hand.
 - **Turn** (`app.ts`): Roll (or tap the die) → the move → what happens. A person throws every die themselves: after a
   6 a popup ("A 6! Roll again!") and a "Roll again" button; "Throw 1 of 3" on the sledge square. The die is passed ("Pass the die to Red ▶") only from one person to another; computer players
@@ -49,6 +49,11 @@ Two areas plus the players:
   try / catch; blocked storage = no album, same game). "New postcard!" stamp when one is earned; the win popup names
   the new ones; the album opens from the start screen ("Postcards · 5 / 16") and the win popup.
 
+**How to play** (`guide.ts`, owner 15 Oct): four short pages, once per device before the start screen, and from "How
+to play" on the start screen (texts: draft for the owner's approval). **Keyboard** (U5): Escape closes the popup on
+top, the album and the guide; the whole board is one Tab stop, the arrow keys walk the road, Enter / Space tells what a
+square does. All text from data is escaped once, in `src/render/html.ts` (S3).
+
 **Every screen size** (owner, 15 Oct): all sizes in `app.css` are rem, and the root size grows on big screens (PC).
 A popup that does not fit over the board moves over everything above the controls (or the whole screen, when it has
 its own buttons), then gets compact with only its words scrolling; its buttons are never cut (`popup.ts`, `fit`). The
@@ -58,7 +63,7 @@ its own width (container query). Checked at 19 sizes from 280 × 653 to 2560 × 
 
 Every rule comes from the engine (`src/engine`); this folder only shows its events and answers its decisions.
 Accessibility: tokens differ by colour and shape, good/bad by colour and ▲/▼, big buttons, no timers for people,
-"reduce motion" stops the animations (reading pauses stay). `?fast` in the address fast-forwards games (testing).
+"reduce motion" stops the animations (reading pauses stay). `?fast` in the address fast-forwards games (testing; development and the browser-test build only, S4).
 
 **Offline and install (Step 7):** `public/manifest.webmanifest` (name, colours, icons in `public/icons/`, drawn from the
 four tokens) and `public/sw.js` (only in the built game: pages network-first, everything else cache-first; the page

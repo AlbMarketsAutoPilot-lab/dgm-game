@@ -42,8 +42,6 @@ const PAPER_COLOURS: Record<number, string> = {
   183: CRAYON.brown, 188: CRAYON.blue, 193: CRAYON.orange, 198: CRAYON.purple, 202: CRAYON.darkBlue,
 };
 
-/** Shortcut squares (not on paper): the jackpot in green, the fall in the Bog's grey-brown. */
-export const SHORTCUT_COLOURS = { R: CRAYON.green, P: CRAYON.greyBrown } as const;
 
 /** Light washes behind the plain squares of each region (GCD §9.2), in the order of the journey. */
 export const REGION_WASH = [

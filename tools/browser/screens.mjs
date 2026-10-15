@@ -1,0 +1,122 @@
+// Every screen and popup at every screen size, from a folded phone to a 2560 × 1440 PC screen (owner, 15 Oct: "buttons
+// cut, you need to scroll"). Checked: buttons off screen or cut, popups or the page needing to scroll, buttons
+// overlapping, words squeezed, anything spilling out of the turn panel, and buttons under 40 px.
+import { newPage } from "./common.mjs";
+
+export const SIZES = [
+  [280, 653, "fold"], [320, 568, "se1"], [360, 640, "android-s"], [375, 667, "iphone8"], [390, 844, "iphone14"], [412, 915, "pixel"], [430, 932, "promax"],
+  [568, 320, "se1-land"], [667, 375, "iphone8-land"], [844, 390, "iphone14-land"], [915, 412, "pixel-land"],
+  [768, 1024, "ipad"], [1024, 768, "ipad-land"], [820, 1180, "ipad-air"], [1280, 720, "pc-720"], [1366, 768, "laptop"], [1440, 900, "mac"],
+  [1920, 1080, "pc-1080"], [2560, 1440, "pc-1440"],
+];
+
+// In the page: every problem on the screen as it is now.
+const CHECK = () => {
+  const bad = [], vw = innerWidth, vh = innerHeight;
+  const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden"; };
+  const cover = document.querySelector(".album, .howto"); // a full-screen page over everything: only its own buttons count
+  for (const b of document.querySelectorAll("button")) {
+    if (!visible(b) || b.closest("[hidden]") || (cover && !cover.contains(b))) continue;
+    const r = b.getBoundingClientRect(), name = (b.getAttribute("aria-label") || b.textContent || "").trim().slice(0, 30);
+    if (r.top < -1 || r.left < -1 || r.bottom > vh + 1 || r.right > vw + 1) { bad.push(`off screen: "${name}"`); continue; }
+    for (let a = b.parentElement; a && a !== document.body; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      if (/(auto|scroll|hidden|clip)/.test(cs.overflow + cs.overflowX + cs.overflowY)) {
+        const q = a.getBoundingClientRect();
+        if (r.top < q.top - 1 || r.bottom > q.bottom + 1 || r.left < q.left - 1 || r.right > q.right + 1) { bad.push(`cut: "${name}" by .${[...a.classList].join(".")}`); break; }
+      }
+    }
+  }
+  // buttons overlapping each other in the same area, and button text squeezed (cut with … or spilling out)
+  const shown = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.closest("[hidden]") && (!cover || cover.contains(b)));
+  const area = (b) => b.closest(".players, .setup, .controls, .pop-buttons, .hud, .album-top, .pop");
+  for (let i = 0; i < shown.length; i++) for (let j = i + 1; j < shown.length; j++) {
+    const a = shown[i], c = shown[j];
+    if (a.contains(c) || c.contains(a) || area(a) !== area(c) || !area(a)) continue;
+    const r = a.getBoundingClientRect(), q = c.getBoundingClientRect();
+    const ix = Math.min(r.right, q.right) - Math.max(r.left, q.left), iy = Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top);
+    if (ix > 3 && iy > 3) bad.push(`overlap: "${(a.getAttribute("aria-label") || a.textContent).trim().slice(0, 20)}" / "${(c.getAttribute("aria-label") || c.textContent).trim().slice(0, 20)}"`);
+  }
+  for (const b of shown) for (const t of [b, ...b.querySelectorAll("span, b, small")]) {
+    if (t.closest(".badge, .need, .gc-n, .cpu")) continue;
+    if (t.scrollWidth > t.clientWidth + 1 && getComputedStyle(t).overflow !== "visible") { bad.push(`squeezed text: "${t.textContent.trim().slice(0, 24)}"`); break; }
+  }
+  // text or pictures spilling out of the turn panel or the players' bar (not counting popups, which float over them)
+  for (const panel of document.querySelectorAll(".stage-panel, .players")) {
+    const q = panel.getBoundingClientRect();
+    for (const el of panel.querySelectorAll(".hud *, .controls *, .avs, .leave")) {
+      if (el.closest(".pop-layer, .fx, .badge, .need, .cpu, .gc-n")) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height && (r.top < q.top - 2 || r.bottom > q.bottom + 2 || r.left < q.left - 2 || r.right > q.right + 2)) { bad.push(`spills out of .${panel.className.split(" ")[0]}: ${el.tagName.toLowerCase()}.${[...el.classList].join(".")} "${(el.textContent || "").trim().slice(0, 20)}"`); break; }
+    }
+  }
+  for (const p of document.querySelectorAll(".pop:not([hidden])")) if (p.scrollHeight > p.clientHeight + 2) bad.push(`popup scrolls: "${p.querySelector(".pop-title")?.textContent}" (${p.scrollHeight} > ${p.clientHeight})`);
+  const se = document.scrollingElement; if (!cover && se.scrollHeight > vh + 1 || se.scrollWidth > vw + 1) bad.push(`page scrolls ${se.scrollWidth}x${se.scrollHeight}`);
+  const smallest = Math.min(...[...document.querySelectorAll("button")].filter((b) => visible(b) && !b.closest("[hidden]")).map((b) => { const r = b.getBoundingClientRect(); return Math.min(r.width, r.height); }));
+  return { bad, smallest: Math.round(smallest) };
+};
+// Opens a game screen, stops its own play loop, and shows one kind of popup in it (private parts of the game screen
+// are reached on purpose: this is a test).
+const SETUP_GAME = async (kind) => {
+  const { GameScreen } = await import("/src/ui/app.ts");
+  const { BOARDS } = await import("/src/engine/index.ts");
+  const { SQUARE_TALES } = await import("/src/ui/tales.ts");
+  const root = document.querySelector("#app") ?? document.body.appendChild(Object.assign(document.createElement("main"), { id: "app" }));
+  const s = new GameScreen(root, { board: BOARDS.long, players: 4, computer: [false, false, false, false] }, () => {});
+  s.gone = true; // the play loop stops at its next pause; the screen stays
+  await new Promise((r) => setTimeout(r, 50));
+  s.pops.clear();
+  const p = s.game.players[0];
+  Object.assign(p, { pos: 120, bonus: 2, jailPass: 1, snakeLeader: true, skip: 2, double: true, lanterns: 0 });
+  s.places[0] = { pos: 120, stair: 0 };
+  s.render();
+  const B = BOARDS.long, longest = Object.entries(B.tiles).sort(([, a], [, b]) => (SQUARE_TALES[b.icon]?.text.length ?? 0) - (SQUARE_TALES[a.icon]?.text.length ?? 0))[0];
+  const tile = longest[1], sq = Number(longest[0]);
+  const act = (n) => s.setAct([{ label: "Use the card: dodge it!", value: "a", primary: true }, { label: "Keep the card", value: "b" }, { label: "Don't ask me again this game", value: "c" }].slice(0, n));
+  switch (kind) {
+    case "turn": Object.assign(p, { pos: -1, skip: 0, double: false }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Pass the die to Yellow ▶", value: "roll" }]); s.dice.ready(true); break;
+    case "intro": s.pops.show({ kind: "info", art: "", kicker: "Red starts", title: "You need a 6 to enter", text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> A 6 always gives you one more throw, and the throws add up. No 6 in three throws: you set off anyway, but a lantern goes out.", outcome: "First to the Festival of Lights wins. You need the exact number to get in.", buttons: [{ label: "Let's go!", value: "ok", primary: true }] }); break;
+    case "story": s.story(0, { ...SQUARE_TALES[tile.icon] }, "Back to square 2. Then miss 3 turns.", "bad"); s.setAct([{ label: "Pass the die to Red ▶", value: "ok" }]); break;
+    case "defend": s.choose({ kind: "bonusDefend", player: 0, square: sq, tile }); break;
+    case "spoil": s.choose({ kind: "bonusAttack", player: 1, target: 0, square: sq, tile: { ...tile, cat: "R" } }); break;
+    case "player": s.playerInfo(0); break;
+    case "card": s.cardInfo("bonus"); break;
+    case "square": s.squareInfo(sq); break;
+    case "leave": s.gone = false; void s.leave(); break;
+    case "win": s.pops.show({ kind: "win", tone: "good", art: "", kicker: "The end of the journey", title: "Yellow made it!", text: "Thousands of lanterns rise over the square as Yellow walks into the Festival of Lights. Music, food stalls, and a very well-earned sit-down.", more: `<p class="pop-sub">New postcards: <b>Home Town, Countryside, Forest, River &amp; Lake, The Bog, Three Sixes</b></p>`, buttons: [{ label: "Play again: same players", value: "again", primary: true }, { label: "New game: change players or board", value: "new" }, { label: "Postcard album", value: "album" }] }); break;
+    case "welcome": s.pops.show({ kind: "info", art: "", kicker: "Saved game", title: "Welcome back!", text: "The journey goes on where you left it: round 23, <b>Yellow</b> plays next.", buttons: [{ label: "Let's go on!", value: "ok", primary: true }] }); break;
+  }
+  if (kind === "defend") act(2); if (kind === "spoil") act(3);
+};
+export const SCREENS = ["setup", "album", "guide", "guide-last", "turn", "intro", "story", "defend", "spoil", "player", "card", "square", "leave", "win", "welcome"];
+
+/** Checks every screen at every size; returns the problems found. */
+export async function checkScreens(browser, url, sizes = SIZES) {
+  const problems = [];
+  let combos = 0;
+  for (const [w, h, name] of sizes) {
+    const { ctx, page, errors } = await newPage(browser, { viewport: { width: w, height: h } });
+    for (const scr of SCREENS) {
+      if (scr === "setup" || scr === "album" || scr.startsWith("guide")) {
+        await page.goto(url + "/");
+        await page.evaluate(() => localStorage.setItem("dgm.game.v1", "{}")); // the Continue button's room is kept
+        await page.waitForSelector(".go");
+        await page.click('[data-players="4"]');
+        if (scr === "album") { await page.click(".album-open"); await page.waitForSelector(".album"); }
+        if (scr.startsWith("guide")) { await page.click(".how-open"); await page.waitForSelector(".howto"); if (scr === "guide-last") for (let i = 0; i < 3; i++) await page.click(".g-next"); }
+      } else {
+        await page.goto(url + "/gallery.html");
+        await page.evaluate(async () => { document.body.innerHTML = ""; await import("/node_modules/@fontsource/patrick-hand/index.css"); await import("/src/ui/app.css"); await document.fonts.load('20px "Patrick Hand"'); });
+        await page.evaluate(SETUP_GAME, scr);
+      }
+      await page.waitForTimeout(250);
+      const r = await page.evaluate(CHECK);
+      if (r.smallest < 40) r.bad.push(`a button only ${r.smallest}px`);
+      combos++;
+      for (const b of r.bad) problems.push(`${name} ${w}×${h} ${scr}: ${b}`);
+    }
+    for (const e of errors) problems.push(`${name}: error ${e}`);
+    await ctx.close();
+  }
+  return { problems, combos };
+}

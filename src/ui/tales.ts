@@ -1,9 +1,10 @@
 // The journey's narrative (owner, 15 Oct: "make it real narrative", for young adults first and kids too).
-// One short tale per event square (keyed by its picture, so the short board reuses the long board's tales), per
-// Shortcut square, and per rule moment. The board files keep their approved one-liners; the game tells these.
+// One short tale per event square (keyed by its picture, so the short board reuses the long board's tales), and per
+// rule moment. The board files keep their approved one-liners; the game tells these.
 // What the square DOES is never written here: `outcome()` derives it from the engine's tile, so it always matches
 // the rules.
-import { isShortcut, shortcutOf, type Board, type Pos, type Tile } from "../engine";
+import type { Board, Pos, Tile } from "../engine";
+import { esc } from "../render/html";
 
 export interface Tale {
   title: string;
@@ -56,14 +57,6 @@ export const SQUARE_TALES: Record<string, Tale> = {
 /** The last square of each board: only the Snake Leader's ride back. */
 export const SNAKE_BACK: Tale = { title: "The Sea Snake Returns", text: "The festival is right there when the sea snake surfaces beside you. It gave you a ride once. A deal is a deal." };
 
-/** Shortcut squares, by picture name. */
-export const SHORTCUT_TALES: Record<string, Tale> = {
-  "rope-swing": { title: "The Rope Swing", text: "An old rope swing hangs over the river. You take a run-up, let go at exactly the right moment and land on the far bank. People on the Main Road will hear about this for years." },
-  compass: { title: "The Compass Lied", text: "North, said the compass. The compass was a souvenir. Three fields and one fence later, the ground goes soft under your feet." },
-  "park-bench": { title: "Through the Park", text: "Through the gate, past the fountain, round the bandstand, and out the other side. Wait, it actually worked!" },
-  maze: { title: "Lost in the Alleys", text: "Left, right, left, a dead end, a cat, another dead end. You follow the smell of mud out of the maze, which in hindsight was a mistake." },
-};
-
 /** Rule moments (R1–R21) and places. `{p}` = the player, `{o}` = another player, `{n}` = a number. */
 export const MOMENTS = {
   home: { title: "Home", text: "Bags packed, lights off, door locked (probably). The Festival of Lights is a long way off. A 6 gets you out of the door." },
@@ -86,9 +79,6 @@ export const MOMENTS = {
   boots: { title: "Bog Boots!", text: "The Bog tries its usual trick, and gets a mouthful of yellow rubber. Your Bog boots carry you straight through." },
   capture: { title: "Bump!", text: "{p} lands right where {o} was standing. Apologies are made, luggage is picked up, and {o} goes back to Start." },
   swap: { title: "Swap!", text: "{p} and {o} trade places. One of you will be telling this story for weeks." },
-  crossroads: { title: "Crossroads", text: "The road splits. The Main Road is long and safe. The Shortcut is quicker and wilder: one stone flies you far ahead, one drops you into the Bog." },
-  mainRoad: { title: "The Main Road", text: "Boring, reliable, paved. Exactly what it says on the sign." },
-  shortcut: { title: "The Shortcut!", text: "You leave the road and step onto the stones. Good luck." },
   overshoot: { title: "Too Far!", text: "The festival is right there, but you'd walk straight past it. You need exactly {n}." },
   wait: { title: "Waiting", text: "{p} sits this turn out." },
   doubled: { title: "Ice Cream Break", text: "While {p} enjoys the ice cream, every other traveller's next throw counts double." },
@@ -97,8 +87,9 @@ export const MOMENTS = {
   bonusAttack: { title: "Spoiled!", text: "{p} plays the Bonus card on {o}. That luck is cancelled." },
 } satisfies Record<string, Tale>;
 
+/** A moment's text with its names and numbers filled in (as text: escaped, S3). */
 export const fill = (s: string, v: { p?: string; o?: string; n?: number | string }) =>
-  s.replace(/\{p\}/g, v.p ?? "").replace(/\{o\}/g, v.o ?? "").replace(/\{n\}/g, String(v.n ?? ""));
+  s.replace(/\{p\}/g, esc(v.p)).replace(/\{o\}/g, esc(v.o)).replace(/\{n\}/g, esc(v.n));
 
 /** What a square does, in plain words, from the engine's tile. */
 export function outcome(board: Board, t: Tile): string {
@@ -127,17 +118,11 @@ export function outcome(board: Board, t: Tile): string {
   }
 }
 
-/** The tale of a square (event squares and Shortcut stones). */
+/** The tale of an event square. */
 export function taleOf(board: Board, pos: Pos): { tale: Tale; tile: Tile; icon: string } | null {
-  if (isShortcut(pos)) {
-    const { fork, index } = shortcutOf(pos), t = board.rules.forks[fork].tiles[index];
-    if (!t) return null;
-    const icon = (board.story as { roads?: { forks?: { tiles?: Record<string, { icon?: string }> }[] } }).roads?.forks?.[fork]?.tiles?.[String(index)]?.icon ?? "signpost";
-    return { tale: SHORTCUT_TALES[icon] ?? { title: "The Shortcut", text: t.text }, tile: t, icon };
-  }
   const t = board.tiles[pos];
   if (!t) return null;
   const icon = t.icon ?? "card";
-  const tale = t.requires === "snakeLeader" ? SNAKE_BACK : SQUARE_TALES[icon] ?? { title: "On the Road", text: t.story ?? t.text };
+  const tale = t.requires === "snakeLeader" ? SNAKE_BACK : SQUARE_TALES[icon] ?? { title: "On the Road", text: esc(t.story ?? t.text) }; // board text: escaped (S3)
   return { tale, tile: t, icon };
 }
