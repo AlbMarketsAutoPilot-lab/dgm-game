@@ -6,6 +6,7 @@ import { artCss, artFor } from "../render/art";
 import { cardFace } from "../render/art-modern";
 import { PUNISH, REGION_WASH, REWARD, SHORTCUT_COLOURS, crayonFor, regionOf } from "../render/palette";
 import { tokenSvg } from "./players";
+import { regionIcon } from "./postcards";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -62,7 +63,8 @@ export function describe(board: Board, pos: Pos, stair = 0): { html: string; cls
   if (lm) return { cls: "plain lm", style: wash, caption: lm.name, html: `<span class="cnum">${pos}</span><div class="cart soft">${artFor(lm.icon, esc(lm.name))}</div><span class="cname">${esc(lm.name)}</span>` };
   const fork = board.rules.forks.findIndex((f) => f.at === pos);
   if (fork >= 0) return { cls: "plain lm", style: wash, caption: "Crossroads", html: `<span class="cnum">${pos}</span><div class="cart soft">${artFor("signpost", "Crossroads")}</div><span class="cname">Crossroads</span>` };
-  return { cls: "plain", style: wash, caption: region, html: `<span class="cnum">${pos}</span><span class="cname">${esc(region)}</span>` };
+  // A plain square shows where you are with the region's picture (owner: no repeated region names on every square).
+  return { cls: "plain rg", style: wash, caption: region, html: `<span class="cnum">${pos}</span><div class="cart soft">${artFor(regionIcon(region), esc(region))}</div>` };
 }
 
 let artStyled = false;
@@ -144,6 +146,21 @@ export class Stage {
       setTimeout(() => el.remove(), 1600);
     }, start - now);
     return word;
+  }
+
+  /** A signboard when a token reaches a new region of the journey: "Now entering · Countryside". */
+  sign(name: string): void {
+    const now = performance.now(), start = Math.max(now, this.stampFree);
+    this.stampFree = start + 2200;
+    setTimeout(() => {
+      const el = document.createElement("div");
+      el.className = "region-sign";
+      el.innerHTML = `<div class="rs-board"><div class="rs-pic">${artFor(regionIcon(name), "")}</div><div><small>Now entering</small><b>${esc(name)}</b></div></div><div class="rs-post"></div>`;
+      this.fx.append(el);
+      el.animate(reduced() ? [{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }] : [{ transform: "translate(-50%, -140%)", opacity: 0 }, { transform: "translate(-50%, 0)", opacity: 1, offset: 0.15 },
+        { transform: "translate(-50%, 0)", opacity: 1, offset: 0.85 }, { transform: "translate(-50%, 0)", opacity: 0 }], { duration: 2200, easing: "ease-out", fill: "forwards" });
+      setTimeout(() => el.remove(), 2300);
+    }, start - now);
   }
 
   /** The Bonus card flies onto the square and flips away. */
@@ -247,7 +264,7 @@ export class Stage {
   private resize(): void {
     const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
     // The token stands half over the card's bottom edge: at most .74 of the height keeps it whole.
-    this.wrap.style.setProperty("--card", `${Math.max(110, Math.min(w * 0.7, h * 0.74))}px`);
+    this.wrap.style.setProperty("--card", `${Math.max(64, Math.min(w * 0.7, h * 0.74))}px`);
     this.moveTo(this.index, 0);
   }
 }

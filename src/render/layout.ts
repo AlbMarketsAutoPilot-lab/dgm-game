@@ -63,14 +63,19 @@ export interface BoardLayout {
 }
 
 /** Walls between rings: thin, and wider where a Shortcut runs inside them. */
-export const WALL_THIN = 0.14;
+export const WALL_THIN = 0.38; // owner, 15 Oct: a clear purple wall between the rings, as on the first boards
 export const WALL_WIDE = 0.44;
 /** How long the Start square is (it holds up to four tokens side by side). */
 export const START_LEN = 4;
 
-const DESIGNS: Record<string, { w: number; h: number }> = {
-  long: { w: 16.5, h: 15 },
-  short: { w: 11.5, h: 10 },
+/**
+ * Board sizes (w × h units) where the spiral, with a clear wall between the rings, leaves a well-shaped plaza in
+ * the middle for the Festival of Lights and no other empty space (owner, 15 Oct). The board view takes the one that
+ * gives the biggest squares in its panel. The first is the default.
+ */
+const DESIGNS: Record<string, [number, number][]> = {
+  long: [[16.25, 15.75]],
+  short: [[12.25, 11], [11.25, 12]],
 };
 
 /** The paper drawings (archived transcription §6.1, §8.1): ladders and snakes, by their long-board squares. */
@@ -103,14 +108,29 @@ function spiral(w: number, h: number, count: number, gaps: number[]): { pts: Poi
   return { pts, along, ring };
 }
 
-const cache = new Map<Board, BoardLayout>();
+const cache = new Map<Board, Map<string, BoardLayout>>();
 
-export function layoutFor(board: Board): BoardLayout {
-  const hit = cache.get(board);
-  if (hit) return hit;
-  const design = DESIGNS[board.id];
-  if (!design) throw new Error(`no layout for board "${board.id}"`);
-  const { w, h } = design, last = board.lastTile;
+/** The board size that gives the biggest squares in a panel of panelW × panelH pixels (no panel: the default). */
+export function designFor(board: Board, panelW = 0, panelH = 0): [number, number] {
+  const list = DESIGNS[board.id];
+  if (!list) throw new Error(`no layout for board "${board.id}"`);
+  if (!(panelW > 0 && panelH > 0)) return list[0];
+  const side = ([w, h]: [number, number]) => Math.min(panelW / (w + 1 + 2 * WALL_THIN), panelH / (h + 1 + 2 * WALL_THIN));
+  return list.reduce((best, d) => (side(d) > side(best) + 0.01 ? d : best));
+}
+
+export function layoutFor(board: Board, panelW = 0, panelH = 0): BoardLayout {
+  const [w, h] = designFor(board, panelW, panelH), key = `${w}x${h}`;
+  let byBoard = cache.get(board);
+  if (!byBoard) cache.set(board, (byBoard = new Map()));
+  let layout = byBoard.get(key);
+  if (!layout) byBoard.set(key, (layout = layoutForDesign(board, w, h)));
+  return layout;
+}
+
+/** The layout on a board of w × h units (tests try other sizes). */
+export function layoutForDesign(board: Board, w: number, h: number): BoardLayout {
+  const last = board.lastTile;
   // The first START_LEN places are the Start square, then squares 1..last, then one more: END.
   // The walls beside a Shortcut are widened; that moves the inner rings, so repeat until it settles.
   let gaps: number[] = [], road = spiral(w, h, START_LEN + last + 1, gaps);
@@ -128,23 +148,52 @@ export function layoutFor(board: Board): BoardLayout {
   const s0 = road.pts[0], s1 = road.pts[START_LEN - 1];
   const start: Pad = { centre: lerp(s0, s1, 0.5), w: dist(s0, s1) + dist(s0, road.pts[1]), h: 1 };
   const squares = [start.centre, ...road.pts.slice(START_LEN, START_LEN + last)], along = [START_LEN, ...road.along.slice(START_LEN, START_LEN + last)];
-  const end = road.pts[START_LEN + last];
-  const endPad: Pad = { centre: end, w: 1, h: 1 };
-  const next = (n: number) => (n < last ? squares[n + 1] : end);
+  const roadEnd = road.pts[START_LEN + last];
+  const next = (n: number) => (n < last ? squares[n + 1] : roadEnd);
   const heading = squares.map((p, n) => {
     if (n === 0) return { x: 1, y: 0 };
     const q = next(n), d = dist(p, q) || 1;
     return { x: (q.x - p.x) / d, y: (q.y - p.y) / d };
   });
+  // The festival grows into whatever space the spiral leaves in the middle, so the board has no empty hole.
+  const boxes = squares.map((p, n) => {
+    if (n === 0) return { x0: p.x - start.w / 2, x1: p.x + start.w / 2, y0: p.y - 0.5, y1: p.y + 0.5 };
+    const horiz = Math.abs(heading[n].x) > Math.abs(heading[n].y), a = along[n], bw = horiz ? a : 1, bh = horiz ? 1 : a;
+    return { x0: p.x - bw / 2, x1: p.x + bw / 2, y0: p.y - bh / 2, y1: p.y + bh / 2 };
+  });
+  type Box = { x0: number; x1: number; y0: number; y1: number };
+  const g = WALL_THIN; // the festival keeps a wall's width from the squares around it
+  const clear = (q: Box) => q.x0 >= -0.5 && q.y0 >= -0.5 && q.x1 <= w + 0.5 && q.y1 <= h + 0.5
+    && boxes.every((b) => b.x1 + g <= q.x0 + 1e-6 || b.x0 - g >= q.x1 - 1e-6 || b.y1 + g <= q.y0 + 1e-6 || b.y0 - g >= q.y1 - 1e-6);
+  let pad: Box = { x0: roadEnd.x - 0.3, x1: roadEnd.x + 0.3, y0: roadEnd.y - 0.3, y1: roadEnd.y + 0.3 };
+  for (let grew = clear(pad); grew;) {
+    grew = false;
+    for (const [k, d] of [["x0", -0.05], ["x1", 0.05], ["y0", -0.05], ["y1", 0.05]] as const) {
+      const t = { ...pad, [k]: pad[k] + d };
+      if (clear(t)) { pad = t; grew = true; }
+    }
+  }
+  const end = { x: (pad.x0 + pad.x1) / 2, y: (pad.y0 + pad.y1) / 2 };
+  const endPad: Pad = { centre: end, w: pad.x1 - pad.x0, h: pad.y1 - pad.y0 };
   // inwards = the heading turned right (the road turns clockwise)
   const inward = (n: number) => ({ x: -heading[n].y, y: heading[n].x });
   // Each Shortcut runs in the wall beside its Main Road squares, on the inner or the outer side, whichever is clear.
   const shortcuts = board.rules.forks.map((f, k) => {
-    const lane = (side: 1 | -1) => Array.from({ length: f.len }, (_, j) => {
-      const n = f.at + 1 + j, a = inward(n - 1), b = inward(n), d = side * (WALL_WIDE / 2 + 0.5);
-      const off = Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < 0.01 ? a : { x: a.x + b.x, y: a.y + b.y }; // at a corner: the corner of the wall
-      return { x: squares[n].x + off.x * d, y: squares[n].y + off.y * d };
-    });
+    // The wall beside the Main Road squares it replaces; the stones are spread evenly along it, so they never
+    // bunch up at a corner, however few stones the Shortcut has.
+    const lane = (side: 1 | -1) => {
+      const wall = Array.from({ length: f.merge - f.at - 1 }, (_, j) => {
+        const n = f.at + 1 + j, a = inward(n - 1), b = inward(n), d = side * (WALL_WIDE / 2 + 0.5);
+        const off = Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < 0.01 ? a : { x: a.x + b.x, y: a.y + b.y }; // at a corner: the corner of the wall
+        return { x: squares[n].x + off.x * d, y: squares[n].y + off.y * d };
+      });
+      const seg = wall.slice(1).map((q, i) => dist(wall[i], q)), total = seg.reduce((x, y) => x + y, 0);
+      return Array.from({ length: f.len }, (_, j) => {
+        let t = f.len === 1 ? total / 2 : (total * j) / (f.len - 1), i = 0;
+        while (i < seg.length - 1 && t > seg[i]) { t -= seg[i]; i++; }
+        return seg.length ? lerp(wall[i], wall[i + 1], seg[i] ? Math.min(1, t / seg[i]) : 0) : wall[0];
+      });
+    };
     const clear = (st: Point[]) => Math.min(...st.flatMap((p) => squares.slice(1).map((q) => Math.max(Math.abs(p.x - q.x), Math.abs(p.y - q.y)))))
       - (st.some((p) => p.x < -0.5 || p.y < -0.5 || p.x > w + 0.5 || p.y > h + 0.5) ? 9 : 0);
     const inner = lane(1), outer = lane(-1), stones = clear(inner) >= clear(outer) ? inner : outer;
@@ -158,7 +207,6 @@ export function layoutFor(board: Board): BoardLayout {
     legend: { x: 0, y: 0, w: 0, h: 0 },
     bounds: { x: -0.5 - WALL_THIN, y: -0.5 - WALL_THIN, w: w + 1 + 2 * WALL_THIN, h: h + 1 + 2 * WALL_THIN },
   };
-  cache.set(board, layout);
   return layout;
 }
 

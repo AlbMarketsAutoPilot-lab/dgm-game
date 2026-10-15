@@ -62,20 +62,17 @@ play("Non-leader on 202 stays", { tiles: snake, dice: [2], setup: [{ pos: 200 }]
 
 // ---- Step I-6 options ----
 const both = (...r) => r.find((x) => x !== true) ?? true;
-// L1 waiting stairs (owner's example: trapped on 30, two failed throws, third throw 5 -> 31, 31/1, 31/2, 32, 33)
+// R17 as changed by the owner (15 Oct): no stair steps; a 6 only lets you in (also on the 3rd throw); the 3rd throw without a 6 moves you
 const ST = { stairs: true };
-play("L1 stairs: 2 failed throws, 3rd throw 5 -> 33 (slowed by 2)", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 33, "pos"));
-play("L1 stairs: 3rd throw 3 -> stands on stair step 31/2", { tiles: trapTiles, dice: [3, 2, 3], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => both(eq(P[0].pos, 31, "pos"), eq(P[0].onStair, true, "on stair"), eq(P[0].stairLeft, 0, "steps left")));
-play("L1 stairs: from stair 31/1, next throw 4 -> 1 step + 3 squares = 34", { tiles: trapTiles, dice: [3, 2, 2, 4], setup: [{ pos: 30, trapped: true }], turns: 4, players: 1, rules: ST }, (P) => eq(P[0].pos, 34, "pos"));
-play("L1 stairs: 3rd throw 1 -> lands on 31 itself, both steps still to climb", { tiles: trapTiles, dice: [3, 2, 1], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => both(eq(P[0].pos, 31, "pos"), eq(P[0].stairLeft, 2, "steps left"), eq(P[0].onStair, false, "on the real square")));
-play("L1 stairs: a 6 on throw 2 frees; the one step is still walked (6, 4 -> 31, 31/1, 32, 33)", { tiles: trapTiles, dice: [3, 6, 4], setup: [{ pos: 30, trapped: true }], turns: 2, players: 1, rules: ST }, (P) => eq(P[0].pos, 33, "pos"));
-play("L1 stairs: a 6 on throw 1 frees as today (6, 4 -> 34)", { tiles: trapTiles, dice: [6, 4], setup: [{ pos: 30, trapped: true }], turns: 1, players: 1, rules: ST }, (P) => eq(P[0].pos, 34, "pos"));
-play("L1 stairs at Start: 2 failed throws, 3rd throw 5 -> 1, 1/1, 1/2, 2, 3", { dice: [2, 3, 5], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 3, "pos"));
-play("L1 stairs: 3rd throw is a 6 -> moves like a normal 6 (6 + 3 = 9, 2 of them on the steps -> 37)", { tiles: trapTiles, dice: [3, 2, 6, 3], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 37, "pos"));
-play("L1 stairs: nobody is captured on a stair step", { dice: [1], setup: [{ pos: 30 }, { pos: 31, onStair: true, stairAt: 31, stairLeft: 1 }], turns: 1, rules: ST }, (P) => both(eq(P[1].pos, 31, "other pos"), eq(P[0].pos, 31, "mover")));
+play("R17: Bog, 2 failed throws, 3rd throw 5 -> 35", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 35, "pos"));
+play("R17: Bog, a 6 on throw 2 frees, then 4 -> 34", { tiles: trapTiles, dice: [3, 6, 4], setup: [{ pos: 30, trapped: true }], turns: 2, players: 1, rules: ST }, (P) => eq(P[0].pos, 34, "pos"));
+play("R17: Bog, a 6 on throw 1 frees (6, 4 -> 34)", { tiles: trapTiles, dice: [6, 4], setup: [{ pos: 30, trapped: true }], turns: 1, players: 1, rules: ST }, (P) => eq(P[0].pos, 34, "pos"));
+play("R17: Home, 2 failed throws, 3rd throw 5 -> 5", { dice: [2, 3, 5], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 5, "pos"));
+play("R17: Home, 2 failed throws, then 6, 2 -> 2 (owner's real test)", { dice: [5, 1, 6, 2], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 2, "pos"));
+play("R17: Bog, 2 failed throws, 3rd throw 6, then 3 -> 33", { tiles: trapTiles, dice: [3, 2, 6, 3], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1, rules: ST }, (P) => eq(P[0].pos, 33, "pos"));
 // Lifelines
 const LL = (n) => ({ stairs: true, lifelines: n });
-play("Lifelines: 3 throws without a 6 cost one, and the player still moves", { dice: [2, 3, 5], turns: 3, players: 1, rules: LL(3) }, (P) => both(eq(P[0].life, 2, "lifelines"), eq(P[0].pos, 3, "pos")));
+play("Lifelines: 3 throws without a 6 cost one, and the player still moves", { dice: [2, 3, 5], turns: 3, players: 1, rules: LL(3) }, (P) => both(eq(P[0].life, 2, "lifelines"), eq(P[0].pos, 5, "pos")));
 play("Lifelines: a 6 within 3 throws costs nothing", { dice: [2, 6, 4], turns: 2, players: 1, rules: LL(3) }, (P) => eq(P[0].life, 3, "lifelines"));
 play("Lifelines: losing the last one = out", { dice: [2, 3, 5], setup: [{}, { skip: 9 }, { skip: 9 }], turns: 9, players: 3, rules: LL(1) }, (P) => both(eq(P[0].out, true, "out"), eq(P[0].pos, -2, "off the board")));
 {
@@ -132,7 +129,7 @@ play("Final: three 6s in a row give a lifeline", { dice: [6, 6, 6], setup: [{ po
 play("Final: two 6s in a row give nothing", { dice: [6, 6, 2, 3], setup: [{ pos: 10 }], turns: 1, players: 1, rules: LF }, (P) => eq(P[0].life, 3, "lifelines"));
 play("Final: entering 6 + two 6s = three in a row -> lifeline", { dice: [6, 6, 6], turns: 1, players: 1, rules: LF }, (P) => eq(P[0].life, 4, "lifelines"));
 play("Final: a capture costs no lifeline", { dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1, rules: LF }, (P) => eq(P[1].life, 3, "lifelines"));
-play("Final: losing the 3rd lifeline -> 0 left, still playing", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, life: 1 }], turns: 3, players: 1, rules: LF }, (P) => both(eq(P[0].life, 0, "lifelines"), eq(P[0].out, false, "still in"), eq(P[0].pos, 33, "moved")));
+play("Final: losing the 3rd lifeline -> 0 left, still playing", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, life: 1 }], turns: 3, players: 1, rules: LF }, (P) => both(eq(P[0].life, 0, "lifelines"), eq(P[0].out, false, "still in"), eq(P[0].pos, 35, "moved")));
 play("Final: the 4th loss -> out", { tiles: trapTiles, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, life: 0 }, { skip: 9 }, { skip: 9 }], turns: 9, players: 3, rules: LF }, (P) => eq(P[0].out, true, "out"));
 // Owner idea B: +1 for a 6 that gets you out, -1 when sent back to Start
 const LB = { stairs: true, lifelines: 3, outAfterZero: true, lifeOnEscape6: true, lifeOnCapture: true, lifeOnBackToStart: true };

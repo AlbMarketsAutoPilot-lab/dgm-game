@@ -26,7 +26,7 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 
 /* ---- Layout: players on top + board + stage (portrait); board | stage | players (landscape) ---- */
 .game {
-  display: grid; height: 100%; grid-template-columns: minmax(0, 1fr);
+  display: grid; height: 100%; overflow: hidden; grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 44fr) minmax(0, 56fr); grid-template-areas: "players" "board" "stage";
 }
 @media (orientation: landscape) {
@@ -36,18 +36,19 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .overview-board { width: 100%; height: 100%; }
 .overview-board .pick { cursor: pointer; }
 .overview-board .sq:hover rect:first-child { fill: #fff8e6; }
-.ov-sub { font-size: 30px; fill: var(--ink); }
+.ov-sub { font-size: 40px; fill: var(--ink); }
+.ov-fest { font-size: 46px; fill: var(--ink); }
 .zoom-out { position: absolute; left: 8px; bottom: 8px; z-index: 0; font-size: 1.05rem; min-height: 44px; padding: 4px 12px; }
 .overview-board .flow { animation: flow 1.6s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -64; } }
 .ov-token { transition: transform 300ms ease-in-out, opacity 300ms; pointer-events: none; }
 .ov-token .halo { opacity: 0; }
-.ov-token.current .halo { opacity: 1; transform-box: fill-box; transform-origin: center; animation: ov-spin 6s linear infinite; }
-@keyframes ov-spin { to { transform: rotate(360deg); } }
+/* The ring does not spin: a spinning ring inside the board redraws the whole board every frame (audit: slow phones) */
+.ov-token.current .halo { opacity: 1; }
 
 /* Players: round avatars with their lanterns and cards (tap for details) */
 .players { grid-area: players; display: flex; justify-content: center; gap: 10px; padding: 6px 8px; background: var(--ink); }
-@media (orientation: landscape) { .players { flex-direction: column; justify-content: center; padding: 8px 6px; } }
+@media (orientation: landscape) { .players { flex-direction: column; justify-content: center; padding: 8px 16px 8px 12px; } }
 .avatar {
   position: relative; width: 58px; height: 58px; min-width: 0; padding: 4px; border-radius: 50%;
   background: var(--paper); border: 3px solid var(--paper); box-shadow: 0 3px 0 rgba(0, 0, 0, .35);
@@ -62,6 +63,7 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .avatar .badge svg { width: 16px; height: 16px; }
 .avatar .badge.l { right: -10px; bottom: -6px; }
 .avatar .badge.c { left: -10px; bottom: -6px; }
+.avatar .need { position: absolute; left: -14px; top: -8px; white-space: nowrap; font-size: .85rem; line-height: 1; padding: 2px 6px 3px; border-radius: 8px; background: #f2c230; color: var(--ink); border: 2px solid var(--ink); z-index: 1; }
 .avatar .cpu { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); line-height: 0; background: var(--ink); color: var(--paper); border-radius: 50%; padding: 3px; border: 1px solid var(--paper); }
 .avatar .cpu svg { width: 15px; height: 15px; display: block; }
 
@@ -128,6 +130,8 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .hud .who .tok { width: 40px; height: 40px; flex: 0 0 auto; }
 .hud .who b { display: block; font-weight: normal; font-size: 1.3rem; line-height: 1.05; }
 .hud .st { display: block; font-size: .95rem; }
+.hud .st.guide { font-size: 1.02rem; line-height: 1.15; color: var(--ink); }
+.hud .who > div { min-width: 0; }
 /* The hand: game cards (Bonus card, Bog boots, Snake Leader); held ones glow, all can be tapped */
 .hand { display: flex; gap: 8px; margin-left: auto; }
 /* The cards in hand: each card's own face (Bonus card, Bog boots, Snake Leader); grey until held, glowing when held */
@@ -150,6 +154,14 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
   box-shadow: 0 6px 0 rgba(43, 18, 72, .35); transform: translate(-50%, -50%) rotate(-8deg);
 }
 .stamp.good { background: var(--good); }
+/* The region sign: a wooden board on a post, at the top of the stage */
+.region-sign { position: absolute; left: 50%; top: 4px; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, 0); z-index: 3; }
+.rs-board { display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 8px; background: #b7864f; color: #fff8e6; border: 3px solid #5b3a1e; border-radius: 10px; box-shadow: 0 4px 0 rgba(43, 18, 72, .35); white-space: nowrap; }
+.rs-board small { display: block; font-size: .9rem; line-height: 1; opacity: .9; }
+.rs-board b { display: block; font-weight: normal; font-size: clamp(1.3rem, 6vmin, 1.9rem); line-height: 1.05; }
+.rs-pic { width: 46px; height: 46px; border-radius: 8px; background: var(--paper); padding: 2px; }
+.rs-pic .art { width: 100%; height: 100%; display: block; }
+.rs-post { width: 10px; height: 22px; background: #5b3a1e; border-radius: 0 0 3px 3px; }
 .stamp.bad { background: var(--bad); }
 .played-card { position: absolute; left: 50%; top: 45%; width: calc(var(--card) * .4); height: calc(var(--card) * .56); }
 .played-card .art { width: 100%; height: 100%; }
@@ -187,7 +199,11 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
   padding: 2px 7px 4px; border-radius: 9px; background: var(--paper); border: 2px solid var(--ink);
 }
 .card .cname { position: absolute; left: 0; right: 0; top: 44%; text-align: center; font-size: calc(var(--card) * .11); }
-.card.lm .cname, .card.home .cname { top: auto; bottom: 22%; }
+.card.lm .cname, .card.home .cname { top: auto; bottom: 7%; }
+/* A landmark: the picture above, its name below; they never overlap (owner) */
+.card.lm .cart.soft { inset: 16% 24% 30%; }
+/* A plain square: the region's picture (owner: no repeated region names) */
+.card.rg .cart.soft { inset: 22% 18% 12%; opacity: .5; }
 .card.home .cname { bottom: 14%; }
 .card .cname.big { inset: 0; display: grid; place-items: center; font-size: calc(var(--card) * .2); }
 .card.end .cname.big { inset: 3% 0 auto; display: block; font-size: calc(var(--card) * .12); }
@@ -240,7 +256,7 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .setup .pick.num { width: 72px; font-size: 1.6rem; }
 .setup .seats { display: grid; gap: 8px; margin: 14px auto 22px; max-width: 360px; }
 .setup .seat { display: flex; align-items: center; gap: 10px; text-align: left; }
-.setup .seat .mini { width: 34px; height: 34px; }
+.setup .seat .mini { width: 34px; height: 34px; flex: 0 0 auto; }
 .setup .seat span { flex: 1; }
 .setup .go { font-size: 1.6rem; padding: 10px 40px; }
 
@@ -291,3 +307,20 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .album-top { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; background: var(--paper); border-bottom: 2px dashed rgba(75, 35, 119, .3); }
 .album-top h2 { margin: 0; font-weight: normal; font-size: 1.8rem; } .album-top h2 span { font-size: 1.2rem; opacity: .8; }
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; max-width: 1000px; margin: 14px auto 0; }
+
+/* Start screen on short screens (small phones, phones held sideways): everything fits without scrolling (audit) */
+@media (max-height: 760px) {
+  .setup { padding: 8px 12px 12px; }
+  .setup h1 { font-size: 1.9rem; margin: 0; }
+  .setup .sub { margin: 0 0 4px; font-size: 1rem; }
+  .setup h2 { font-size: 1.15rem; margin: 6px 0 4px; }
+  .setup button { min-height: 44px; padding: 4px 12px; }
+  .setup .pick small { font-size: .8rem; }
+  .setup .seats { grid-template-columns: 1fr 1fr; max-width: 520px; gap: 6px; margin: 8px auto 10px; }
+  .setup .go { padding: 6px 32px; font-size: 1.4rem; }
+  .setup p { margin: 6px 0 0; }
+}
+@media (max-height: 400px) {
+  .setup h2 { display: none; }
+  .setup .row { margin-top: 6px; }
+}

@@ -319,22 +319,19 @@ export function simulate(board, rules, games, seed) {
           } else {
             const r = d6();
             if (off ? s.enterFaces.includes(r) : r === 6) {
-              const moved3 = p.tries >= 2;
               if (s.lifeOnEscape6 && r === 6 && p.life < s.lifeMax) { p.life++; p.gainEscape++; }
-              if (s.stairs) setStairs(p, off, p.tries); // each earlier failed throw left one stair step
               p.tries = 0;
               if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false;
               if (r !== 6) { /* entered without a 6: no extra throw, move next turn */ }
               else if (p.slow) { p.slow = false; moveBy(pi, 1); }
               else { // L1: on the 3rd throw (stairs) the 6 is a normal moving 6; otherwise the out-6 does not move (R6)
-                let n = (s.stairs && moved3 ? 6 : 0) + throwSequence(1); if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n);
+                let n = throwSequence(1); if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n); // owner 15 Oct: the 6 only enters, also on the 3rd throw
               }
             } else if (s.stairs && p.tries >= 2) { // L1: 3rd throw without a 6 -> move anyway, walking the 2 stair steps
               p.tries = 0;
               if (s.lifelines) { p.lostWait++; p.lastLoss = off ? "start" : "trap"; }
               if (!(s.lifelines && loseLife(pi))) {
-                setStairs(p, off, 2);
-                if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false;
+                if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false; // owner 15 Oct: no stair steps
                 let n = p.slow ? 1 : r; p.slow = false; if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n);
               }
             } else {

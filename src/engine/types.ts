@@ -56,11 +56,12 @@ export interface Fork {
 /** The rule fields of a board file. Only the frozen values are accepted (see `parseBoard`). */
 export interface BoardRules {
   entry: "six";
-  sixRule: "owner";
+  sixRule: "standard";
   maxSixes: number;
   capture: true;
   endRule: "exact";
   bonusPolicy: "defend";
+  /** R17 as changed by the owner (15 Oct): the 3rd throw without a 6 moves you anyway; there are no stair steps. */
   stairs: true;
   lifelines: number;
   lifeOnTriple: true;

@@ -14,7 +14,7 @@ const TILE_TYPES: readonly TileType[] = [
 /** The rule values the engine implements (GCD R1–R21). A board file with any other value is refused, not half-played. */
 const FROZEN = {
   entry: "six",
-  sixRule: "owner",
+  sixRule: "standard", // owner 15 Oct: every 6 gives one more throw, at most three 6s
   capture: true,
   endRule: "exact",
   bonusPolicy: "defend",
