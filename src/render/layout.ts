@@ -69,8 +69,9 @@ export const WALL_WIDE = 0.44;
 export const START_LEN = 4;
 
 const DESIGNS: Record<string, { w: number; h: number }> = {
-  long: { w: 16.5, h: 15 },
-  short: { w: 11.5, h: 10.5 }, // 10 left the Festival on top of square 100 (audit, 15 Oct)
+  // Without the Shortcuts (owner, 15 Oct) the walls are all thin: these sizes let the spiral fill the board.
+  long: { w: 15.5, h: 13.5 },
+  short: { w: 11.5, h: 9 },
 };
 
 /** The paper drawings (archived transcription §6.1, §8.1): ladders and snakes, by their long-board squares. */

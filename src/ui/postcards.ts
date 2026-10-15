@@ -34,7 +34,7 @@ const SPECIAL = {
   snakeLeader: { id: "snake-leader", icon: "snake-crown", title: "Snake Leader", line: "I rode a sea serpent. Ask me how.", how: "Become the Snake Leader" },
   keys: { id: "forgot-keys", icon: "two-keys", title: "Forgot Keys AGAIN!!!", line: "Same keys. Same café. Same look from the waiter.", how: "Land on Forgot your keys AGAIN" },
   bog: { id: "the-bog", icon: "boot-in-mud", title: "The Bog", line: "Greetings from the Bog. Send boots.", how: "Get stuck in the Bog" },
-  jackpot: { id: "shortcut-jackpot", icon: "rope-swing", title: "Shortcut Jackpot", line: "Took the Shortcut. It worked. Nobody believes me.", how: "Hit the jackpot on the Shortcut" },
+  dodged: { id: "dodged-it", icon: "card", title: "Dodged It!", line: "Bad luck came. I showed it a card. It left.", how: "Cancel a punishment with your Bonus card" }, // replaces the Shortcut jackpot (Shortcut removed, owner 15 Oct)
   twist: { id: "plot-twist", icon: "swap-arrows", title: "Plot Twist", line: "Swapped places with the leader. Still smiling.", how: "Swap places with the leader" },
   boots: { id: "bog-boots", icon: "boots", title: "Bog Boots", line: "Walked straight through the Bog. Didn't even look down.", how: "Bog boots save you" },
   sixes: { id: "three-sixes", icon: "lantern", title: "Three Sixes", line: "Three sixes in a row. The lantern lit itself.", how: "Throw three 6s in a row" },
@@ -62,12 +62,12 @@ export function postcardsFor(board: Board, e: GameEvent, person: (seat: number) 
     case "snakeLeader": return [SPECIAL.snakeLeader];
     case "tile":
       if (e.tile.icon === "two-keys") return [SPECIAL.keys];
-      if (isShortcut(e.square) && e.tile.cat === "R") return [SPECIAL.jackpot];
       return [];
     case "trapped": return [SPECIAL.bog];
     case "swap": return [SPECIAL.twist];
     case "bogBoots": return [SPECIAL.boots];
     case "lanternWon": return [SPECIAL.sixes];
+    case "bonusUsed": return e.use === "defend" ? [SPECIAL.dodged] : [];
     default: return [];
   }
 }

@@ -20,13 +20,13 @@ describe("R2 sixes", () => {
   const from10 = (dice: number[]) => play({ dice, setup: [{ pos: 10 }], turns: 1 }).P[0].pos - 10;
   it("4 -> 4 squares", () => expect(from10([4])).toBe(4));
   it("6, 3 -> 9", () => expect(from10([6, 3])).toBe(9));
-  it("owner's example 6, 6, 1, 5 -> 18", () => expect(from10([6, 6, 1, 5])).toBe(18));
+  it("owner 15 Oct: every 6 gives exactly one more throw: 6, 6, 1 -> 13, then the turn ends", () => expect(from10([6, 6, 1])).toBe(13));
   it("6, 6, 6 -> 18 and stop", () => expect(from10([6, 6, 6])).toBe(18));
-  it("6, 6, 1, 6 -> a 6 among the owed throws is the third six: stop (19)", () => expect(from10([6, 6, 1, 6])).toBe(19));
+  it("6, 2 -> 8", () => expect(from10([6, 2])).toBe(8));
   it("the token moves once, by the total (one move event)", () => {
-    const { events } = play({ dice: [6, 6, 1, 5], setup: [{ pos: 10 }], turns: 1 });
+    const { events } = play({ dice: [6, 6, 1], setup: [{ pos: 10 }], turns: 1 });
     expect(events.filter((e) => e.type === "move")).toHaveLength(1);
-    expect(events.filter((e) => e.type === "roll")).toHaveLength(4);
+    expect(events.filter((e) => e.type === "roll")).toHaveLength(3);
   });
 });
 
@@ -212,53 +212,41 @@ describe("R14 bonus card", () => {
     expect(play({ tiles: fall, dice: [2], setup: [{ pos: 10 }], turns: 1, players: 1 }).decisions).toEqual([]));
 });
 
-describe("R17 waiting stairs", () => {
-  it("owner's example: trapped, 2 failed throws, 3rd throw 5 -> 31, 31/1, 31/2, 32, 33", () => {
-    const { P, events } = play({ tiles: trap, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1 });
-    expect(P[0].pos).toBe(33);
-    const move = events.find((e) => e.type === "move");
-    expect(move && move.type === "move" && move.path).toEqual([
-      { pos: 31, stair: 0 }, { pos: 31, stair: 1 }, { pos: 31, stair: 2 }, { pos: 32, stair: 0 }, { pos: 33, stair: 0 },
-    ]);
+describe("R17 as changed by the owner (15 Oct): a 6 only lets you in; no stair steps", () => {
+  it("at Home: 6, 2 -> square 2, whatever was missed before", () => {
+    for (const misses of [[], [5], [5, 1]]) expect(play({ dice: [...misses, 6, 2], turns: misses.length + 1, players: 1 }).P[0].pos, `${misses}`).toBe(2);
   });
-  it("3rd throw 3 -> stands on stair step 31/2", () => {
-    const { P } = play({ tiles: trap, dice: [3, 2, 3], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1 });
-    expect([P[0].pos, P[0].onStair, P[0].stairLeft]).toEqual([31, true, 0]);
+  it("in the Bog: 6, 4 -> 34, whatever was missed before", () => {
+    for (const misses of [[], [3], [3, 2]]) expect(play({ tiles: trap, dice: [...misses, 6, 4], setup: [{ pos: 30, trapped: true }], turns: misses.length + 1, players: 1 }).P[0].pos).toBe(34);
   });
-  it("from stair 31/1, next throw 4 -> 1 step + 3 squares = 34", () =>
-    expect(play({ tiles: trap, dice: [3, 2, 2, 4], setup: [{ pos: 30, trapped: true }], turns: 4, players: 1 }).P[0].pos).toBe(34));
-  it("3rd throw 1 -> on 31 itself, both steps still to climb", () => {
-    const { P } = play({ tiles: trap, dice: [3, 2, 1], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1 });
-    expect([P[0].pos, P[0].stairLeft, P[0].onStair]).toEqual([31, 2, false]);
+  it("3rd throw without a 6: you move by that throw (Home 2, 3, 5 -> 5; Bog 3, 2, 5 -> 35)", () => {
+    expect(play({ dice: [2, 3, 5], turns: 3, players: 1 }).P[0].pos).toBe(5);
+    expect(play({ tiles: trap, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1 }).P[0].pos).toBe(35);
   });
-  it("a 6 on throw 2 frees; the one step is still walked (6, 4 -> 33)", () =>
-    expect(play({ tiles: trap, dice: [3, 6, 4], setup: [{ pos: 30, trapped: true }], turns: 2, players: 1 }).P[0].pos).toBe(33));
-  it("a 6 on throw 1 frees with no step (6, 4 -> 34)", () =>
-    expect(play({ tiles: trap, dice: [6, 4], setup: [{ pos: 30, trapped: true }], turns: 1, players: 1 }).P[0].pos).toBe(34));
-  it("at Home: 2 failed throws, 3rd throw 5 -> 1, 1/1, 1/2, 2, 3", () =>
-    expect(play({ dice: [2, 3, 5], turns: 3, players: 1 }).P[0].pos).toBe(3));
-  it("3rd throw a 6 -> moves like a normal 6 (6 + 3, 2 of them on the steps -> 37)", () =>
-    expect(play({ tiles: trap, dice: [3, 2, 6, 3], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1 }).P[0].pos).toBe(37));
-  it("nobody is captured on a stair step", () => {
-    const { P } = play({ dice: [1], setup: [{ pos: 30 }, { pos: 31, onStair: true, stairAt: 31, stairLeft: 1, stairTotal: 2 }], turns: 1 });
-    expect([P[0].pos, P[1].pos]).toEqual([31, 31]);
+  it("two players never share square 1: the one there goes back to Start", () => {
+    const { P } = play({ dice: [6, 1], setup: [{}, { pos: 1 }], turns: 1 });
+    expect([P[0].pos, P[1].pos]).toEqual([1, 0]);
+  });
+  it("nobody ever stands on a stair step", () => {
+    const { events } = play({ dice: [2, 3, 5, 6, 1], turns: 4, players: 1 });
+    for (const e of events) if (e.type === "move") for (const s of e.path) expect(s.stair).toBe(0);
   });
 });
 
 describe("R18 lanterns (lifelines)", () => {
   it("3 throws without a 6 cost one, and the player still moves", () => {
     const { P, events } = play({ dice: [2, 3, 5], turns: 3, players: 1 });
-    expect([P[0].lanterns, P[0].pos]).toEqual([2, 3]);
+    expect([P[0].lanterns, P[0].pos]).toEqual([2, 5]);
     expect(events).toContainEqual({ type: "lanternLost", player: 0, left: 2 });
   });
   it("a 6 within 3 throws costs nothing", () => expect(play({ dice: [2, 6, 4], turns: 2, players: 1 }).P[0].lanterns).toBe(3));
   it("three 6s in a row win one", () => expect(play({ dice: [6, 6, 6], setup: [{ pos: 10 }], turns: 1, players: 1 }).P[0].lanterns).toBe(4));
-  it("two 6s in a row win nothing", () => expect(play({ dice: [6, 6, 2, 3], setup: [{ pos: 10 }], turns: 1, players: 1 }).P[0].lanterns).toBe(3));
+  it("two 6s in a row win nothing", () => expect(play({ dice: [6, 6, 2], setup: [{ pos: 10 }], turns: 1, players: 1 }).P[0].lanterns).toBe(3));
   it("the entering 6 + two 6s = three in a row", () => expect(play({ dice: [6, 6, 6], turns: 1, players: 1 }).P[0].lanterns).toBe(4));
   it("a capture costs none", () => expect(play({ dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1 }).P[1].lanterns).toBe(3));
   it("losing the 3rd -> 0 left, still playing", () => {
     const { P } = play({ tiles: trap, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, lanterns: 1 }], turns: 3, players: 1 });
-    expect([P[0].lanterns, P[0].out, P[0].pos]).toEqual([0, false, 33]);
+    expect([P[0].lanterns, P[0].out, P[0].pos]).toEqual([0, false, 35]);
   });
   it("the 4th loss -> out; with 3 players the game goes on", () => {
     const { P, game } = play({ tiles: trap, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, lanterns: 0 }, { skip: 9 }, { skip: 9 }], turns: 9, players: 3 });

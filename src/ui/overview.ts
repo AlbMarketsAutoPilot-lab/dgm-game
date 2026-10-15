@@ -45,7 +45,8 @@ export class Overview {
       return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#f2c230" stroke-width="12" stroke-linecap="round"/>`
         + `<path d="M-14 -18L6 0-14 18" transform="translate(${mx} ${my}) rotate(${ang})" fill="none" stroke="#f2c230" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>`;
     };
-    for (let n = 1; n < board.lastTile; n++) if (Math.hypot(L.squares[n + 1].x - L.squares[n].x, L.squares[n + 1].y - L.squares[n].y) > 1.1) s += link(L.squares[n], L.squares[n + 1]);
+    // squares touch (at most 1.11 apart); only a step into the next ring crosses a wall (1.14 or more)
+    for (let n = 1; n < board.lastTile; n++) if (Math.hypot(L.squares[n + 1].x - L.squares[n].x, L.squares[n + 1].y - L.squares[n].y) > 1.12) s += link(L.squares[n], L.squares[n + 1]);
     s += link(L.squares[board.lastTile], L.end);
     // Shortcut stones (small squares inside the wider walls)
     for (const sc of L.shortcuts) {

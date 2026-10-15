@@ -21,8 +21,7 @@ Two areas plus the players:
 - **Narrative** (`tales.ts`): a tale per event square, Shortcut stone and rule moment, for young adults first. What a
   square does is always derived from the engine's tile (`outcome()`), never written by hand.
 - **Turn** (`app.ts`): Roll (or tap the die) → the move → what happens. A person throws every die themselves: after a
-  6 a popup ("A 6! Roll again!") and a "Roll again" button; after two 6s "One more throw"; "Throw 1 of 3" on the
-  sledge square. The die is passed ("Pass the die to Red ▶") only from one person to another; computer players
+  6 a popup ("A 6! Roll again!") and a "Roll again" button; "Throw 1 of 3" on the sledge square. The die is passed ("Pass the die to Red ▶") only from one person to another; computer players
   (GCD §8.6) play by themselves. A line under "Blue's turn" says what the turn is about (At Home: roll a 6…, Stuck in
   the Bog…, Needs exactly 4…); a waiting player is told why ("landed on …, which says miss turns"). The game opens
   with "You need a 6 to enter". Only the newest story moment is shown (no list of earlier ones, owner).

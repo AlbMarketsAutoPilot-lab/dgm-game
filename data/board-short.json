@@ -192,7 +192,7 @@
  },
  "rules": {
   "entry": "six",
-  "sixRule": "owner",
+  "sixRule": "standard",
   "maxSixes": 3,
   "capture": true,
   "endRule": "exact",
@@ -207,48 +207,7 @@
    "back": 10,
    "range": 10
   },
-  "forks": [
-   {
-    "at": 41,
-    "merge": 48,
-    "len": 6,
-    "tiles": {
-     "1": {
-      "cat": "R",
-      "type": "jump",
-      "to": 50,
-      "text": "Wild road: shortcut over the hill"
-     },
-     "2": {
-      "cat": "P",
-      "type": "jump",
-      "to": 15,
-      "then": "prison",
-      "text": "Wild road: lost, into the trap"
-     }
-    }
-   },
-   {
-    "at": 80,
-    "merge": 90,
-    "len": 9,
-    "tiles": {
-     "1": {
-      "cat": "R",
-      "type": "jump",
-      "to": 92,
-      "text": "Wild road: shortcut over the hill"
-     },
-     "3": {
-      "cat": "P",
-      "type": "jump",
-      "to": 15,
-      "then": "prison",
-      "text": "Wild road: lost, into the trap"
-     }
-    }
-   }
-  ]
+  "forks": []
  },
  "rulesNote": "rules = FROZEN set (GCD R1-R21) as on the long board. Changed for the half-length board (owner, I-5.1): forks (crossroads 41 -> roads meet at 48, Shortcut 6 squares, square 1 -> 50, square 2 -> Bog 15; crossroads 80 -> roads meet at 90, Shortcut 9 squares, square 1 -> 92, square 3 -> Bog 15). Fallen tree unchanged (back 10, range 10).",
  "story": {
@@ -352,36 +311,7 @@
     "story": "The two roads meet again.",
     "icon": "joining-paths"
    },
-   "forks": [
-    {
-     "at": 41,
-     "crossroads": "Crossroads. Main Road, or the Shortcut?",
-     "tiles": {
-      "1": {
-       "story": "Rope swing over the river. Worth it!",
-       "icon": "rope-swing"
-      },
-      "2": {
-       "story": "Shortcuts never work. Into the Bog.",
-       "icon": "compass"
-      }
-     }
-    },
-    {
-     "at": 80,
-     "crossroads": "City crossroads. Main Road, or the Shortcut?",
-     "tiles": {
-      "1": {
-       "story": "Through the park. Wait, it actually worked!",
-       "icon": "park-bench"
-      },
-      "3": {
-       "story": "Lost in the alleys. Somehow, the Bog.",
-       "icon": "maze"
-      }
-     }
-    }
-   ]
+   "forks": []
   },
   "cards": {
    "bonus": {

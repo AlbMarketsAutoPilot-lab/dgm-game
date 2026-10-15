@@ -163,18 +163,17 @@ export class GameScreen {
     this.overview.setReach(null);
 
     const t = this.game.turn();
-    let shown = this.game.events.length, r = t.next(), rolls: number[] = [], moving: number[] = [], sum = 0;
+    let shown = this.game.events.length, r = t.next(), rolls: number[] = [], sum = 0;
     for (;;) {
       const fresh = this.game.events.slice(shown);
       shown = this.game.events.length;
       for (const e of fresh) {
         if (e.type === "tile") sum = e.tile.type === "rollSum" ? e.tile.dice ?? 0 : e.tile.type === "extraRoll" ? -1 : 0;
-        if (e.type === "move" || e.type === "jump") { rolls = []; moving = []; if (e.type === "move") sum = 0; }
-        if (e.type === "released" && e.bySix && e.stairs < 2) moving.pop(); // R15: the 6 to enter or leave the Bog moves nobody
-        // A person throws every die themselves (owner): after a 6, after two 6s (owed throws), on "throw 3 times".
-        if (e.type === "roll" && !comp && e.player === seat && (rolls.length || sum)) await this.rollAgain(seat, rolls, moving, sum);
+        if (e.type === "move" || e.type === "jump") { rolls = []; if (e.type === "move") sum = 0; }
+        // A person throws every die themselves (owner): after a 6, and on "throw 3 times".
+        if (e.type === "roll" && !comp && e.player === seat && (rolls.length || sum)) await this.rollAgain(rolls, sum);
         await this.play(e);
-        if (e.type === "roll") { rolls.push(e.value); moving.push(e.value); }
+        if (e.type === "roll") rolls.push(e.value);
         const after = fresh.slice(fresh.indexOf(e) + 1);
         if (e.type === "roll" && e.value === 6 && sum <= 0 && !comp && e.player === seat && after[0]?.type !== "released" && after.some((x) => x.type === "roll" && x.player === seat)) this.sixParty(seat);
         this.collect(e);
@@ -222,13 +221,8 @@ export class GameScreen {
   }
 
   /** Waits for a person to throw the next die of this turn. */
-  private async rollAgain(seat: number, rolls: number[], moving: number[], sum: number): Promise<void> {
-    const sixes = rolls.filter((v) => v === 6).length, last = rolls[rolls.length - 1];
-    let label = "Roll again";
-    if (sum > 0) label = `Throw ${rolls.length + 1} of ${sum}`;
-    else if (last !== 6 && sixes >= 2) {
-      this.story(seat, { title: "One more throw", text: `Two 6s earn two extra throws, not just one. ${this.name(seat)} has one more to go.`, art: artFor("lanterns", "Extra throw") }, `So far: ${moving.join(" + ")} = ${moving.reduce((a, b) => a + b, 0)} squares${moving.length < rolls.length ? " (the 6 that let you in moves nobody)" : ""}.`, "good");
-    }
+  private async rollAgain(rolls: number[], sum: number): Promise<void> {
+    const label = sum > 0 ? `Throw ${rolls.length + 1} of ${sum}` : "Roll again";
     this.dice.ready(true);
     await Promise.race([this.ask([{ label, value: "roll", primary: true }]), this.dice.tapped()]);
     this.dice.ready(false);
@@ -286,7 +280,7 @@ export class GameScreen {
         break;
       case "released": {
         if (e.where === "start") { this.places[e.player] = { pos: START, stair: 0 }; st.show(e.player, START, 0); this.overview.setPlace(e.player, START); }
-        if (e.bySix && e.stairs < 2) this.dice.released(e.where); // R15: that 6 moves nobody (on the 3rd throw it does, R17)
+        if (e.bySix) this.dice.released(e.where); // R15: the 6 that lets you in (or out of the Bog) moves nobody
         this.render();
         if (e.bySix) st.celebrate("good");
         if (e.bySix) st.stamp("good", e.where === "start" ? "A six!" : "Free!");

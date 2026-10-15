@@ -149,24 +149,16 @@ export class Game implements GameView {
   }
 
   /**
-   * R2 (owner's rule): throw while you throw 6; after k sixes you have k throws in total after them (the one ending
-   * the run included), and a 6 among those gives one more. The third 6 ends the throwing. k0 = sixes already thrown
-   * this turn to enter or leave the trap (R15: they count, but give no squares).
+   * R2 (owner, 15 Oct): every 6 gives one more throw and the throws add up; the third 6 ends the throwing.
+   * k0 = sixes already thrown this turn to enter or leave the Bog (R15: they count, but move nobody).
    */
   private throwSequence(k0: number): number {
     const max = this.board.rules.maxSixes;
     let k = k0, total = 0;
     for (;;) {
       const r = this.throwDie(); total += r;
-      if (r !== 6) break;
-      if (++k >= max) return total;
+      if (r !== 6 || ++k >= max) return total;
     }
-    let owed = Math.max(0, k - 1);
-    while (owed > 0) {
-      const r = this.throwDie(); owed--; total += r;
-      if (r === 6) { if (++k >= max) return total; owed++; }
-    }
-    return total;
   }
 
   // ---- Waiting at Home or in the trap (R1, R6, R17, R18) ----
@@ -174,24 +166,21 @@ export class Game implements GameView {
   private *waitingTurn(pi: number): Turn {
     const p = this.players[pi], off = p.pos === OFF, where = off ? "start" : "trap";
     const r = this.throwDie();
-    if (r === 6) { // freed; the 6 itself does not move you (except on the 3rd throw), you throw again
-      const third = p.tries >= 2, steps = p.tries;
-      this.setStairs(p, off, p.tries);
+    if (r === 6) { // freed; the 6 itself never moves you, you throw again (owner, 15 Oct: "6 to enter, 2 to move")
       p.tries = 0;
       if (off) p.pos = START; else p.trapped = false;
-      this.emit({ type: "released", player: pi, where, bySix: true, stairs: steps });
+      this.emit({ type: "released", player: pi, where, bySix: true, stairs: 0 });
       if (p.slow) { p.slow = false; yield* this.moveBy(pi, 1); }
       else {
-        let n = (third ? 6 : 0) + this.throwSequence(1);
+        let n = this.throwSequence(1);
         if (p.double) { n *= 2; p.double = false; }
         yield* this.moveBy(pi, n);
       }
-    } else if (p.tries >= 2) { // 3rd throw without a 6: a lantern goes out, and you move anyway over 2 stair steps
+    } else if (p.tries >= 2) { // 3rd throw without a 6: a lantern goes out, and you move anyway by that throw
       p.tries = 0;
       if (!this.loseLantern(pi)) {
-        this.setStairs(p, off, 2);
         if (off) p.pos = START; else p.trapped = false;
-        this.emit({ type: "released", player: pi, where, bySix: false, stairs: 2 });
+        this.emit({ type: "released", player: pi, where, bySix: false, stairs: 0 });
         let n = p.slow ? 1 : r;
         p.slow = false;
         if (p.double) { n *= 2; p.double = false; }
@@ -201,10 +190,6 @@ export class Game implements GameView {
       p.tries++;
       this.emit({ type: "noSix", player: pi, where, tries: p.tries });
     }
-  }
-
-  private setStairs(p: PlayerState, off: boolean, k: number): void {
-    if (k > 0) { p.stairAt = off ? 1 : p.pos + 1; p.stairLeft = k; p.stairTotal = k; }
   }
 
   private clearStairs(p: PlayerState): void {

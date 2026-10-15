@@ -336,7 +336,7 @@
  },
  "rules": {
   "entry": "six",
-  "sixRule": "owner",
+  "sixRule": "standard",
   "maxSixes": 3,
   "capture": true,
   "endRule": "exact",
@@ -351,48 +351,7 @@
    "back": 10,
    "range": 10
   },
-  "forks": [
-   {
-    "at": 82,
-    "merge": 96,
-    "len": 13,
-    "tiles": {
-     "2": {
-      "cat": "R",
-      "type": "jump",
-      "to": 100,
-      "text": "Wild road: shortcut over the hill"
-     },
-     "5": {
-      "cat": "P",
-      "type": "jump",
-      "to": 30,
-      "then": "prison",
-      "text": "Wild road: lost, into the trap"
-     }
-    }
-   },
-   {
-    "at": 160,
-    "merge": 180,
-    "len": 19,
-    "tiles": {
-     "3": {
-      "cat": "R",
-      "type": "jump",
-      "to": 185,
-      "text": "Wild road: shortcut over the hill"
-     },
-     "7": {
-      "cat": "P",
-      "type": "jump",
-      "to": 30,
-      "then": "prison",
-      "text": "Wild road: lost, into the trap"
-     }
-    }
-   }
-  ]
+  "forks": []
  },
  "rulesR1R16": {
   "entry": "six",
@@ -506,36 +465,7 @@
     "story": "The two roads meet again.",
     "icon": "joining-paths"
    },
-   "forks": [
-    {
-     "at": 82,
-     "crossroads": "Crossroads. Main Road, or the Shortcut?",
-     "tiles": {
-      "2": {
-       "story": "Rope swing over the river. Worth it!",
-       "icon": "rope-swing"
-      },
-      "5": {
-       "story": "Shortcuts never work. Into the Bog.",
-       "icon": "compass"
-      }
-     }
-    },
-    {
-     "at": 160,
-     "crossroads": "City crossroads. Main Road, or the Shortcut?",
-     "tiles": {
-      "3": {
-       "story": "Through the park. Wait, it actually worked!",
-       "icon": "park-bench"
-      },
-      "7": {
-       "story": "Lost in the alleys. Somehow, the Bog.",
-       "icon": "maze"
-      }
-     }
-    }
-   ]
+   "forks": []
   },
   "cards": {
    "bonus": {

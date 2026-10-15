@@ -1,6 +1,6 @@
 // Journey postcards (GCD §12): which events earn which postcard, people only; the album survives blocked storage.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BOARDS, Game, shortcutPos, simplePlayer, type GameEvent } from "../src/engine";
+import { BOARDS, Game, simplePlayer, type GameEvent } from "../src/engine";
 import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum } from "../src/ui/postcards";
 
 const L = BOARDS.long, S = BOARDS.short, person = () => true, ids = (e: GameEvent, b = L) => postcardsFor(b, e, person).map((c) => c.id);
@@ -21,13 +21,12 @@ describe("which events earn which postcard", () => {
     [{ type: "released", player: 0, where: "trap", bySix: true, stairs: 0 }, []],
     [{ type: "move", player: 0, from: 1, to: 140, path: [], crossroads: false }, ["seaside"]],
     [{ type: "jump", player: 0, from: 40, to: 103, cause: "tile" }, ["river-lake"]],
-    [{ type: "jump", player: 0, from: 1, to: shortcutPos(0, 3), cause: "tile" }, ["river-lake"]], // a Shortcut stone: its crossroads' region
     [{ type: "win", player: 0, lastStanding: false }, ["festival"]],
     [{ type: "snakeLeader", player: 0 }, ["snake-leader"]],
     [{ type: "tile", player: 0, square: 198, tile: L.tiles[198] }, ["forgot-keys"]],
     [{ type: "tile", player: 0, square: 193, tile: L.tiles[193] }, []], // forgot keys (once) is not AGAIN
-    [{ type: "tile", player: 0, square: shortcutPos(0, 2), tile: L.rules.forks[0].tiles[2] }, ["shortcut-jackpot"]],
-    [{ type: "tile", player: 0, square: shortcutPos(0, 5), tile: L.rules.forks[0].tiles[5] }, []], // the Shortcut's fall
+    [{ type: "bonusUsed", player: 0, use: "defend", target: 0, square: 30 }, ["dodged-it"]],
+    [{ type: "bonusUsed", player: 0, use: "attack", target: 1, square: 20 }, []],
     [{ type: "trapped", player: 0, square: 30 }, ["the-bog"]],
     [{ type: "swap", player: 0, other: 1 }, ["plot-twist"]],
     [{ type: "bogBoots", player: 0 }, ["bog-boots"]],
