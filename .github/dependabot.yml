@@ -1,0 +1,13 @@
+# S2 (owner approved, 15 Oct): the pinned GitHub Actions and the npm packages are checked weekly; an update arrives
+# as a pull request, with the checks run on it, for the owner to merge or not.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

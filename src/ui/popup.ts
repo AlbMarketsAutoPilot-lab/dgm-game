@@ -3,6 +3,11 @@
 // closes it with ✕ to look at the board. A choice popup can be put aside with ✕ (to look at the board first) and
 // brought back with "Back to your choice". Info popups (a square, a player, a card) open on top and, when closed,
 // give back the popup that was there before.
+//
+// Fitting (owner, 15 Oct: "buttons cut, you need to scroll to see them"): a popup sits over the board when it fits
+// there. When it does not (phones: the board is under half the screen), it moves to the big layer, over everything
+// above the die and the action button (so a choice's buttons stay in view). When even that is too small, the popup gets
+// compact, and only its text scrolls: its own buttons stay pinned at its bottom. Fitted again when the screen turns.
 export interface PopupButton {
   label: string;
   value: string;
@@ -37,19 +42,41 @@ const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export class Popups {
   private readonly layer: HTMLElement;
+  /** Over everything above the controls, for popups that do not fit over the board. */
+  private readonly big: HTMLElement;
+  /** Over the whole screen, for a popup with its own buttons or an info popup (the controls are not needed then). */
+  private readonly full: HTMLElement;
   private readonly back: HTMLButtonElement;
   /** The open story / choice popup, and info popups stacked on top of it. */
   private base: Open | null = null;
   private infos: Open[] = [];
 
-  constructor(host: HTMLElement) {
+  /** `host`: the board panel; `screen`: the whole game screen; `controls`: the die and action button (never covered). */
+  constructor(host: HTMLElement, screen: HTMLElement, controls: HTMLElement) {
     this.layer = document.createElement("div");
     this.layer.className = "pop-layer";
+    this.big = document.createElement("div");
+    this.big.className = "pop-layer pop-big";
+    this.full = document.createElement("div");
+    this.full.className = "pop-layer pop-big pop-full";
+    screen.append(this.big, this.full);
+    new ResizeObserver(() => {
+      screen.style.setProperty("--ctl", `${controls.offsetHeight}px`);
+      this.refit();
+    }).observe(screen);
+    // U5: Escape closes the popup on top (a choice or the results are put aside, as with ✕). Ends with the screen.
+    const onKey = (e: KeyboardEvent) => {
+      if (!screen.isConnected) return document.removeEventListener("keydown", onKey);
+      if (e.key !== "Escape" || document.querySelector(".album, .howto")) return;
+      const top = this.infos.at(-1) ?? (this.base && !this.base.el.hidden ? this.base : null);
+      if (top) { e.preventDefault(); this.answer(top, "close"); }
+    };
+    document.addEventListener("keydown", onKey);
     this.back = document.createElement("button");
     this.back.className = "pop-back primary";
     this.back.textContent = "Back to your choice";
     this.back.hidden = true;
-    this.back.onclick = () => { if (this.base) { this.base.el.hidden = false; this.back.hidden = true; this.focus(this.base.el); } };
+    this.back.onclick = () => { if (this.base) { this.base.el.hidden = false; this.fit(this.base.el); this.back.hidden = true; this.focus(this.base.el); } };
     host.append(this.layer, this.back);
   }
 
@@ -69,6 +96,7 @@ export class Popups {
         this.back.hidden = true;
       }
       this.layer.append(el);
+      this.fit(el);
       if (!reduced()) el.animate([{ opacity: 0, transform: "translateY(14px) scale(.94)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "cubic-bezier(.2,1.4,.4,1)" });
       if (c.kind === "info") this.focus(el); // no auto-focus elsewhere: the game is played by tapping, not by holding Enter
     });
@@ -85,6 +113,22 @@ export class Popups {
   /** Whether a story / choice popup is showing. */
   get showing(): boolean {
     return !!this.base && !this.base.el.hidden;
+  }
+
+  /** Over the board if it fits there; else in the big layer; else compact, with only the text scrolling. */
+  private fit(el: HTMLElement): void {
+    if (el.hidden) return;
+    const over = () => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
+    el.classList.remove("compact");
+    if (el.parentElement !== this.layer) this.layer.append(el);
+    if (!over()) return;
+    (el.dataset.own ? this.full : this.big).append(el);
+    if (over()) el.classList.add("compact");
+  }
+
+  /** The screen changed size: fit the open popups again. */
+  private refit(): void {
+    for (const o of [this.base, ...this.infos]) if (o) this.fit(o.el);
   }
 
   private focus(el: HTMLElement): void {
@@ -107,11 +151,12 @@ export class Popups {
       this.infos = this.infos.filter((x) => x !== o);
       this.drop(o, v);
       const top = this.infos.at(-1) ?? this.base;
-      if (top) top.el.hidden = false;
+      if (top) { top.el.hidden = false; this.fit(top.el); }
       return;
     }
-    if (o.c.kind === "choice" && v === "close") { // put aside, not answered
+    if ((o.c.kind === "choice" || o.c.kind === "win") && v === "close") { // put aside, not answered (the win: not "Play again"!)
       o.el.hidden = true;
+      this.back.textContent = o.c.kind === "win" ? "Back to the results" : "Back to your choice";
       this.back.hidden = false;
       this.back.focus({ preventScroll: true });
       return;
@@ -123,11 +168,12 @@ export class Popups {
   private build(c: PopupContent): HTMLElement {
     const el = document.createElement("section");
     el.className = `pop ${c.kind ?? "story"} ${c.tone ?? ""}`;
+    if (c.kind === "info" || c.kind === "win" || c.buttons?.length) el.dataset.own = "1"; // needs no controls while open
     el.setAttribute("role", c.kind === "choice" || c.kind === "win" ? "alertdialog" : "dialog");
     el.setAttribute("aria-live", "polite");
     el.setAttribute("aria-label", c.title);
     el.innerHTML = `
-      <button class="pop-x" aria-label="${c.kind === "choice" ? "Look at the board first" : "Close"}">✕</button>
+      <button class="pop-x" aria-label="${c.kind === "choice" || c.kind === "win" ? "Look at the board first" : "Close"}">✕</button>
       ${c.art ? `<div class="pop-art">${c.art}</div>` : ""}
       <div class="pop-head">
         ${c.kicker ? `<p class="pop-kicker">${c.kicker}</p>` : ""}

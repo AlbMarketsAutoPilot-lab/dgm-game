@@ -1,6 +1,7 @@
 // DRAFT for the owner's review (15 Oct), not used by the game yet: every picture redrawn as a grown-up subject in the
 // game's own style (the purple ink outline, flat colours, one shaded side, a little motion; no text on pictures).
 // The owner approved the house. Compare all of them with the current ones at /gallery.html?compare (npm run dev).
+import { esc } from "./html";
 import { A, C, INK, S, S2, waves } from "./art-kit";
 
 interface Art {
@@ -461,7 +462,7 @@ export function cardFace(kind: keyof typeof CARD_DESIGNS, label: string): string
   const pattern = kind === "bonus" ? Array.from({ length: 6 }, (_, i) => `<path d="M${14 + i * 14} 16l4 4-4 4-4-4z" fill="${d.pattern}"/>`).join("")
     : kind === "jailPass" ? Array.from({ length: 7 }, (_, i) => `<path d="M10 ${20 + i * 16}q10-6 20 0t20 0 20 0 20 0" fill="none" stroke="${d.pattern}" stroke-width="3"/>`).join("")
     : Array.from({ length: 6 }, (_, i) => `<circle cx="${18 + (i % 3) * 32}" cy="${24 + Math.floor(i / 3) * 92}" r="7" fill="none" stroke="${d.pattern}" stroke-width="2.4"/>`).join("");
-  return `<svg class="card-face" viewBox="0 0 100 140" role="img" aria-label="${label}">`
+  return `<svg class="card-face" viewBox="0 0 100 140" role="img" aria-label="${esc(label)}">`
     + `<rect x="3" y="3" width="94" height="134" rx="10" fill="${d.frame}" ${S}/>`
     + `<rect x="10" y="10" width="80" height="120" rx="5" fill="${d.panel}"/>${pattern}`
     + `<rect x="16" y="36" width="68" height="68" rx="6" fill="${W}" ${S}/>`

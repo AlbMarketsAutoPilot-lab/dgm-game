@@ -1,8 +1,9 @@
 // Journey postcards (GCD §12, owner approved 15 Oct): one per region and eight special moments, collected over many
 // games by the people at the table (computer players do not collect). The album belongs to the device: it is saved
 // only in this browser (C1: no accounts, nothing leaves the device), and the game works the same when saving is blocked.
-import { OFF, isShortcut, shortcutOf, type Board, type GameEvent, type Pos } from "../engine";
+import { OFF, type Board, type GameEvent, type Pos } from "../engine";
 import { artFor } from "../render/art";
+import { esc } from "../render/html";
 
 export interface Postcard {
   id: string;
@@ -43,9 +44,8 @@ const SPECIAL = {
 /** All postcards, in album order. */
 export const POSTCARDS: Postcard[] = [...Object.values(REGIONS), ...Object.values(SPECIAL)];
 
-/** The region postcard of a place (a Shortcut stone belongs to the region of its crossroads). */
-function regionCard(board: Board, pos: Pos): Postcard | null {
-  const sq = isShortcut(pos) ? board.rules.forks[shortcutOf(pos).fork].at : pos;
+/** The region postcard of a place. */
+function regionCard(board: Board, sq: Pos): Postcard | null {
   if (sq < 1 || sq > board.lastTile) return null;
   const r = board.story.regions.find((x) => sq >= x.from && sq <= x.to);
   return r ? REGIONS[r.name] ?? null : null;
@@ -98,9 +98,9 @@ export function saveAlbum(ids: Set<string>): void {
 
 /** One postcard as HTML: picture, title, line; not collected yet: greyed, "?", how to get it. */
 export function postcardHtml(p: Postcard, have: boolean): string {
-  return `<div class="pc${have ? "" : " locked"}" role="listitem" aria-label="${have ? p.title : `Not collected yet: ${p.how}`}">`
+  return `<div class="pc${have ? "" : " locked"}" role="listitem" aria-label="${esc(have ? p.title : `Not collected yet: ${p.how}`)}">`
     + `<div class="pic">${artFor(p.icon, p.title)}</div><div class="side"><span class="post"></span><span class="mark"></span>`
-    + `<h3>${have ? p.title : "?"}</h3><p${have ? "" : ` class="how"`}>${have ? p.line : p.how}</p></div></div>`;
+    + `<h3>${have ? esc(p.title) : "?"}</h3><p${have ? "" : ` class="how"`}>${esc(have ? p.line : p.how)}</p></div></div>`;
 }
 
 /** The album, over the whole screen; resolves when it is closed. */
@@ -109,9 +109,18 @@ export function showAlbum(): Promise<void> {
     const have = loadAlbum();
     const el = document.createElement("div");
     el.className = "album";
+    // U5: a dialog over the whole screen; the focus goes to Back, Escape closes it
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-modal", "true");
+    el.setAttribute("aria-label", "Postcards");
     el.innerHTML = `<div class="album-top"><h2>Postcards <span>${POSTCARDS.filter((p) => have.has(p.id)).length} / ${POSTCARDS.length}</span></h2><button class="primary">Back</button></div>`
       + `<div class="album-grid" role="list">${POSTCARDS.map((p) => postcardHtml(p, have.has(p.id))).join("")}</div>`;
-    el.querySelector("button")!.onclick = () => { el.remove(); done(); };
+    const back = el.querySelector("button")!, before = document.activeElement as HTMLElement | null;
+    const close = () => { document.removeEventListener("keydown", onKey); el.remove(); before?.focus?.({ preventScroll: true }); done(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); close(); } };
+    back.onclick = close;
+    document.addEventListener("keydown", onKey);
     document.body.append(el);
+    back.focus({ preventScroll: true });
   });
 }

@@ -2,9 +2,9 @@
 // A labyrinth spiral of plain paper squares with thin ink walls between the rings, as big as the panel allows. No
 // numbers, no colours, no lines: good squares have a green frame (and ▲), bad squares a red frame (and ▼). Tap any
 // square to see what happens there; where squares are small (the long board), the first tap zooms in.
-// The squares the current player can reach with one die show a small die face.
-import { OFF, OUT, isShortcut, shortcutPos, type Board, type Pos } from "../engine";
-import { WALL_WIDE, type BoardLayout, type Point, designFor, layoutFor, pointOf } from "../render/layout";
+// The squares the current player can reach with one throw of 1–5 show a small die face.
+import { OFF, OUT, type Board, type Pos } from "../engine";
+import { type BoardLayout, type Point, designFor, layoutFor, pointOf } from "../render/layout";
 import { INK, PAPER, PUNISH, REWARD } from "../render/palette";
 
 /** Squares smaller than this on screen (px) are zoomed in on first. */
@@ -19,12 +19,30 @@ const PIPS: Record<number, [number, number][]> = {
   5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
 };
 
+/**
+ * How far one throw of each face moves a token, for the faces that can end a move: 1–5. A 6 always throws again and
+ * adds up (R2), so a token never stops 6 squares ahead (audit, 15 Oct). A doubled throw (R9) moves twice as far.
+ */
+export const reachSteps = (double: boolean): { face: number; steps: number }[] =>
+  [1, 2, 3, 4, 5].map((face) => ({ face, steps: double ? 2 * face : face }));
+
 export class Overview {
   layout!: BoardLayout;
   private readonly board: Board;
   private svg!: SVGSVGElement;
-  private tokens: SVGGElement[] = [];
-  private readonly places: { pos: Pos; stair: number }[] = [];
+  /** The die faces and the fallen tree, over the board with the same view (they change once a turn at most). */
+  private live!: SVGSVGElement;
+  /**
+   * P1 (owner approved, 15 Oct): the tokens are page elements over the board, not part of its drawing. A glide inside
+   * the drawing made the browser lay out and repaint the whole 200-square board on every frame of every hop (measured:
+   * 3.4× the work on a slow phone); a page element glides on the graphics chip.
+   */
+  private readonly tokenLayer: HTMLElement;
+  /** The part of the board shown (the viewBox), for placing the tokens. */
+  private box = { x: 0, y: 0, w: 1, h: 1 };
+  private tokenSize = 0;
+  private tokens: HTMLElement[] = [];
+  private readonly places: Pos[] = [];
   private tree!: SVGGElement;
   private reach!: SVGGElement;
   private readonly end: number;
@@ -35,21 +53,30 @@ export class Overview {
   private current = -1;
   private roadblock: number | null = null;
   private reachFrom: Pos | null = null;
+  private reachDouble = false;
+  /** The square that has the board's Tab stop (U5). */
+  private focusPos = 0;
   private design = "";
 
   constructor(private readonly host: HTMLElement, board: Board, private readonly players: number, private readonly onPick: (pos: Pos) => void) {
     this.board = board;
     this.end = board.endTile;
-    for (let i = 0; i < players; i++) this.places.push({ pos: OFF, stair: 0 });
+    for (let i = 0; i < players; i++) this.places.push(OFF);
     this.zoomOut = document.createElement("button");
     this.zoomOut.className = "zoom-out";
     this.zoomOut.textContent = "Whole board";
     this.zoomOut.hidden = true;
     this.zoomOut.onclick = () => this.zoom(null);
-    host.append(this.zoomOut);
+    this.tokenLayer = document.createElement("div");
+    this.tokenLayer.className = "ov-tokens";
+    this.tokenLayer.setAttribute("aria-hidden", "true");
+    host.append(this.tokenLayer, this.zoomOut);
     this.build();
     // the board takes the shape that gives the biggest squares in its panel (owner: no empty space)
-    new ResizeObserver(() => { if (designFor(board, host.clientWidth, host.clientHeight).join("x") !== this.design) this.build(); }).observe(host);
+    new ResizeObserver(() => {
+      if (designFor(board, host.clientWidth, host.clientHeight).join("x") !== this.design) this.build();
+      else this.layoutTokens();
+    }).observe(host);
   }
 
   private build(): void {
@@ -74,25 +101,15 @@ export class Overview {
       const q = L.squares[board.lastTile], E = L.endPad, edge = { x: Math.max(E.centre.x - E.w / 2, Math.min(E.centre.x + E.w / 2, q.x)), y: Math.max(E.centre.y - E.h / 2, Math.min(E.centre.y + E.h / 2, q.y)) };
       s += link(q, edge);
     }
-    // Shortcut stones (small squares inside the wider walls)
-    for (const sc of L.shortcuts) {
-      sc.stones.forEach((q, i) => {
-        const t = board.rules.forks[sc.fork].tiles[i + 1], c = P(q), r = (WALL_WIDE * U) / 2 - 2;
-        s += `<g class="pick" data-pos="${shortcutPos(sc.fork, i + 1)}"><rect x="${c.x - r - 10}" y="${c.y - r - 10}" width="${2 * r + 20}" height="${2 * r + 20}" fill="transparent"/>`
-          + `<rect x="${c.x - r}" y="${c.y - r}" width="${2 * r}" height="${2 * r}" rx="5" fill="#d9d2c4" stroke="${t ? (t.cat === "R" ? REWARD : PUNISH) : INK}" stroke-width="${t ? 7 : 3}"/></g>`;
-      });
-    }
     // the squares
     for (let n = 1; n <= board.lastTile; n++) {
       const c = P(L.squares[n]), h = L.heading[n], horiz = Math.abs(h.x) > Math.abs(h.y), a = L.along[n] * U;
       const w = (horiz ? a : U) - 4, ht = (horiz ? U : a) - 4, t = board.tiles[n];
       const frame = t ? (t.cat === "R" ? REWARD : PUNISH) : null;
-      s += `<g class="pick sq" data-pos="${n}"><rect x="${c.x - w / 2}" y="${c.y - ht / 2}" width="${w}" height="${ht}" rx="7" fill="${PAPER}" stroke="${INK}" stroke-opacity=".35" stroke-width="3"/>`;
+      s += `<g class="pick sq" data-pos="${n}" tabindex="-1" role="button" aria-label="Square ${n}${t ? (t.cat === "R" ? ", good square" : ", bad square") : ""}"><rect x="${c.x - w / 2}" y="${c.y - ht / 2}" width="${w}" height="${ht}" rx="7" fill="${PAPER}" stroke="${INK}" stroke-opacity=".35" stroke-width="3"/>`;
       if (frame) {
         s += `<rect x="${c.x - w / 2 + 7}" y="${c.y - ht / 2 + 7}" width="${w - 14}" height="${ht - 14}" rx="6" fill="none" stroke="${frame}" stroke-width="10"/>`
           + `<path d="${t!.cat === "R" ? `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 34}l10-14 10 14z` : `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 20}l10 14 10-14z`}" fill="${frame}"/>`;
-      } else if (board.rules.forks.some((f) => f.at === n)) {
-        s += `<path d="M${c.x} ${c.y + 26}v-20l-16-16M${c.x} ${c.y + 6}l16-16" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;
       } else if (n % 3 === 1) { // which way the road goes
         const ang = (Math.atan2(h.y, h.x) * 180) / Math.PI;
         s += `<path d="M-8 -12l12 12-12 12" transform="translate(${c.x} ${c.y}) rotate(${ang})" fill="none" stroke="${INK}" stroke-opacity=".3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -101,49 +118,72 @@ export class Overview {
     }
     // Start (four squares long: everyone waits here) and the festival
     const sp = P(L.start.centre), sw = L.start.w * U - 4, sh = U - 4;
-    s += `<g class="pick" data-pos="0"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
-      + `<text x="${sp.x - sw / 2 + 14}" y="${sp.y - sh / 2 + 32}" class="ov-sub">START: a 6 to enter</text></g>`;
+    s += `<g class="pick" data-pos="0" tabindex="-1" role="button" aria-label="START: a 6 to enter (Home and Start)"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
+      + `<text x="${sp.x}" y="${sp.y - sh / 2 + 34}" text-anchor="middle" class="ov-sub">START: a 6 to enter</text></g>`; // the tokens wait below it (U4)
     // The Festival of Lights: the destination, a golden plaza in the middle of the spiral with its lanterns
     const e = P(L.endPad.centre), ew = L.endPad.w * U - 8, eh = L.endPad.h * U - 8, pic = Math.min(ew * 0.8, eh * 0.62), big = ew >= 180 && eh >= 150;
-    s += `<g class="pick" data-pos="${board.endTile}"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="24" fill="#f2c230" stroke="${INK}" stroke-width="8"/>`
+    s += `<g class="pick" data-pos="${board.endTile}" tabindex="-1" role="button" aria-label="The Festival of Lights"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="24" fill="#f2c230" stroke="${INK}" stroke-width="8"/>`
       + `<rect x="${e.x - ew / 2 + 14}" y="${e.y - eh / 2 + 14}" width="${ew - 28}" height="${eh - 28}" rx="14" fill="#fff4c8" stroke="${INK}" stroke-width="3" stroke-dasharray="10 8"/>`
       + (big ? artFor("lanterns", "Festival of Lights").replace("<svg ", `<svg x="${e.x - pic / 2}" y="${e.y - eh / 2 + 22}" width="${pic}" height="${pic}" `)
         + `<text x="${e.x}" y="${e.y + eh / 2 - 30}" text-anchor="middle" class="ov-fest" style="font-size:${Math.min(46, (ew - 40) / 7.6)}px">Festival of Lights</text>`
         : `<path d="M0 -30l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" transform="translate(${e.x} ${e.y})" fill="#f2c230" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`)
       + `</g>`;
-    const markup = `<svg class="overview-board" viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The whole board">`
-      + s
-      + `<g class="reach" aria-hidden="true"></g>`
-      + `<g class="tree" opacity="0" aria-hidden="true"><path d="M-34 16l64-28M-30 26l64-28" stroke="#6b4f34" stroke-width="13" stroke-linecap="round"/><circle cx="32" cy="-16" r="18" fill="#3c8c50" stroke="${INK}" stroke-width="4"/></g>`
-      + `<g class="tokens"></g></svg>`;
+    const view = `viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet"`;
+    const markup = `<svg class="overview-board" ${view} role="group" aria-label="The whole board">${s}</svg>`
+      + `<svg class="overview-live" ${view} aria-hidden="true">`
+      + `<g class="reach"></g>`
+      + `<g class="tree" opacity="0"><path d="M-34 16l64-28M-30 26l64-28" stroke="#6b4f34" stroke-width="13" stroke-linecap="round"/><circle cx="32" cy="-16" r="18" fill="#3c8c50" stroke="${INK}" stroke-width="4"/></g></svg>`;
     const tmp = document.createElement("div");
     tmp.innerHTML = markup;
-    const svg = tmp.firstElementChild as SVGSVGElement;
-    if (this.svg) this.svg.replaceWith(svg); else host.prepend(svg);
+    const svg = tmp.firstElementChild as SVGSVGElement, live = tmp.lastElementChild as SVGSVGElement;
+    if (this.svg) { this.svg.replaceWith(svg); this.live.replaceWith(live); } else host.prepend(svg, live);
     this.svg = svg;
-    this.tree = this.svg.querySelector(".tree")!;
-    this.reach = this.svg.querySelector(".reach")!;
+    this.live = live;
+    this.tree = live.querySelector(".tree")!;
+    this.reach = live.querySelector(".reach")!;
     this.full = `0 0 ${B.w * U} ${B.h * U}`;
+    // U5, the keyboard: the board is one Tab stop; the arrow keys walk the road (Home, Start … the festival), Enter or
+    // Space tells what the square does. The square last visited keeps the Tab stop.
+    const order = [0, ...Array.from({ length: board.lastTile }, (_, i) => i + 1), board.endTile];
+    const pickOf = (pos: number) => this.svg.querySelector<SVGGElement>(`.pick[data-pos="${pos}"]`)!;
+    pickOf(order.includes(this.focusPos) ? this.focusPos : 0).setAttribute("tabindex", "0");
+    this.svg.addEventListener("keydown", (ev) => {
+      const g = (ev.target as Element).closest<SVGGElement>(".pick");
+      if (!g) return;
+      const i = order.indexOf(Number(g.dataset.pos)), step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1, PageDown: 10, PageUp: -10 };
+      let to = i;
+      if (ev.key in step) to = Math.max(0, Math.min(order.length - 1, i + step[ev.key]));
+      else if (ev.key === "Home") to = 0;
+      else if (ev.key === "End") to = order.length - 1;
+      else if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onPick(order[i]); return; }
+      else return;
+      ev.preventDefault();
+      g.setAttribute("tabindex", "-1");
+      const next = pickOf(order[to]);
+      next.setAttribute("tabindex", "0");
+      next.focus();
+      this.focusPos = order[to];
+    });
     this.svg.addEventListener("click", (ev) => {
       const g = (ev.target as Element).closest<SVGGElement>(".pick");
       if (!g) return;
       if (!this.zoomed && Math.min(this.svg.clientWidth / L.bounds.w, this.svg.clientHeight / L.bounds.h) < TAP) return this.zoom(ev);
       onPick(Number(g.dataset.pos));
     });
-    const layer = this.svg.querySelector(".tokens")!;
-    this.tokens = [];
-    for (let i = 0; i < players; i++) {
-      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      g.classList.add("ov-token");
-      g.innerHTML = `<circle class="halo" r="58" fill="none" stroke="${INK}" stroke-width="8" stroke-dasharray="14 10"/>`
-        + `<g transform="translate(-40 -40) scale(.8)">${tokenSvg(i).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g>`;
-      layer.append(g);
-      this.tokens.push(g);
+    this.box = { x: 0, y: 0, w: B.w * U, h: B.h * U };
+    if (!this.tokens.length) for (let i = 0; i < players; i++) {
+      const t = document.createElement("div");
+      t.className = "ov-token";
+      t.dataset.seat = String(i);
+      t.innerHTML = `<svg viewBox="-60 -60 120 120"><circle class="halo" r="58" fill="none" stroke="${INK}" stroke-width="8" stroke-dasharray="14 10"/>`
+        + `<g transform="translate(-40 -40) scale(.8)">${tokenSvg(i).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g></svg>`;
+      this.tokenLayer.append(t);
+      this.tokens.push(t);
     }
     this.layoutTokens();
     if (this.current >= 0) this.setCurrent(this.current);
     this.setRoadblock(this.roadblock);
-    this.setReach(this.reachFrom);
+    this.setReach(this.reachFrom, this.reachDouble);
   }
 
   /** Zooms in around a tap so the squares are big enough to tap (null = the whole board again). */
@@ -153,22 +193,33 @@ export class Overview {
   }
 
   private zoom(ev: MouseEvent | null): void {
-    if (!ev) { this.svg.setAttribute("viewBox", this.full); this.zoomed = false; this.zoomOut.hidden = true; return; }
+    if (!ev) { this.view(this.full); this.zoomed = false; this.zoomOut.hidden = true; return; }
     const r = this.svg.getBoundingClientRect(), B = this.layout.bounds;
     const fit = Math.min(r.width / B.w, r.height / B.h); // px per unit now
     const k = Math.max(1.5, 54 / fit), vw = (r.width / fit / k) * U, vh = (r.height / fit / k) * U;
     // the tapped point in board coordinates (the drawing is centred in the svg)
     const ox = (r.width - B.w * fit) / 2, oy = (r.height - B.h * fit) / 2;
     const bx = ((ev.clientX - r.left - ox) / fit) * U, by = ((ev.clientY - r.top - oy) / fit) * U;
-    const x = bx - vw / 2, y = by - vh / 2; // the tapped square in the middle, never under the "Whole board" button
-    this.svg.setAttribute("viewBox", `${x} ${y} ${vw} ${vh}`);
+    // the tapped square in the middle, but never past the board's edge (audit: a top-row tap showed half a panel of nothing)
+    const keep = (v: number, size: number, full: number) => (size >= full ? (full - size) / 2 : Math.max(0, Math.min(full - size, v)));
+    const x = keep(bx - vw / 2, vw, B.w * U), y = keep(by - vh / 2, vh, B.h * U);
+    this.view(`${x} ${y} ${vw} ${vh}`);
     this.zoomed = true;
     this.zoomOut.hidden = false;
   }
 
+  /** The part of the board shown, on both layers. */
+  private view(box: string): void {
+    this.svg.setAttribute("viewBox", box);
+    this.live.setAttribute("viewBox", box);
+    const [x, y, w, h] = box.split(" ").map(Number);
+    this.box = { x, y, w, h };
+    this.layoutTokens();
+  }
+
   /** Puts a token on a place (the token glides there). */
-  setPlace(seat: number, pos: Pos, stair = 0): void {
-    this.places[seat] = { pos, stair };
+  setPlace(seat: number, pos: Pos): void {
+    this.places[seat] = pos;
     this.layoutTokens();
   }
 
@@ -187,17 +238,18 @@ export class Overview {
     this.tree.setAttribute("opacity", "1");
   }
 
-  /** Die faces on the squares 1–6 ahead of `pos` (Main Road; null = none). */
-  setReach(pos: Pos | null): void {
+  /** Die faces on the squares one throw reaches from `pos` (null = none), see `reachSteps`. */
+  setReach(pos: Pos | null, double = false): void {
     this.reachFrom = pos;
+    this.reachDouble = double;
     let s = "";
     if (pos !== null && pos !== OFF && pos !== OUT) {
-      for (let k = 1; k <= 6; k++) {
-        const n = this.ahead(pos, k);
+      for (const { face, steps } of reachSteps(double)) {
+        const n = this.ahead(pos, steps);
         if (n === null) break;
         const c = this.px(pointOf(this.layout, n));
         s += `<g transform="translate(${c.x - 30} ${c.y + 6})"><rect x="-17" y="-17" width="34" height="34" rx="8" fill="#fffdf6" stroke="${INK}" stroke-width="4"/>`
-          + PIPS[k].map(([dx, dy]) => `<circle cx="${dx * 8.5}" cy="${dy * 8.5}" r="3.6" fill="${INK}"/>`).join("") + `</g>`;
+          + PIPS[face].map(([dx, dy]) => `<circle cx="${dx * 8.5}" cy="${dy * 8.5}" r="3.6" fill="${INK}"/>`).join("") + `</g>`;
       }
     }
     this.reach.innerHTML = s;
@@ -205,10 +257,6 @@ export class Overview {
 
   /** The place k squares ahead along the road (no further than END). */
   private ahead(pos: Pos, k: number): Pos | null {
-    if (isShortcut(pos)) {
-      const fork = Math.floor(pos / 1000) - 1, i = pos % 1000 + k, f = this.board.rules.forks[fork];
-      return i <= f.len ? shortcutPos(fork, i) : Math.min(f.merge + (i - f.len - 1), this.end);
-    }
     const n = pos + k;
     return n > this.end ? null : n;
   }
@@ -220,22 +268,28 @@ export class Overview {
 
   /** Tokens on the same place sit side by side; on the Start pad, in a 2 × 2 block. */
   private layoutTokens(): void {
-    const key = (pl: { pos: Pos; stair: number }) => (pl.pos === OFF || pl.pos === 0 ? "pad" : `${pl.pos}:${pl.stair}`);
+    const key = (pos: Pos) => (pos === OFF || pos === 0 ? "pad" : String(pos));
     const groups = new Map<string, number[]>();
-    this.places.forEach((pl, i) => { if (pl.pos !== OUT) groups.set(key(pl), [...(groups.get(key(pl)) ?? []), i]); });
-    this.places.forEach((pl, i) => {
+    this.places.forEach((pos, i) => { if (pos !== OUT) groups.set(key(pos), [...(groups.get(key(pos)) ?? []), i]); });
+    // board units → pixels of the token layer, as the drawing is fitted ("meet") into the same box
+    const W = this.tokenLayer.clientWidth, H = this.tokenLayer.clientHeight, b = this.box, zoom = Math.min(W / b.w, H / b.h) || 0;
+    const ox = (W - b.w * zoom) / 2 - b.x * zoom, oy = (H - b.h * zoom) / 2 - b.y * zoom, size = Math.round(120 * zoom);
+    if (size !== this.tokenSize) { this.tokenSize = size; this.tokens.forEach((t) => { t.style.width = t.style.height = `${size}px`; }); }
+    this.places.forEach((pos, i) => {
       const t = this.tokens[i];
-      if (pl.pos === OUT) { t.style.opacity = "0"; return; }
-      const same = groups.get(key(pl))!, k = same.indexOf(i), n = same.length;
-      const c = this.px(pointOf(this.layout, pl.pos, pl.stair));
-      let dx = 0, dy = 0;
-      if (key(pl) === "pad") { dx = (i - 1.5) * U; dy = 8; }
-      else if (n > 1) { dx = (k - (n - 1) / 2) * 30; dy = n > 2 ? (k % 2 ? 14 : -14) : 0; }
-      t.style.opacity = pl.pos === OFF ? ".75" : "1";
-      t.style.transform = `translate(${c.x + dx}px, ${c.y + dy}px)${n > 1 && key(pl) !== "pad" ? " scale(.8)" : ""}`;
+      if (pos === OUT) { t.style.opacity = "0"; return; }
+      const same = groups.get(key(pos))!, k = same.indexOf(i), n = same.length, pad = key(pos) === "pad";
+      const c = this.px(pointOf(this.layout, pos));
+      let dx = 0, dy = 0, scale = "";
+      // On Start each seat has its own place, smaller and in the lower half: the "START" label above stays readable (U4)
+      if (pad) { dx = (i - 1.5) * U; dy = 20; scale = " scale(.6)"; }
+      else if (n > 1) { dx = (k - (n - 1) / 2) * 30; dy = n > 2 ? (k % 2 ? 14 : -14) : 0; scale = " scale(.8)"; }
+      t.style.opacity = pos === OFF ? ".75" : "1";
+      const x = ox + (c.x + dx) * zoom - size / 2, y = oy + (c.y + dy) * zoom - size / 2;
+      t.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)${scale}`;
     });
-    const where = ({ pos }: { pos: Pos }) => pos === OFF ? "at Home" : pos === OUT ? "out" : pos === 0 ? "on Start"
-      : pos === this.end ? "at the festival" : isShortcut(pos) ? "on the Shortcut" : `on square ${pos}`;
-    this.svg.setAttribute("aria-label", `The whole board. ${this.places.map((pl, i) => `${PLAYERS[i].name} ${where(pl)}`).join(", ")}.`);
+    const where = (pos: Pos) => pos === OFF ? "at Home" : pos === OUT ? "out" : pos === 0 ? "on Start" : pos === this.end ? "at the festival" : `on square ${pos}`;
+    this.svg.setAttribute("aria-label", `The whole board. ${this.places.map((pos, i) => `${PLAYERS[i].name} ${where(pos)}`).join(", ")}.`);
   }
+
 }

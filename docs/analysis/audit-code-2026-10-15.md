@@ -1,0 +1,235 @@
+# Code audit: security, performance, correctness, user experience (15 Oct 2026)
+
+Every source file was read line by line (engine, UI, rendering, service worker, build and CI files, about 5,300
+lines). Everything below was also **tested for real**: whole games played through the real game screen in Chromium,
+the production build on a 6× slower processor (about a budget Android phone), offline use, tampered storage, a strict
+security policy, accessibility scans, and 100,000 engine games with random choices.
+
+Part 1 is what was wrong and is **fixed in this change**. Part 2 is what was measured. Part 3 is the proposals for the
+owner's approval. **Update, same day:** the owner approved U1, U2, U3, S1, C1, P1 and U6 (reword); they are built and
+tested, see §5. The others still wait.
+
+## 1. Found and fixed
+
+| # | Area | What was wrong | How it showed | Fix |
+|---|---|---|---|---|
+| 1 | Correctness | The die faces on the board marked the square **6 ahead** as reachable. A 6 always throws again (R2), so a token never stops 6 squares ahead | A 6 die face on a square nobody can land on with one throw | Faces 1–5 only. The rule is one function (`reachSteps`), used by the board and the tip, tested against the engine (`test/reach.test.ts`) |
+| 2 | Correctness | The player tip said "a 6 ▲ Farm Taxi"; tapping a square 6 ahead said "Blue gets here with a 6" | Advice that cannot happen | Same rule: 1–5; "A 6 throws again" added to the tip |
+| 3 | Correctness | Doubled throw (Ice Cream Break) and Puddle (move exactly 1) were ignored by the die faces, the tip and the turn line | With a double, "Needs exactly 3" (a 3 moves 6 and overshoots); with the Puddle, six die faces although only 1 square is possible | Double: faces mark 2, 4, 6, 8, 10 squares and the line says "exactly a 2 reaches the festival" or "no throw lands exactly this turn". Puddle: no faces |
+| 4 | Correctness | The round under "Blue's turn" changed only after the roll | At the prompt of round 2 it still said "Round 1"; the first turn showed no round | The round is worked out before the prompt. Checked on 317 turns against the engine |
+| 5 | Correctness | Texts left over from the removed stair steps: "You set off anyway, two steps slower", "you go anyway, slower" | Wrong rule on screen (the third throw now moves you by that throw) | "You set off anyway, and that third throw moves you"; Start info likewise. The story lines "One more step down the porch" / "another stone" were kept (owner's narrative), see 3.4 |
+| 6 | Security / reliability | The offline worker deleted **every cache of the website** on its first start, not only its own. On GitHub Pages all projects of the account share one website address, so this game wiped other projects' offline files | Test: another app's cache existed before, gone after the first visit | Only caches named `dgm-…` are touched. Test: the other cache now survives |
+| 7 | Security / reliability | The worker searched every cache of the website for files, and stored any address a page sent it | Another project on the same address could feed it files | It searches only its own cache and stores only files inside the game's own folder |
+| 8 | Reliability | Offline did not start when the server sends `Vary: Origin` (the game's own `npm run preview`, and some hosts): scripts and styles were cached but never found | Blank page offline | Cached files are found whatever the `Vary` header says (file names change with every build, so this is safe). The cache name moved to `dgm-v2`, which also clears the old files that piled up since Step 7. Tested: first visit, offline reload, and an update from the old version |
+| 9 | Performance (memory) | Every roll made with the button left a click listener on the die until the end of the game | Listeners piled up, about one per roll | The waiting listener is dropped when the roll is made another way |
+| 10 | User experience | Zooming into a square at the board's edge showed up to half a panel of empty background | Screenshot: top-row square, top half empty | The zoom stays inside the board |
+| 11 | Tests | `npm run test:sim` (the 100,000-game check) failed 6 of 6: it still expected the numbers from before today's rule changes. `docs/analysis/measure-long.md` / `measure-short.md` still described the Shortcuts and the old six rule | Red slow suite; outdated published numbers | Both regenerated for today's rules (same command, same seeds). The TypeScript engine and the simulator agree exactly on all six 100,000-game runs. Suite green |
+
+After the fixes: `npm test` 170 / 170, `npm run test:sim` 6 / 6, typecheck and build clean.
+
+## 2. What was measured
+
+### 2.1 Correctness
+
+| Test | Size | Result |
+|---|---|---|
+| Whole games through the real game screen (Chromium), every turn: where the board shows each token vs where the engine has it (same seed replayed), plus the winner | 21 games (both boards, 2–4 players, "Play again" in between): 16 with people only, 1,608 turns compared one by one; 5 with computer players, winner and final board compared | **0 differences** |
+| Engine with random choices (Bonus card defend / spoil at random), checks after every turn: legal places, no negative counters, no two tokens on one square, winner on END, no endless game | 100,000 games, 13.5 million turns | **0 violations**, no game stopped by the round limit (longest: 1,006 turns) |
+| TypeScript engine vs the measured simulator | 6 × 100,000 games | Identical win % by seat and game length |
+| Fairness, 100,000 games | long 4p: 25.06 / 25.02 / 24.93 / 24.99 · short 4p: 25.36 / 25.10 / 24.84 / 24.69 | Fair. The short board gives the first seat about +0.4 points (see 3.3) |
+| Game length (4 players, rounds) | long 50.8 (median 47), short 28.9 (median 26) | Matches the start screen's "about 50 / about 30 rounds" |
+
+### 2.2 Performance (production build)
+
+| Measure | Normal phone | 6× slower phone |
+|---|---|---|
+| Download for a first visit | 97 KB (game 57 KB + style 5 KB + one font 24 KB, compressed) | |
+| Start screen ready | | 0.97 s (first paint 0.71 s) |
+| Main thread busy while waiting for a tap (animated pictures running) | | 0.5% |
+| Tap to screen response, 40 taps | | median 64 ms, 90% under 120 ms, worst 352 ms (the tap that builds the game screen) |
+| Turning the phone (board redrawn) | | about 160 ms of main-thread work per turn of the phone (first estimate of 1.1 s counted every thread; corrected in §5) |
+| Engine speed | 0.1 ms per whole game | |
+| Memory over 15 games in a row ("Play again") | 3.3 MB after game 1, 4.0 MB after game 15; page elements and listeners back to the same level each game (old games are released). About 45 KB per game: nothing to fix | |
+
+### 2.3 Security
+
+| Check | Result |
+|---|---|
+| Dependencies (`npm audit`) | 0 known vulnerabilities; one runtime dependency (the font) |
+| Requests to other websites | None. No trackers, no accounts, nothing leaves the device |
+| Built files | No source maps, no `eval`, no secrets |
+| Places where the game writes HTML | All filled from the game's own files (board files, texts), never from typing, the address or storage. Postcard storage is only compared to a fixed list |
+| Tampered storage (broken JSON, wrong type, HTML in the data, 200,000 entries) and storage blocked | No crash, no script ran, the game plays on |
+| A strict Content-Security-Policy (only the game's own files may run) | A whole 108-turn game under it: **0 violations**, so it can be switched on (3.2) |
+| Offline worker | Issues 6–8 above, fixed |
+| GitHub workflow | Least permissions; tests run before publishing. Actions are pinned by version tag, not by exact commit (3.2) |
+
+### 2.4 User experience
+
+| Check | Result |
+|---|---|
+| Accessibility scan (axe-core) on start screen, album, intro, game screen, player popup | No serious or critical problems. 2 moderate: the game screen has no top-level heading; the album's text sits outside a page landmark |
+| Screen sizes 320×568, 390×844, 740×360 (sideways), 768×1024, 1366×768 | No sideways or up-down scrolling; the action button always on screen; every button at least 44 px (the size a finger needs) |
+| Keyboard only | Every button reachable with Tab. The board's squares are not (they can only be tapped), and Escape does not close a popup |
+| Visual | The "START: a 6 to enter" label is covered by the tokens waiting there |
+
+## 3. Proposals for the owner's approval
+
+Each one is small enough to be one step. Nothing here changes the rules.
+
+### 3.1 Correctness
+
+| # | Proposal | Why | Effort |
+|---|---|---|---|
+| C1 ✅ built | Run the 100,000-game check (`npm run test:sim`, 1 minute) in the GitHub workflow, at least weekly | It was red for a whole day without anyone seeing it (fix 11) | Small |
+| C2 ✅ built | Remove the dead code of the Shortcut and the stair steps from the screen (choosing a road, crossroads texts, stair drawing); keep it in the engine only as long as the old reports must be reproducible | About 150 lines no player can reach; every later change has to keep them right | Medium |
+| C3 ✅ built | Add the real-browser game check used for this audit (whole games, board vs engine every turn) to the repository as `npm run test:browser` | It found no differences today; it would catch a screen that drifts from the rules in a later change | Medium |
+
+### 3.2 Security
+
+| # | Proposal | Why | Effort |
+|---|---|---|---|
+| S1 ✅ built | Switch on the strict Content-Security-Policy tested in 2.3 (one line in `index.html`) | If a future change ever put outside text into the page, the browser would refuse to run it | Small, tested |
+| S2 ✅ built | Pin the GitHub Actions to exact commits (and let Dependabot update them) | A tag can be moved by whoever controls that action; a commit cannot | Small |
+| S3 ✅ built | Write player-visible text through one escaping helper | Today all text is our own, so nothing can go wrong. The day player names, custom boards or the Android app arrive, it matters | Small |
+| S4 ✅ built | Make `?fast` (fast-forward, for testing) work only in the development build | Harmless today; a player who finds it just gets a fast game. Tidier without it | Small |
+
+### 3.3 Performance
+
+| # | Proposal | Why | Effort |
+|---|---|---|---|
+| P1 ✅ built | Draw the board's paper and walls once as a picture, with only tokens and markers live on top | Turning a cheap phone costs ~1 s of work today; this would make it near instant and lighten every board update | Medium |
+| P2 ✅ built | Redraw the player row and the cards only when they change (today they are rebuilt many times per turn) | Small gain on cheap phones (~15–20 ms per update at 6× slower) | Small |
+
+### 3.4 User experience
+
+| # | Proposal | Why | Effort |
+|---|---|---|---|
+| U1 ✅ built | **Continue a game after closing the app.** The game is fully decided by its seed and the choices made, so saving those two lets it be replayed to the same spot | A long game is ~50 rounds (30–60 min). Today a reload, a phone call or a closed tab loses it | Medium |
+| U2 ✅ built | A "Leave game" button (back to the start screen, with "Are you sure?") | Today the only way out of a game is to finish it or reload | Small |
+| U3 ✅ built | Pick the first player at random (a short "who starts" moment) | The first seat wins 25.4% on the short board (0.4 points above fair); random order spreads that, and it is a nice moment at the table | Small |
+| U4 ✅ built | Move the "START: a 6 to enter" label so the waiting tokens do not cover it | Visible on every game start | Small |
+| U5 ✅ built | Keyboard and screen reader: Escape closes a popup, the board's squares can be reached with Tab, the game screen gets a heading | The 2 moderate scan findings plus the keyboard gaps (2.4) | Small |
+| U6 ✅ reworded | Story texts "One more step down the porch" / "You lay another stone" still describe stair steps, which no longer exist. Keep as story, or reword? | The owner's narrative; not changed without approval | Owner's words |
+| U7 📋 list ready (docs/U7_sounds.md) | Optional sound and vibration for the die, a 6, a bump and the win (off by default, one switch) | Phones at a family table; the 6 party is silent today | Medium |
+
+## 4. How the tests were run
+
+- Browser: Chromium (Playwright), phone size 390×844 unless stated; whole games played by tapping the real buttons; the game's seed read from the page and the same game replayed in the engine.
+- "6× slower": Chrome's processor slow-down, the usual stand-in for a budget Android phone.
+- Offline: the built game served like GitHub Pages and like `npm run preview`; first visit, offline reload, and an update from the previous version.
+- The test scripts are not part of this change (proposal C3).
+
+## 5. Built after the owner's approval (15 Oct)
+
+| # | What was built | How it was tested |
+|---|---|---|
+| U1 | **Continue game.** After every turn the seed, the first player and every answer to the engine are saved on this device; "Continue game · The Quick Trip · 4 players · round 12" on the start screen plays the game again to that turn. A changed board file or engine version refuses the save. Reloading mid-turn brings back the start of that turn with the same throws (nothing to gain by reloading) | `test/save.test.ts`: games saved halfway on both boards replay event for event and go on identically; tampered or outdated saves are refused. In the browser: reloads at turns 5, 12, 15 and 60, each continued to the end; the board after Continue was identical every time |
+| U2 | **Leave** in the players' bar: "Leave this game?" (Leave / Stay), back to the start screen; the game stays saved | Browser: Leave at turns 8 and 30, then Continue: identical board, games played to the end and checked against the engine |
+| U3 | **Random first player.** The avatars light up in turn and stop on the starter, "Red starts!", and the start popup says so. The engine takes the first seat (`first`, default 0 = the simulator's order, so every measured number still holds) | `test/first.test.ts` (turn order, rounds, a first player who is out); browser games started with seats 0, 1, 2 and 3 |
+| U6 | "Still on the Porch: … The door is still open behind you." and "Still Stuck: … The mud holds on with a little gurgle." (no more stair steps; the Bog moment shows the Bog picture) | Seen in the browser |
+| S1 | The Content-Security-Policy is added to the built page only (the development server needs its live reload) | Production build: whole games, a reload and Continue, offline: 0 policy violations |
+| C1 | `.github/workflows/checks.yml`: typecheck, all tests, the 100,000-game check and the build on every push and pull request, and every Monday | Same commands run here: all green |
+| P1 | Measured first: the cost was not the board picture but the **token glide**. A token inside the board drawing made the browser lay out and repaint all 200 squares on every frame of every hop. The tokens are now page elements over the drawing, so the glide runs on the graphics chip | Same 40 hops on the long board, 6× slower processor: main-thread work **2,800 ms → 1,065 ms (−62%)**. Tokens measured on their squares: 0 px off in portrait, landscape and zoomed in |
+
+Found while building, and fixed:
+
+- **A person was never asked to spoil a computer player's luck.** In a computer's turn every question was answered
+  as a computer would, including "Spoil Red's luck?" addressed to a person holding a Bonus card. Now the person is
+  asked (about 0.9 times per game; seen 18 times in 10 browser games).
+
+Seen, not changed (not part of the approval): on a 390 × 844 phone the "You need a 6 to enter" popup's "Let's go!"
+button is cut in half at the bottom of the board panel (it can still be tapped). This was already so before today.
+
+After the build: 181 / 181 tests, `npm run test:sim` 6 / 6, typecheck and build clean. 12 more whole games in the
+browser (reloads, Leave, computer and person players) checked turn by turn against the engine: 0 differences; 18 more
+(production build with the security policy, and the spoil checks) with no errors.
+
+## 6. Every screen size (owner's report, 15 Oct: "buttons cut or almost invisible, you need to scroll")
+
+Checked automatically: 13 screens and popups (start screen, album, a turn, the start popup, a story, the Bonus card
+choice, the spoil question, player / card / square info, Leave, the win, Welcome back) × 19 screen sizes, from a folded
+phone (280 × 653) and an iPhone SE held sideways (568 × 320) to tablets, laptops and PC screens up to 2560 × 1440:
+247 combinations. Each is checked for buttons off screen or cut, popups that need scrolling, the page scrolling,
+buttons overlapping, words squeezed, anything spilling out of the turn panel, and buttons under 40 px.
+
+| | Before | After |
+|---|---|---|
+| Combinations with a problem | **65 of 247** (the start popup's "Let's go!" and the win popup's buttons cut on nearly every phone, also the largest; the start screen scrolling on phones, sideways phones and 1366 × 768 laptops; the start screen wider than a folded phone) | **0 of 247** |
+
+What changed:
+
+- **Popups fit wherever they are.** A popup stays over the board when it fits (the owner's design). When it does not,
+  it moves over everything above the die and the action button (so a choice's buttons stay in view); a popup with its
+  own buttons (start, win, Leave, Welcome back) or an info popup may use the whole screen. If even that is too small,
+  it gets compact and only its words scroll: **its buttons are always in view**. Fitted again when the screen turns.
+- **Start screen without scrolling**, on every size: one column in portrait, sized by the screen's height (players
+  in two columns, name over Person / Computer, on short phones); two columns when the screen is wider than tall
+  (phones sideways, tablets, PC).
+- **PC screens:** every size in the game grows with the screen (one base size, in rem): 16 px on phones, tablets and
+  small laptops, about 20 px on 1920 × 1080, 27 px on 2560 × 1440. The board and the stage size themselves already.
+- **Narrow turn panel** (phones held sideways): the turn line, cards, die and buttons size themselves by the panel's
+  own width, and the three spoil choices stack instead of becoming slivers.
+- **Players' bar:** Leave has its own place (it was under Blue's avatar on a 320 px phone); avatars shrink to fit.
+
+Regression after the change: 181 / 181 tests; 4 more whole games in the production build (reload, Leave, people and
+computer players) checked turn by turn against the engine: 0 differences, 0 security-policy violations; tokens 0 px
+off their squares in portrait, landscape and zoomed in; offline start works.
+
+## 7. The second round of approvals (owner, 15 Oct): C2, C3, S2–S4, P2, U4, U5, a first-time guide; U7 listed
+
+| # | Built | Tested |
+|---|---|---|
+| C2 | The Shortcut and stair-step code is gone from the screen (board drawing, stage, popups, tips, postcards; about 240 lines). The engine keeps the rules (the simulator comparison and the old reports need them). A board with a Shortcut is refused with a clear message, never half drawn | `test/layout.test.ts` |
+| C3 | `npm run test:browser` (`tools/browser/`), also a job in the GitHub checks: whole games checked against the engine turn by turn (reload and Leave included), 15 screens × 19 sizes, the published build (security policy, offline with the site really gone, other apps' caches, tampered storage, guide, keyboard, accessibility, no fast-forward) | Full run: **19 of 19 checks pass**: 5 whole games, 560 turns compared with the engine, 0 differences; 285 screen / size combinations, no problem; every published-build check |
+| S2 | Every GitHub Action pinned to an exact commit (same versions as before); Dependabot proposes updates weekly as pull requests | `.github/` |
+| S3 | `src/render/html.ts` `esc()`: board text, region and landmark names, player names, postcard text and picture labels go through it; plain-text places (button labels, stamps) get the plain name | `test/html.test.ts` (markup in a board file is shown as text) |
+| S4 | `?fast` only in development and the test build | the browser test checks the published build has no fast-forward |
+| P2 | The players' bar, the turn line and the hand are drawn again only when they change | the browser games |
+| U4 | Tokens waiting on Start are smaller and in the lower half; "START: a 6 to enter" is centred above them | seen on screen |
+| U5 | Escape closes the popup on top (and the album, and the guide); the board is one Tab stop, the arrow keys walk it, Enter or Space tells what a square does, with a yellow ring on the square; a page heading; the album is a dialog that takes the focus | browser test: keyboard; accessibility scan with no serious or critical problem on the guide, start screen, album and game screen |
+| Guide | "How to play": 4 short pages (the race, a 6 to set off, good and bad squares, lanterns and the exact finish), shown once on a device before the start screen, Skip / Back / Next, arrow keys, Escape; and from "How to play" on the start screen. **Texts are a draft for the owner's approval** (`src/ui/guide.ts`) | browser test: first visit; all sizes |
+| U7 | Built with the owner's choices (§8) | §8 |
+
+Found and fixed while building:
+
+- **✕ on the win popup started a new game.** ✕ means "close", and the end of the game treated anything but "New game"
+  as "Play again". Now ✕ (and Escape) puts the results aside, with "Back to the results".
+- The new guide first used the class name `guide`, which the turn line already had: the turn line floated over every
+  popup and blocked the start popup's button. Caught by the browser test; the guide is now `howto`.
+- The accessibility scan found the Start square's spoken name ("Home and Start") did not include its visible words;
+  now "START: a 6 to enter (Home and Start)".
+- The test of "no fast-forward in the published build" first looked for `"fast"`, but the build writes `` `fast` ``;
+  it now accepts any quote (the build was right; the test would have missed a mistake).
+- The browser test's offline check failed only in the full run. Traced to the test, not the game: Vite's development
+  server switches the whole Node process to "development", so the test build made after it left out the offline
+  worker (which only production builds register). Builds in the tests are now always production builds, a check
+  confirms the worker is in the test build, and offline is tested by really stopping the site's server.
+
+## 8. U7: sound and music (owner's choices, 15 Oct)
+
+| What | Built | Tested |
+|---|---|---|
+| Sounds | The owner picked 16 effects and 2 music pieces from a listening page of CC0 sounds (Kenney, OpenGameArt). Trimmed, set to the same loudness, MP3; 1.1 MB in all, in `src/assets/sounds/`, sources in `CREDITS.txt` (no credit needed, given anyway). **Part of the package** (owner, 15 Oct): built in with the game's other files, carried by the Android app | the browser test decodes all 19 files of the build |
+| Fully offline | The build writes the list of every file of the game (page, scripts, styles, fonts, icons, the 19 sounds: 33 files, 1.5 MB) into the offline worker, with a cache name made from their contents. The worker installs only once all of them are stored, so the game, sound included, works offline from the first start, whether or not sound was ever switched on; a new version replaces the old files at once | browser test: every sound in the worker's list; with sound never switched on, the site's server really stopped, then sound switched on: all 19 sounds play from the device and a game is played. A deliberate break (sounds left out of the list) makes both checks fail |
+| When | dice on each throw; step on each square; six; good / bad square; bump (a player sent back); jump up / down (rides and snakes); bog; card (won, played, Bog boots); lantern out / lit again; new postcard; a soft tap on every button; win; out of the game. Menu music on the start screen (its own beginning once, then the loop), calmer music in the game, stopped at the end | browser test: the sounds load as the game plays |
+| Switches | Two, both **off** until a player turns them on, kept on the device: sound effects (with a short buzz on phones for a 6, a bump, bad luck, the Bog, out, the win) and music. Start screen: two buttons beside "Let's go!"; game: the speaker beside the die opens "Sound and music" | browser test: off at first; on; all sounds ready; the speaker; kept after a reload. All sizes (16 screens × 19 sizes) |
+| Safety | Web Audio after the first tap (browsers allow sound only then), all sounds prepared at once; the game never waits for a sound; the security policy needs no change (the game's own files); silent while the app is in the background | security-policy check (no violation) |
+
+Changed at the owner's request (15 Oct): the first version downloaded each sound the first time it played (not
+authorised); now every sound is in the package and stored for offline at install, as above.
+
+Found and fixed while building: on a folded phone (280 px) the two switches pushed "Postcards" and "How to play" off
+the start screen; "Let's go!" is narrower there, so all stay on one line.
+
+## 9. Copyright and privacy (owner, 15 Oct, for Google Play)
+
+| What | Built | Tested |
+|---|---|---|
+| Notice | "© 2026 Connect AL · Copyright · Privacy" at the foot of the start screen (on a phone held sideways, under the players) | all 19 screen sizes; accessibility scan |
+| Copyright page | `public/copyright.html`: all rights reserved; what is protected (code, boards, texts, pictures, name and look); what players may do; what needs written permission; material by others and its licences; how to report copying | browser test: link, page, way back; accessibility scan; opens offline |
+| Privacy Policy | `public/privacy.html`, written for Google Play's user-data rules: no personal data collected; what the game keeps on the device (4 things, each named) and how to delete it; hosting (GitHub Pages, Google Play); no permissions beyond vibration; children; changes; contact | `test/legal.test.ts`: every storage key in the code is named in the policy (a new one fails the test until the policy says it) |
+| Licences | `LICENSE` (all rights reserved), `package.json` `"license": "UNLICENSED"`; `public/licenses/third-party.txt` with the font's SIL Open Font License (which must travel with the font), the CC0 sound credits and Vite's MIT notice | `test/legal.test.ts`: every sound file credited |
+
+The pages are plain HTML with no script and their own strict security policy; the offline worker stores them with the
+rest of the game. Contact on both pages: the project's GitHub issues page.

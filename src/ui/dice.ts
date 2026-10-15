@@ -14,6 +14,8 @@ export class Dice {
   private note = "";
   /** The next throw starts a new list (after a move: a new move). */
   private stale = false;
+  /** The waiting tap listener, dropped when the throw was made with the button instead (audit: they piled up). */
+  private tap: AbortController | null = null;
 
   constructor(host: HTMLElement) {
     host.innerHTML = `<button class="die" aria-label="Die" disabled></button><span class="throws" aria-hidden="true"></span><span class="sr" aria-live="polite"></span>`;
@@ -33,11 +35,14 @@ export class Dice {
     (this.die as HTMLButtonElement).disabled = !on;
     this.die.classList.toggle("ready", on);
     if (on) this.die.setAttribute("aria-label", "Tap the die to roll");
+    else { this.tap?.abort(); this.tap = null; }
   }
 
   /** Resolves when the die is tapped. */
   tapped(): Promise<void> {
-    return new Promise((r) => this.die.addEventListener("click", () => r(), { once: true }));
+    this.tap?.abort();
+    const tap = (this.tap = new AbortController());
+    return new Promise((r) => this.die.addEventListener("click", () => r(), { once: true, signal: tap.signal }));
   }
 
   clear(): void {

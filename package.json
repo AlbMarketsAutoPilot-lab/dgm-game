@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "description": "Don't Get Mad! — a hand-drawn family race game (web + Android).",
+  "author": "Connect AL",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,10 +13,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:sim": "vitest run --config vitest.sim.config.ts"
+    "test:sim": "vitest run --config vitest.sim.config.ts",
+    "test:browser": "node tools/browser/run.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "axe-core": "4.14.0",
+    "playwright": "1.64.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.4"

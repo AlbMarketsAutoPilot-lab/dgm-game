@@ -2,21 +2,25 @@
 import "@fontsource/patrick-hand";
 import "./ui/app.css";
 import { GameScreen, type Setup } from "./ui/app";
+import type { SavedGame } from "./ui/save";
+import { guideSeen, showGuide } from "./ui/guide";
 import { showSetup } from "./ui/setup";
 
 const root = document.querySelector<HTMLElement>("#app")!;
 let last: Setup | null = null;
 
-function play(s: Setup): void {
+/** A new game, or a saved one continued (U1). */
+function play(s: Setup, resume?: SavedGame): void {
   last = s;
-  new GameScreen(root, s, (again) => (again ? play(s) : menu()));
+  new GameScreen(root, s, (again) => (again ? play(s) : menu()), resume);
 }
 
 function menu(): void {
   showSetup(root, last, play);
 }
 
-document.fonts.load('100px "Patrick Hand"').finally(menu);
+// The first time on this device: the short "How to play" guide, then the start screen.
+document.fonts.load('100px "Patrick Hand"').finally(() => (guideSeen() ? menu() : void showGuide().then(menu)));
 
 // Offline (Step 7): only in the built game, so development always shows the latest code. Works without it too.
 if (import.meta.env.PROD && "serviceWorker" in navigator) {

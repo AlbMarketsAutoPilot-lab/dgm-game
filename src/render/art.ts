@@ -9,6 +9,7 @@ import { KIT_CSS } from "./art-kit";
 import { PLACES } from "./art-places";
 import { TRAVEL } from "./art-travel";
 import { MODERN } from "./art-modern";
+import { esc } from "./html";
 import { ICONS } from "./icons";
 
 const INK = "#4b2377";
@@ -247,7 +248,7 @@ export const hasArt = (name: string): boolean => name in ART;
 /** Inline SVG for an icon name: its illustration (the line icon only as a safety net for an unknown name). */
 export function artFor(name: string, label: string): string {
   const a = ART[name];
-  if (a) return `<svg class="art art-${name}" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${label}">${a.svg}</svg>`;
+  if (a) return `<svg class="art art-${name}" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${esc(label)}">${a.svg}</svg>`;
   const d = ICONS[name] ?? ICONS.card;
-  return `<svg class="art art-icon" viewBox="0 0 24 24" role="img" aria-label="${label}"><path class="bob" d="${d}" fill="none" stroke="${INK}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg class="art art-icon" viewBox="0 0 24 24" role="img" aria-label="${esc(label)}"><path class="bob" d="${d}" fill="none" stroke="${INK}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }

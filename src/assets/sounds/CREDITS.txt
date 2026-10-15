@@ -1,0 +1,25 @@
+Sounds and music of Don't Get Mad! (U7, chosen by the owner on 15 Oct 2026)
+
+Every file is CC0 (public domain, https://creativecommons.org/publicdomain/zero/1.0/): free to use, no credit needed.
+Credit is given anyway. Files were trimmed (no silence at the start), set to the same loudness and converted to MP3.
+They are part of the game's package (built in with its other files and stored for offline at install).
+
+dice.mp3         Kenney, Casino Audio: dice-throw-3                  https://kenney.nl/assets/casino-audio
+card.mp3         Kenney, Casino Audio: card-fan-1                    https://kenney.nl/assets/casino-audio
+step.mp3         Kenney, Impact Sounds: footstep_wood_001            https://kenney.nl/assets/impact-sounds
+bump.mp3         Kenney, Impact Sounds: impactSoft_medium_001        https://kenney.nl/assets/impact-sounds
+postcard.mp3     Kenney, RPG Audio: bookPlace1                       https://kenney.nl/assets/rpg-audio
+tap.mp3          Kenney, Interface Sounds: click_001                 https://kenney.nl/assets/interface-sounds
+six.mp3          Kenney, Music Jingles: jingles_PIZZI02              https://kenney.nl/assets/music-jingles
+good.mp3         Kenney, Music Jingles: jingles_PIZZI06              https://kenney.nl/assets/music-jingles
+bad.mp3          Kenney, Music Jingles: jingles_PIZZI11              https://kenney.nl/assets/music-jingles
+jump-up.mp3      Kenney, Music Jingles: jingles_PIZZI15              https://kenney.nl/assets/music-jingles
+jump-down.mp3    Kenney, Music Jingles: jingles_PIZZI01              https://kenney.nl/assets/music-jingles
+lantern-on.mp3   Kenney, Music Jingles: jingles_STEEL12              https://kenney.nl/assets/music-jingles
+out.mp3          Kenney, Music Jingles: jingles_PIZZI07              https://kenney.nl/assets/music-jingles
+bog.mp3          rubberduck, 25 CC0 mud sfx: mud_02                  https://opengameart.org/content/25-cc0-mud-sfx
+lantern-out.mp3  pyranostudios, Air Whoosh (a short part)            https://opengameart.org/content/air-whoosh
+win.mp3          mintodog, Cozy Puzzle Clear (Jingle)                https://opengameart.org/content/cozy-puzzle-jingle-result
+menu-intro.mp3   starninjas, Ukulele Forest (beginning)              https://opengameart.org/content/ukulele-forest-beginning-loop-and-end
+menu-loop.mp3    starninjas, Ukulele Forest (loop)                   https://opengameart.org/content/ukulele-forest-beginning-loop-and-end
+game.mp3         extenz, Short Kalimba Loop                          https://opengameart.org/content/short-kalimba-loop

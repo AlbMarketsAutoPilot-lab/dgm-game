@@ -2,7 +2,17 @@
 // this game"; from then on the engine gets "Let it go" (false) for that seat, as if they had pressed it. One game only.
 
 export class SpoilQuestion {
-  private readonly quiet = new Set<number>();
+  private readonly quiet: Set<number>;
+
+  /** `quiet`: seats that already said "Don't ask me again" (a continued game, U1). */
+  constructor(quiet: Iterable<number> = []) {
+    this.quiet = new Set(quiet);
+  }
+
+  /** The seats that said "Don't ask me again this game" (saved with the game). */
+  get silenced(): number[] {
+    return [...this.quiet];
+  }
 
   /** Ask this seat? No once it pressed "Don't ask me again this game". */
   asks(seat: number): boolean {
