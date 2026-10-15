@@ -3,16 +3,19 @@ import { BOARDS, type BoardId } from "../engine";
 import type { Setup } from "./app";
 import { PLAYERS, tokenSvg } from "./players";
 import { POSTCARDS, loadAlbum, showAlbum } from "./postcards";
+import { loadGame, type SavedGame } from "./save";
 
-export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setup) => void): void {
+/** Start screen. `start` gets the saved game too when the players continue it (U1). */
+export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setup, resume?: SavedGame) => void): void {
   let board: BoardId = (last?.board.id as BoardId) ?? "short", players = last?.players ?? 2;
   const computer = last ? [...last.computer] : [false, true, true, true];
   const render = () => {
-    const album = loadAlbum();
+    const album = loadAlbum(), saved = loadGame();
     root.innerHTML = `
       <div class="setup">
         <h1>Don't Get Mad!</h1>
         <p class="sub">A hand-drawn journey to the Festival of Lights</p>
+        ${saved ? `<button class="continue primary">Continue game<small>${BOARDS[saved.board].story.title} · ${saved.players} players · round ${saved.round}</small></button>` : ""}
         <h2>Which journey?</h2>
         <div class="row">${(["short", "long"] as BoardId[]).map((id) => `<button class="pick" data-board="${id}" aria-pressed="${board === id}">${BOARDS[id].story.title}<small>${id === "short" ? "100 squares, about 30 rounds" : "202 squares, about 50 rounds"}</small></button>`).join("")}</div>
         <h2>Players</h2>
@@ -25,6 +28,8 @@ export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setu
     root.querySelectorAll<HTMLButtonElement>("[data-players]").forEach((b) => b.onclick = () => { players = Number(b.dataset.players); render(); });
     root.querySelectorAll<HTMLButtonElement>("[data-seat]").forEach((b) => b.onclick = () => { const i = Number(b.dataset.seat); computer[i] = !computer[i]; render(); });
     root.querySelector<HTMLButtonElement>(".album-open")!.onclick = () => void showAlbum().then(render);
+    const cont = root.querySelector<HTMLButtonElement>(".continue");
+    if (cont && saved) cont.onclick = () => start({ board: BOARDS[saved.board], players: saved.players, computer: [...saved.computer] }, saved);
     root.querySelector<HTMLButtonElement>(".go")!.onclick = () => start({ board: BOARDS[board], players, computer: computer.slice(0, players) });
   };
   render();

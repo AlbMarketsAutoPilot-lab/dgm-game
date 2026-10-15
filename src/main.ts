@@ -2,14 +2,16 @@
 import "@fontsource/patrick-hand";
 import "./ui/app.css";
 import { GameScreen, type Setup } from "./ui/app";
+import type { SavedGame } from "./ui/save";
 import { showSetup } from "./ui/setup";
 
 const root = document.querySelector<HTMLElement>("#app")!;
 let last: Setup | null = null;
 
-function play(s: Setup): void {
+/** A new game, or a saved one continued (U1). */
+function play(s: Setup, resume?: SavedGame): void {
   last = s;
-  new GameScreen(root, s, (again) => (again ? play(s) : menu()));
+  new GameScreen(root, s, (again) => (again ? play(s) : menu()), resume);
 }
 
 function menu(): void {

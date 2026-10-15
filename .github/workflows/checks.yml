@@ -1,0 +1,29 @@
+# C1 (owner approved, 15 Oct): every push and pull request runs all the checks, including the slow 100,000-game one
+# (`npm run test:sim`, about a minute) that once stayed red for a day unseen. Also weekly, so a red check shows up even
+# when nothing is pushed.
+name: Checks
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:sim
+      - run: npm run build

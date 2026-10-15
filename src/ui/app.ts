@@ -3,7 +3,7 @@
 // choice and the win are popups over the whole board. The players sit in a row on top (portrait) or a column on the
 // right (landscape); tap one to see everything about them. All rules come from the engine (src/engine); this file
 // only shows its events, in order, and answers its decisions.
-import { Game, OFF, OUT, START, isShortcut, shortcutOf, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
+import { BOARDS, Game, OFF, OUT, START, isShortcut, randomSeed, shortcutOf, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
 import { artFor } from "../render/art";
 import { cardFace } from "../render/art-modern";
 import { Dice } from "./dice";
@@ -13,7 +13,8 @@ import { Popups, type PopupContent } from "./popup";
 import { SpoilQuestion } from "./spoil";
 import { Stage } from "./stage";
 import { MOMENTS, fill, outcome, taleOf, type Tale } from "./tales";
-import { loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
+import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
+import { clearGame, replay, saveGame, type SavedGame } from "./save";
 
 export interface Setup {
   board: Board;
@@ -24,9 +25,11 @@ export interface Setup {
 
 // `?fast` in the address fast-forwards whole games (for testing). "Reduce motion" only stops the animations.
 const fast = new URLSearchParams(location.search).has("fast");
-const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, fast ? Math.min(ms, 40) : ms));
+/** Leaving a game in the middle of a turn: whatever was still running stops here, quietly. */
+const STOP = new Promise<never>(() => {});
 /** A computer player's badge on the avatar (owner, Step 7: a robot instead of "CPU"). */
 const robotSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6V3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.6" r="1.7" fill="currentColor"/><rect x="4.5" y="6" width="15" height="13" rx="4" fill="currentColor"/><rect x="2" y="10" width="2" height="5" rx="1" fill="currentColor"/><rect x="20" y="10" width="2" height="5" rx="1" fill="currentColor"/><circle cx="9.2" cy="11.6" r="1.9" fill="var(--ink)"/><circle cx="14.8" cy="11.6" r="1.9" fill="var(--ink)"/><rect x="9" y="15.2" width="6" height="1.7" rx=".85" fill="var(--ink)"/></svg>`;
+const leaveSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5M14 8l-4 4 4 4M10 12h10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const lanternSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6M12 2v2M8 7h8l-1 11H9zM8 7c0-2 8-2 8 0M9.5 18h5v2.5h-5z" fill="#f2c230" stroke="#4b2377" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 const CARD_INFO = {
@@ -53,16 +56,38 @@ export class GameScreen {
   /** Why each player is waiting (the square that made them miss turns), for the "skips this turn" popup. */
   private readonly waitCause: string[] = [];
   /** Who said "Don't ask me again this game" to the spoil question (Step 5b). */
-  private readonly spoil = new SpoilQuestion();
+  private spoil = new SpoilQuestion();
   /** This turn's story so far (newest first); only the newest is shown (owner: no list of earlier moments). */
   private told: PopupContent[] = [];
   /** Where each token is shown (follows the events, one step behind the engine's final state). */
   private readonly places: { pos: Pos; stair: number }[];
+  /** What decides this game (U1: saved after every turn, so it can be continued). */
+  private readonly seed: number;
+  private readonly answers: Answer[] = [];
+  private turns = 0;
+  /** Continued from a saved game. */
+  private readonly resumed: boolean;
+  /** The players left this game (U2): nothing more happens on this screen. */
+  private gone = false;
 
-  constructor(root: HTMLElement, private readonly setup: Setup, private readonly onExit: (again: boolean) => void) {
+  /** `resume`: a saved game to continue (U1); without it a new game, with a random first player (U3). */
+  constructor(root: HTMLElement, private readonly setup: Setup, private readonly onExit: (again: boolean) => void, resume?: SavedGame) {
     const { board, players } = setup;
     this.board = board;
-    this.game = new Game(board, { players });
+    const again = resume ? replay(resume) : null;
+    this.resumed = !!again;
+    if (again && resume) {
+      this.seed = resume.seed;
+      this.game = again;
+      this.answers.push(...resume.answers);
+      this.turns = resume.turns;
+      this.spoil = new SpoilQuestion(resume.quiet);
+      this.newCards.push(...POSTCARDS.filter((c) => resume.cards.includes(c.id)));
+      for (const e of again.events) this.noteWait(e);
+    } else {
+      this.seed = randomSeed();
+      this.game = new Game(board, { players, seed: this.seed, first: Math.floor(Math.random() * players) });
+    }
     root.innerHTML = `
       <div class="game">
         <nav class="players" aria-label="Players"></nav>
@@ -82,7 +107,10 @@ export class GameScreen {
     this.hud = root.querySelector(".hud")!;
     this.act = root.querySelector(".act")!;
     this.places = this.game.players.map((p) => ({ pos: p.pos, stair: 0 }));
+    this.places.forEach((pl, i) => this.overview.setPlace(i, pl.pos));
+    this.overview.setRoadblock(this.game.roadblock);
     this.bar.addEventListener("click", (e) => {
+      if ((e.target as Element).closest(".leave")) return void this.leave();
       const b = (e.target as Element).closest<HTMLElement>("[data-seat]");
       if (b) this.playerInfo(Number(b.dataset.seat));
     });
@@ -91,7 +119,14 @@ export class GameScreen {
       if (b) this.cardInfo(b.dataset.card as keyof typeof CARD_INFO);
     });
     this.render();
+    if (!this.resumed) this.save(); // a new game replaces the saved one at once (not only after its first turn)
     void this.run();
+  }
+
+  /** A pause; never ends once the players have left the game. */
+  private wait(ms: number): Promise<void> {
+    if (this.gone) return STOP;
+    return new Promise<void>((r) => setTimeout(r, fast ? Math.min(ms, 40) : ms)).then(() => (this.gone ? STOP : undefined));
   }
 
   private name(seat: number): string {
@@ -106,15 +141,34 @@ export class GameScreen {
   }
 
   private async run(): Promise<void> {
-    if (this.setup.computer.some((c) => !c)) {
+    const people = this.setup.computer.some((c) => !c);
+    if (this.resumed) {
+      const next = this.nextSeat();
+      if (people) {
+        await this.pops.show({
+          kind: "info", art: `<div class="one">${tokenSvg(next, "tok", true)}</div>`, kicker: "Saved game", title: "Welcome back!",
+          text: `The journey goes on where you left it: round ${this.roundOf(next)}, <b>${this.name(next)}</b> plays next.`,
+          buttons: [{ label: "Let's go on!", value: "ok", primary: true }],
+        });
+        if (this.gone) return;
+      }
+    } else {
+      await this.whoStarts();
+      if (this.gone) return;
+    }
+    if (people && !this.resumed) {
+      const first = this.name(this.game.first);
       await this.pops.show({
-        kind: "info", art: artFor("house", "Home"), kicker: "How to start", title: "You need a 6 to enter",
+        kind: "info", art: artFor("house", "Home"), kicker: `${first} starts`, title: "You need a 6 to enter",
         text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> A 6 always gives you one more throw, and the throws add up. No 6 in three throws: you set off anyway, but a lantern goes out.",
         outcome: "First to the Festival of Lights wins. You need the exact number to get in.",
         buttons: [{ label: "Let's go!", value: "ok", primary: true }],
       });
     }
+    if (this.gone) return;
     while (!this.game.over) await this.turn();
+    if (this.gone) return;
+    clearGame();
     const w = this.game.winner;
     this.overview.setReach(null);
     const m = w === null ? MOMENTS.nobody : this.game.lastStanding ? MOMENTS.winLast : MOMENTS.win;
@@ -134,6 +188,52 @@ export class GameScreen {
     this.onExit(again !== "new");
   }
 
+  /** U3: the first player is drawn at random. The avatars take turns lighting up, and stop on the one who starts. */
+  private async whoStarts(): Promise<void> {
+    const n = this.game.players.length, first = this.game.first, hops = 2 * n + first + 1;
+    for (let i = 0; i < hops; i++) {
+      this.bar.querySelectorAll(".avatar").forEach((a, k) => a.classList.toggle("now", k === i % n));
+      await this.wait(fast ? 10 : 90 + i * 14);
+    }
+    this.seat = first;
+    this.overview.setCurrent(first);
+    this.render();
+    this.stage.show(first, OFF);
+    this.stage.stamp("good", `${this.name(first)} starts!`);
+    await this.wait(900);
+  }
+
+  /** The round a turn of `seat` belongs to (the engine counts a round only when its first throw starts). */
+  private roundOf(seat: number): number {
+    const n = this.game.players.length, rel = (s: number) => (s - this.game.first + n) % n;
+    return this.game.round + (rel(seat) <= rel(this.game.currentSeat) ? 1 : 0);
+  }
+
+  /** U2: leave the game, after "Are you sure?". It stays saved, so "Continue game" brings it back. */
+  private async leave(): Promise<void> {
+    if (this.gone) return;
+    const v = await this.pops.show({
+      kind: "info", art: artFor("house", "Home"), kicker: "Leave game", title: "Leave this game?",
+      text: this.game.over ? "Back to the start screen." : "The game is saved on this device: <b>Continue game</b> on the start screen brings you back to the start of this turn, with the same throws.",
+      buttons: [{ label: "Leave", value: "leave", primary: true }, { label: "Stay", value: "stay" }],
+    });
+    if (v !== "leave" || this.gone) return;
+    this.gone = true;
+    this.onExit(false);
+  }
+
+  /** U1: what decides the game so far, after every whole turn. */
+  private save(): void {
+    if (this.gone) return;
+    if (this.game.over) return clearGame();
+    const id = (Object.keys(BOARDS) as (keyof typeof BOARDS)[]).find((k) => BOARDS[k] === this.board);
+    if (!id) return;
+    saveGame({
+      board: id, players: this.setup.players, computer: this.setup.computer, seed: this.seed, first: this.game.first,
+      answers: this.answers, turns: this.turns, quiet: this.spoil.silenced, cards: this.newCards.map((c) => c.id), round: this.roundOf(this.nextSeat()),
+    });
+  }
+
   // ---- One turn ----
 
   private async turn(): Promise<void> {
@@ -147,7 +247,7 @@ export class GameScreen {
     this.stage.show(seat, pl.pos, pl.stair);
     // The round this turn belongs to: the engine counts it only when the throw starts (audit: the prompt showed the
     // previous round, and no round at all on the first turn).
-    this.round = this.game.round + (seat <= this.game.currentSeat ? 1 : 0);
+    this.round = this.roundOf(seat);
     this.render();
     // the Puddle moves exactly 1 whatever the die shows: no die faces then (the line under "Blue's turn" says so)
     this.overview.setReach(p.skip > 0 || p.trapped || p.pos === OFF || p.slow ? null : pl.pos, p.double);
@@ -155,9 +255,9 @@ export class GameScreen {
       const who = this.name(seat), left = p.skip - 1, cause = this.waitCause[seat];
       this.story(seat, { title: MOMENTS.wait.title, text: cause ? `${who} landed on <b>${cause}</b>, which says “miss turns”. So ${who} skips this turn.` : fill(MOMENTS.wait.text, { p: who }), art: artFor("big-clock", "Waiting") },
         left > 0 ? `${left} more turn${left > 1 ? "s" : ""} to wait after this one.` : `Next turn ${who} plays again.`);
-      if (comp) await wait(1400); else await this.ask([{ label: "OK, skip this turn", value: "ok" }]);
+      if (comp) await this.wait(1400); else await this.ask([{ label: "OK, skip this turn", value: "ok" }]);
     } else if (comp) {
-      await wait(800);
+      await this.wait(800);
     } else {
       this.dice.ready(true);
       await Promise.race([this.ask([{ label: "Roll the die", value: "roll" }]), this.dice.tapped()]);
@@ -183,15 +283,21 @@ export class GameScreen {
         this.collect(e);
       }
       if (r.done) break;
-      r = t.next(comp ? simplePlayer(r.value, this.game) : await this.decide(r.value));
+      // decide() answers for computer players itself; a person may be asked in a computer's turn too (audit: a person
+      // holding a Bonus card was never offered to spoil a computer player's luck)
+      const a = await this.decide(r.value);
+      this.answers.push(a);
+      r = t.next(a);
     }
+    this.turns++;
+    this.save();
     this.render();
     if (this.game.over) return;
-    await wait(300);
+    await this.wait(300);
     // Pass the die only from one person to another (owner): computer players just play, and a person's own turn
     // starts with "Roll the die".
     const next = this.nextSeat(seat);
-    if (comp || next === seat || this.setup.computer[next]) await wait(comp ? 1300 : 2200);
+    if (comp || next === seat || this.setup.computer[next]) await this.wait(comp ? 1300 : 2200);
     else await this.ask([{ label: `Pass the die to ${this.name(next)} ▶`, value: "ok" }]);
     this.setAct([]);
   }
@@ -277,10 +383,10 @@ export class GameScreen {
       case "roadblockPlaced": this.overview.setRoadblock(e.square); break;
       case "roadblockRemoved": this.overview.setRoadblock(null); break;
       case "roll": await this.dice.roll(e.value); break;
-      case "skipTurn": await wait(500); break;
+      case "skipTurn": await this.wait(500); break;
       case "noSix":
-        this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "stones", "No 6") }, `Throw ${e.tries} of 3 without a 6.`);
-        await wait(900);
+        this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`);
+        await this.wait(900);
         break;
       case "released": {
         if (e.where === "start") { this.places[e.player] = { pos: START, stair: 0 }; st.show(e.player, START, 0); this.overview.setPlace(e.player, START); }
@@ -289,24 +395,24 @@ export class GameScreen {
         if (e.bySix) st.celebrate("good");
         if (e.bySix) st.stamp("good", e.where === "start" ? "A six!" : "Free!");
         this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
-        await wait(900);
+        await this.wait(900);
         break;
       }
       case "road":
         this.story(e.player, { ...(e.road === "main" ? M.mainRoad : M.shortcut), art: artFor(e.road === "main" ? "flat-path" : "compass", "Road") });
-        await wait(700);
+        await this.wait(700);
         break;
       case "move":
         await st.walk(e.path, (s) => { this.places[e.player] = { ...s }; this.overview.setPlace(e.player, s.pos, s.stair); });
         this.arrived(e.from, e.to);
         this.dice.moved();
-        if (e.crossroads) await wait(500);
+        if (e.crossroads) await this.wait(500);
         break;
       case "overshoot": {
         const need = this.board.endTile - this.places[e.player].pos;
         this.story(e.player, { ...M.overshoot, art: artFor("lanterns", "Festival"), text: fill(M.overshoot.text, { n: need }) },
           `Rolled ${e.squares}, needed exactly ${need}: you stay where you are.${need === 6 ? " A 6 can never finish: a 6 always throws again, so the total is at least 7." : ""}`, "bad");
-        await wait(1100);
+        await this.wait(1100);
         break;
       }
       case "tile": {
@@ -314,9 +420,9 @@ export class GameScreen {
         st.pulse();
         st.celebrate(tone);
         st.stamp(tone);
-        if (e.tile.type === "skip" || e.tile.type === "hospital" || e.tile.then === "hospital" || e.tile.then === "skip2") this.waitCause[e.player] = `${tl.title}${isShortcut(e.square) ? "" : ` (square ${e.square})`}`;
+        this.noteWait(e);
         this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone);
-        await wait(1700);
+        await this.wait(1700);
         break;
       }
       case "jump":
@@ -324,7 +430,7 @@ export class GameScreen {
         this.places[e.player] = { pos: e.to, stair: 0 };
         this.overview.setPlace(e.player, e.to);
         this.arrived(e.from, e.to);
-        await wait(400);
+        await this.wait(400);
         break;
       case "capture":
         this.places[e.victim] = { pos: START, stair: 0 };
@@ -333,32 +439,32 @@ export class GameScreen {
         st.stamp("bad", "Bump!");
         this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad");
         this.render();
-        await wait(1400);
+        await this.wait(1400);
         break;
-      case "roadblockHit": st.celebrate("bad"); this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await wait(1300); break;
+      case "roadblockHit": st.celebrate("bad"); this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await this.wait(1300); break;
       case "trapped": if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
-        this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "Only a 6 gets you out.", "bad"); await wait(1100); break;
+        this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "Only a 6 gets you out.", "bad"); await this.wait(1100); break;
       case "bogBoots": st.celebrate("good"); st.stamp("good", "Not today, Bog!");
-        this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await wait(1300); break;
-      case "card": this.render(); await wait(300); break;
+        this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await this.wait(1300); break;
+      case "card": this.render(); await this.wait(300); break;
       case "bonusUsed": {
         const m = e.use === "defend" ? M.bonusDefend : M.bonusAttack;
         st.cardPlayed();
         st.stamp(e.use === "defend" ? "good" : "bad", e.use === "defend" ? "Dodged it!" : "Spoiled!");
         this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad");
         this.render();
-        await wait(1500);
+        await this.wait(1500);
         break;
       }
       case "doubleNext": this.render(); break;
       case "snakeLeader": this.render(); st.stamp("good", "Snake Leader!");
-        this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good"); await wait(1200); break;
+        this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good"); await this.wait(1200); break;
       case "swap": {
         const mine = this.places[e.player];
         this.places[e.other] = { ...mine };
         this.overview.setPlace(e.other, mine.pos, mine.stair);
         this.story(e.player, { title: M.swap.title, text: fill(M.swap.text, { p: this.name(e.player), o: this.name(e.other) }), art: this.twoTokens(e.player, e.other) }, "", "good");
-        await wait(900);
+        await this.wait(900);
         break;
       }
       case "lanternLost":
@@ -366,18 +472,18 @@ export class GameScreen {
         st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
         this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad");
         this.render();
-        await wait(1600);
+        await this.wait(1600);
         break;
       case "lanternWon": st.celebrate("good"); st.stamp("good", "Three sixes!");
-        this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await wait(1400); break;
+        this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await this.wait(1400); break;
       case "out":
         this.places[e.player] = { pos: OUT, stair: 0 };
         this.overview.setPlace(e.player, OUT);
         this.story(e.player, { ...M.out, text: fill(M.out.text, { p: this.name(e.player) }), art: artFor("lantern", "Lights out") }, "Out of the game.", "bad");
         this.render();
-        await wait(1800);
+        await this.wait(1800);
         break;
-      case "win": await wait(600); break;
+      case "win": await this.wait(600); break;
       default: break;
     }
   }
@@ -391,6 +497,13 @@ export class GameScreen {
   }
 
   // ---- Popups ----
+
+  /** Remembers which square made a player miss turns (for the "skips this turn" popup). */
+  private noteWait(e: GameEvent): void {
+    if (e.type !== "tile") return;
+    if (e.tile.type === "skip" || e.tile.type === "hospital" || e.tile.then === "hospital" || e.tile.then === "skip2")
+      this.waitCause[e.player] = `${this.taleAt(e.square, e.tile).title}${isShortcut(e.square) ? "" : ` (square ${e.square})`}`;
+  }
 
   /** A square's picture: the squares that give a card show that card's face. */
   private pic(icon: string, title: string): string {
@@ -545,7 +658,8 @@ export class GameScreen {
       + `${tokenSvg(i, "tok", true)}<span class="badge l">${lanternSvg}${p.out ? "✕" : p.lanterns}</span>`
       + (p.bonus || p.jailPass ? `<span class="badge c">${artFor(p.bonus ? "card" : "boots", "")}${p.bonus + p.jailPass}</span>` : "")
       + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">${robotSvg}</span>` : "")
-      + (this.need(i) ? `<span class="need" aria-hidden="true">needs ${this.need(i)}</span>` : "") + `</button>`).join("");
+      + (this.need(i) ? `<span class="need" aria-hidden="true">needs ${this.need(i)}</span>` : "") + `</button>`).join("")
+      + `<button class="leave" aria-label="Leave game">${leaveSvg}<span>Leave</span></button>`;
     const p: PlayerState = P[cur];
     // The cards: always both slots, so everyone knows what exists; the ones held glow and can be tapped.
     const slot = (k: keyof typeof CARD_INFO, n: number) => `<button class="gcard ${k}${n ? " held" : ""}" data-card="${k}" aria-label="${CARD_INFO[k].title}: ${n ? `you hold ${n}` : "not held"}. Tap to see what it does">`

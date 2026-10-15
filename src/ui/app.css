@@ -34,6 +34,8 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 }
 .overview { grid-area: board; position: relative; min-height: 0; min-width: 0; padding: 2px; display: grid; place-items: center; background: var(--table); }
 .overview-board { width: 100%; height: 100%; }
+/* The die faces and the fallen tree lie exactly over the board and let taps through */
+.overview-live { position: absolute; inset: 2px; width: calc(100% - 4px); height: calc(100% - 4px); pointer-events: none; }
 .overview-board .pick { cursor: pointer; }
 .overview-board .sq:hover rect:first-child { fill: #fff8e6; }
 .ov-sub { font-size: 40px; fill: var(--ink); }
@@ -41,7 +43,10 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .zoom-out { position: absolute; left: 8px; bottom: 8px; z-index: 0; font-size: 1.05rem; min-height: 44px; padding: 4px 12px; }
 .overview-board .flow { animation: flow 1.6s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -64; } }
-.ov-token { transition: transform 300ms ease-in-out, opacity 300ms; pointer-events: none; }
+/* P1: the tokens are page elements over the board, so their glide runs on the graphics chip, not the main thread */
+.ov-tokens { position: absolute; inset: 2px; pointer-events: none; overflow: hidden; }
+.ov-token { position: absolute; left: 0; top: 0; transition: transform 300ms ease-in-out, opacity 300ms; pointer-events: none; will-change: transform; }
+.ov-token svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .ov-token .halo { opacity: 0; }
 /* The ring does not spin: a spinning ring inside the board redraws the whole board every frame (audit: slow phones) */
 .ov-token.current .halo { opacity: 1; }
@@ -56,6 +61,16 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .avatar .tok { width: 100%; height: 100%; display: block; }
 .avatar.now { border-color: #f2c230; box-shadow: 0 0 0 4px #f2c230, 0 3px 10px rgba(0, 0, 0, .4); transform: scale(1.08); }
 .avatar.gone { opacity: .45; }
+/* Leave the game (U2): small, in the corner of the players' bar, away from the avatars */
+.players { position: relative; }
+.leave {
+  position: absolute; left: 6px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center;
+  min-width: 44px; min-height: 44px; padding: 2px 6px; font-size: .8rem; line-height: 1; gap: 1px;
+  background: transparent; color: var(--paper); border: 2px solid rgba(247, 241, 227, .5); box-shadow: none; border-radius: 10px;
+}
+.leave svg { width: 20px; height: 20px; }
+.leave:active { transform: translateY(-50%); box-shadow: none; }
+@media (orientation: landscape) { .leave { top: 8px; left: 50%; transform: translateX(-50%); } .leave:active { transform: translateX(-50%); } }
 .avatar .badge {
   position: absolute; display: flex; align-items: center; gap: 1px; padding: 0 5px 0 2px; height: 22px; border-radius: 11px;
   background: var(--paper); border: 2px solid var(--ink); font-size: .95rem; line-height: 1; color: var(--ink);
@@ -259,6 +274,8 @@ button:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; box-s
 .setup .seat .mini { width: 34px; height: 34px; flex: 0 0 auto; }
 .setup .seat span { flex: 1; }
 .setup .go { font-size: 1.6rem; padding: 10px 40px; }
+.setup .continue { display: flex; flex-direction: column; align-items: center; margin: 0 auto 6px; font-size: 1.5rem; padding: 8px 28px; }
+.setup .continue small { font-size: .95rem; opacity: .85; }
 
 /* ---- Illustrations: transform helpers; no motion with "reduce motion" ---- */
 .art *:not([transform]) { transform-box: fill-box; transform-origin: center; }

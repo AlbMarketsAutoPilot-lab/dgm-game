@@ -25,6 +25,8 @@ export interface GameOptions {
   roadblock?: number | null;
   /** The game stops (no winner) instead of starting this round + 1. Default 3000, as in the simulator. */
   maxRounds?: number;
+  /** Seat that plays first in every round (owner, 15 Oct: drawn at random by the app). Default 0, as in the simulator. */
+  first?: number;
 }
 
 type Turn = Generator<Decision, void, Answer>;
@@ -46,6 +48,8 @@ export class Game implements GameView {
   lastStanding = false;
   /** True when the game stopped at maxRounds without a winner. */
   capped = false;
+  /** Seat that opens every round. */
+  readonly first: number;
 
   private seat: number;
   private readonly rand: Rng;
@@ -70,7 +74,9 @@ export class Game implements GameView {
       stairAt: 0, stairLeft: 0, stairTotal: 0, onStair: false, road: null, captured: 0,
     }));
     opts.setup?.forEach((s, i) => Object.assign(this.players[i], s));
-    this.seat = opts.players - 1;
+    this.first = opts.first ?? 0;
+    if (!Number.isInteger(this.first) || this.first < 0 || this.first >= opts.players) throw new Error("first must be a seat");
+    this.seat = (this.first + opts.players - 1) % opts.players;
   }
 
   get over(): boolean {
@@ -118,14 +124,13 @@ export class Game implements GameView {
 
   // ---- Turn order ----
 
-  /** Moves to the next seat still in the game; a new round starts after the last seat (R19 places the tree then). */
+  /** Moves to the next seat still in the game; a new round starts at the first seat (R19 places the tree then). */
   private advance(): boolean {
     if (this.players.every((q) => q.out)) { this.capped = true; return false; }
     do {
-      this.seat++;
-      if (this.seat >= this.players.length) {
+      this.seat = (this.seat + 1) % this.players.length;
+      if (this.seat === this.first) {
         if (this.round >= this.maxRounds) { this.capped = true; return false; }
-        this.seat = 0;
         this.round++;
         this.emit({ type: "round", round: this.round });
         if (this.roadblock === null) this.placeRoadblock();

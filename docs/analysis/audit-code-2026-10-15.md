@@ -5,8 +5,9 @@ lines). Everything below was also **tested for real**: whole games played throug
 the production build on a 6× slower processor (about a budget Android phone), offline use, tampered storage, a strict
 security policy, accessibility scans, and 100,000 engine games with random choices.
 
-Part 1 is what was wrong and is **fixed in this change**. Part 2 is what was measured. Part 3 is **proposals that wait
-for the owner's approval**: nothing in Part 3 is built.
+Part 1 is what was wrong and is **fixed in this change**. Part 2 is what was measured. Part 3 is the proposals for the
+owner's approval. **Update, same day:** the owner approved U1, U2, U3, S1, C1, P1 and U6 (reword); they are built and
+tested, see §5. The others still wait.
 
 ## 1. Found and fixed
 
@@ -46,7 +47,7 @@ After the fixes: `npm test` 170 / 170, `npm run test:sim` 6 / 6, typecheck and b
 | Start screen ready | | 0.97 s (first paint 0.71 s) |
 | Main thread busy while waiting for a tap (animated pictures running) | | 0.5% |
 | Tap to screen response, 40 taps | | median 64 ms, 90% under 120 ms, worst 352 ms (the tap that builds the game screen) |
-| Turning the phone (board redrawn) | | about 1.1 s of work per turn of the phone, almost all of it the browser painting the big board picture, not our code |
+| Turning the phone (board redrawn) | | about 160 ms of main-thread work per turn of the phone (first estimate of 1.1 s counted every thread; corrected in §5) |
 | Engine speed | 0.1 ms per whole game | |
 | Memory over 15 games in a row ("Play again") | 3.3 MB after game 1, 4.0 MB after game 15; page elements and listeners back to the same level each game (old games are released). About 45 KB per game: nothing to fix | |
 
@@ -80,7 +81,7 @@ Each one is small enough to be one step. Nothing here changes the rules.
 
 | # | Proposal | Why | Effort |
 |---|---|---|---|
-| C1 | Run the 100,000-game check (`npm run test:sim`, 1 minute) in the GitHub workflow, at least weekly | It was red for a whole day without anyone seeing it (fix 11) | Small |
+| C1 ✅ built | Run the 100,000-game check (`npm run test:sim`, 1 minute) in the GitHub workflow, at least weekly | It was red for a whole day without anyone seeing it (fix 11) | Small |
 | C2 | Remove the dead code of the Shortcut and the stair steps from the screen (choosing a road, crossroads texts, stair drawing); keep it in the engine only as long as the old reports must be reproducible | About 150 lines no player can reach; every later change has to keep them right | Medium |
 | C3 | Add the real-browser game check used for this audit (whole games, board vs engine every turn) to the repository as `npm run test:browser` | It found no differences today; it would catch a screen that drifts from the rules in a later change | Medium |
 
@@ -88,7 +89,7 @@ Each one is small enough to be one step. Nothing here changes the rules.
 
 | # | Proposal | Why | Effort |
 |---|---|---|---|
-| S1 | Switch on the strict Content-Security-Policy tested in 2.3 (one line in `index.html`) | If a future change ever put outside text into the page, the browser would refuse to run it | Small, tested |
+| S1 ✅ built | Switch on the strict Content-Security-Policy tested in 2.3 (one line in `index.html`) | If a future change ever put outside text into the page, the browser would refuse to run it | Small, tested |
 | S2 | Pin the GitHub Actions to exact commits (and let Dependabot update them) | A tag can be moved by whoever controls that action; a commit cannot | Small |
 | S3 | Write player-visible text through one escaping helper | Today all text is our own, so nothing can go wrong. The day player names, custom boards or the Android app arrive, it matters | Small |
 | S4 | Make `?fast` (fast-forward, for testing) work only in the development build | Harmless today; a player who finds it just gets a fast game. Tidier without it | Small |
@@ -97,19 +98,19 @@ Each one is small enough to be one step. Nothing here changes the rules.
 
 | # | Proposal | Why | Effort |
 |---|---|---|---|
-| P1 | Draw the board's paper and walls once as a picture, with only tokens and markers live on top | Turning a cheap phone costs ~1 s of work today; this would make it near instant and lighten every board update | Medium |
+| P1 ✅ built | Draw the board's paper and walls once as a picture, with only tokens and markers live on top | Turning a cheap phone costs ~1 s of work today; this would make it near instant and lighten every board update | Medium |
 | P2 | Redraw the player row and the cards only when they change (today they are rebuilt many times per turn) | Small gain on cheap phones (~15–20 ms per update at 6× slower) | Small |
 
 ### 3.4 User experience
 
 | # | Proposal | Why | Effort |
 |---|---|---|---|
-| U1 | **Continue a game after closing the app.** The game is fully decided by its seed and the choices made, so saving those two lets it be replayed to the same spot | A long game is ~50 rounds (30–60 min). Today a reload, a phone call or a closed tab loses it | Medium |
-| U2 | A "Leave game" button (back to the start screen, with "Are you sure?") | Today the only way out of a game is to finish it or reload | Small |
-| U3 | Pick the first player at random (a short "who starts" moment) | The first seat wins 25.4% on the short board (0.4 points above fair); random order spreads that, and it is a nice moment at the table | Small |
+| U1 ✅ built | **Continue a game after closing the app.** The game is fully decided by its seed and the choices made, so saving those two lets it be replayed to the same spot | A long game is ~50 rounds (30–60 min). Today a reload, a phone call or a closed tab loses it | Medium |
+| U2 ✅ built | A "Leave game" button (back to the start screen, with "Are you sure?") | Today the only way out of a game is to finish it or reload | Small |
+| U3 ✅ built | Pick the first player at random (a short "who starts" moment) | The first seat wins 25.4% on the short board (0.4 points above fair); random order spreads that, and it is a nice moment at the table | Small |
 | U4 | Move the "START: a 6 to enter" label so the waiting tokens do not cover it | Visible on every game start | Small |
 | U5 | Keyboard and screen reader: Escape closes a popup, the board's squares can be reached with Tab, the game screen gets a heading | The 2 moderate scan findings plus the keyboard gaps (2.4) | Small |
-| U6 | Story texts "One more step down the porch" / "You lay another stone" still describe stair steps, which no longer exist. Keep as story, or reword? | The owner's narrative; not changed without approval | Owner's words |
+| U6 ✅ reworded | Story texts "One more step down the porch" / "You lay another stone" still describe stair steps, which no longer exist. Keep as story, or reword? | The owner's narrative; not changed without approval | Owner's words |
 | U7 | Optional sound and vibration for the die, a 6, a bump and the win (off by default, one switch) | Phones at a family table; the 6 party is silent today | Medium |
 
 ## 4. How the tests were run
@@ -118,3 +119,28 @@ Each one is small enough to be one step. Nothing here changes the rules.
 - "6× slower": Chrome's processor slow-down, the usual stand-in for a budget Android phone.
 - Offline: the built game served like GitHub Pages and like `npm run preview`; first visit, offline reload, and an update from the previous version.
 - The test scripts are not part of this change (proposal C3).
+
+## 5. Built after the owner's approval (15 Oct)
+
+| # | What was built | How it was tested |
+|---|---|---|
+| U1 | **Continue game.** After every turn the seed, the first player and every answer to the engine are saved on this device; "Continue game · The Quick Trip · 4 players · round 12" on the start screen plays the game again to that turn. A changed board file or engine version refuses the save. Reloading mid-turn brings back the start of that turn with the same throws (nothing to gain by reloading) | `test/save.test.ts`: games saved halfway on both boards replay event for event and go on identically; tampered or outdated saves are refused. In the browser: reloads at turns 5, 12, 15 and 60, each continued to the end; the board after Continue was identical every time |
+| U2 | **Leave** in the players' bar: "Leave this game?" (Leave / Stay), back to the start screen; the game stays saved | Browser: Leave at turns 8 and 30, then Continue: identical board, games played to the end and checked against the engine |
+| U3 | **Random first player.** The avatars light up in turn and stop on the starter, "Red starts!", and the start popup says so. The engine takes the first seat (`first`, default 0 = the simulator's order, so every measured number still holds) | `test/first.test.ts` (turn order, rounds, a first player who is out); browser games started with seats 0, 1, 2 and 3 |
+| U6 | "Still on the Porch: … The door is still open behind you." and "Still Stuck: … The mud holds on with a little gurgle." (no more stair steps; the Bog moment shows the Bog picture) | Seen in the browser |
+| S1 | The Content-Security-Policy is added to the built page only (the development server needs its live reload) | Production build: whole games, a reload and Continue, offline: 0 policy violations |
+| C1 | `.github/workflows/checks.yml`: typecheck, all tests, the 100,000-game check and the build on every push and pull request, and every Monday | Same commands run here: all green |
+| P1 | Measured first: the cost was not the board picture but the **token glide**. A token inside the board drawing made the browser lay out and repaint all 200 squares on every frame of every hop. The tokens are now page elements over the drawing, so the glide runs on the graphics chip | Same 40 hops on the long board, 6× slower processor: main-thread work **2,800 ms → 1,065 ms (−62%)**. Tokens measured on their squares: 0 px off in portrait, landscape and zoomed in |
+
+Found while building, and fixed:
+
+- **A person was never asked to spoil a computer player's luck.** In a computer's turn every question was answered
+  as a computer would, including "Spoil Red's luck?" addressed to a person holding a Bonus card. Now the person is
+  asked (about 0.9 times per game; seen 18 times in 10 browser games).
+
+Seen, not changed (not part of the approval): on a 390 × 844 phone the "You need a 6 to enter" popup's "Let's go!"
+button is cut in half at the bottom of the board panel (it can still be tapped). This was already so before today.
+
+After the build: 181 / 181 tests, `npm run test:sim` 6 / 6, typecheck and build clean. 12 more whole games in the
+browser (reloads, Leave, computer and person players) checked turn by turn against the engine: 0 differences; 18 more
+(production build with the security policy, and the spoil checks) with no errors.

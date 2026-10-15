@@ -30,7 +30,18 @@ export class Overview {
   layout!: BoardLayout;
   private readonly board: Board;
   private svg!: SVGSVGElement;
-  private tokens: SVGGElement[] = [];
+  /** The die faces and the fallen tree, over the board with the same view (they change once a turn at most). */
+  private live!: SVGSVGElement;
+  /**
+   * P1 (owner approved, 15 Oct): the tokens are page elements over the board, not part of its drawing. A glide inside
+   * the drawing made the browser lay out and repaint the whole 200-square board on every frame of every hop (measured:
+   * 3.4× the work on a slow phone); a page element glides on the graphics chip.
+   */
+  private readonly tokenLayer: HTMLElement;
+  /** The part of the board shown (the viewBox), for placing the tokens. */
+  private box = { x: 0, y: 0, w: 1, h: 1 };
+  private tokenSize = 0;
+  private tokens: HTMLElement[] = [];
   private readonly places: { pos: Pos; stair: number }[] = [];
   private tree!: SVGGElement;
   private reach!: SVGGElement;
@@ -54,10 +65,16 @@ export class Overview {
     this.zoomOut.textContent = "Whole board";
     this.zoomOut.hidden = true;
     this.zoomOut.onclick = () => this.zoom(null);
-    host.append(this.zoomOut);
+    this.tokenLayer = document.createElement("div");
+    this.tokenLayer.className = "ov-tokens";
+    this.tokenLayer.setAttribute("aria-hidden", "true");
+    host.append(this.tokenLayer, this.zoomOut);
     this.build();
     // the board takes the shape that gives the biggest squares in its panel (owner: no empty space)
-    new ResizeObserver(() => { if (designFor(board, host.clientWidth, host.clientHeight).join("x") !== this.design) this.build(); }).observe(host);
+    new ResizeObserver(() => {
+      if (designFor(board, host.clientWidth, host.clientHeight).join("x") !== this.design) this.build();
+      else this.layoutTokens();
+    }).observe(host);
   }
 
   private build(): void {
@@ -119,18 +136,19 @@ export class Overview {
         + `<text x="${e.x}" y="${e.y + eh / 2 - 30}" text-anchor="middle" class="ov-fest" style="font-size:${Math.min(46, (ew - 40) / 7.6)}px">Festival of Lights</text>`
         : `<path d="M0 -30l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" transform="translate(${e.x} ${e.y})" fill="#f2c230" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`)
       + `</g>`;
-    const markup = `<svg class="overview-board" viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The whole board">`
-      + s
-      + `<g class="reach" aria-hidden="true"></g>`
-      + `<g class="tree" opacity="0" aria-hidden="true"><path d="M-34 16l64-28M-30 26l64-28" stroke="#6b4f34" stroke-width="13" stroke-linecap="round"/><circle cx="32" cy="-16" r="18" fill="#3c8c50" stroke="${INK}" stroke-width="4"/></g>`
-      + `<g class="tokens"></g></svg>`;
+    const view = `viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet"`;
+    const markup = `<svg class="overview-board" ${view} role="img" aria-label="The whole board">${s}</svg>`
+      + `<svg class="overview-live" ${view} aria-hidden="true">`
+      + `<g class="reach"></g>`
+      + `<g class="tree" opacity="0"><path d="M-34 16l64-28M-30 26l64-28" stroke="#6b4f34" stroke-width="13" stroke-linecap="round"/><circle cx="32" cy="-16" r="18" fill="#3c8c50" stroke="${INK}" stroke-width="4"/></g></svg>`;
     const tmp = document.createElement("div");
     tmp.innerHTML = markup;
-    const svg = tmp.firstElementChild as SVGSVGElement;
-    if (this.svg) this.svg.replaceWith(svg); else host.prepend(svg);
+    const svg = tmp.firstElementChild as SVGSVGElement, live = tmp.lastElementChild as SVGSVGElement;
+    if (this.svg) { this.svg.replaceWith(svg); this.live.replaceWith(live); } else host.prepend(svg, live);
     this.svg = svg;
-    this.tree = this.svg.querySelector(".tree")!;
-    this.reach = this.svg.querySelector(".reach")!;
+    this.live = live;
+    this.tree = live.querySelector(".tree")!;
+    this.reach = live.querySelector(".reach")!;
     this.full = `0 0 ${B.w * U} ${B.h * U}`;
     this.svg.addEventListener("click", (ev) => {
       const g = (ev.target as Element).closest<SVGGElement>(".pick");
@@ -138,15 +156,15 @@ export class Overview {
       if (!this.zoomed && Math.min(this.svg.clientWidth / L.bounds.w, this.svg.clientHeight / L.bounds.h) < TAP) return this.zoom(ev);
       onPick(Number(g.dataset.pos));
     });
-    const layer = this.svg.querySelector(".tokens")!;
-    this.tokens = [];
-    for (let i = 0; i < players; i++) {
-      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      g.classList.add("ov-token");
-      g.innerHTML = `<circle class="halo" r="58" fill="none" stroke="${INK}" stroke-width="8" stroke-dasharray="14 10"/>`
-        + `<g transform="translate(-40 -40) scale(.8)">${tokenSvg(i).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g>`;
-      layer.append(g);
-      this.tokens.push(g);
+    this.box = { x: 0, y: 0, w: B.w * U, h: B.h * U };
+    if (!this.tokens.length) for (let i = 0; i < players; i++) {
+      const t = document.createElement("div");
+      t.className = "ov-token";
+      t.dataset.seat = String(i);
+      t.innerHTML = `<svg viewBox="-60 -60 120 120"><circle class="halo" r="58" fill="none" stroke="${INK}" stroke-width="8" stroke-dasharray="14 10"/>`
+        + `<g transform="translate(-40 -40) scale(.8)">${tokenSvg(i).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g></svg>`;
+      this.tokenLayer.append(t);
+      this.tokens.push(t);
     }
     this.layoutTokens();
     if (this.current >= 0) this.setCurrent(this.current);
@@ -161,7 +179,7 @@ export class Overview {
   }
 
   private zoom(ev: MouseEvent | null): void {
-    if (!ev) { this.svg.setAttribute("viewBox", this.full); this.zoomed = false; this.zoomOut.hidden = true; return; }
+    if (!ev) { this.view(this.full); this.zoomed = false; this.zoomOut.hidden = true; return; }
     const r = this.svg.getBoundingClientRect(), B = this.layout.bounds;
     const fit = Math.min(r.width / B.w, r.height / B.h); // px per unit now
     const k = Math.max(1.5, 54 / fit), vw = (r.width / fit / k) * U, vh = (r.height / fit / k) * U;
@@ -171,9 +189,18 @@ export class Overview {
     // the tapped square in the middle, but never past the board's edge (audit: a top-row tap showed half a panel of nothing)
     const keep = (v: number, size: number, full: number) => (size >= full ? (full - size) / 2 : Math.max(0, Math.min(full - size, v)));
     const x = keep(bx - vw / 2, vw, B.w * U), y = keep(by - vh / 2, vh, B.h * U);
-    this.svg.setAttribute("viewBox", `${x} ${y} ${vw} ${vh}`);
+    this.view(`${x} ${y} ${vw} ${vh}`);
     this.zoomed = true;
     this.zoomOut.hidden = false;
+  }
+
+  /** The part of the board shown, on both layers. */
+  private view(box: string): void {
+    this.svg.setAttribute("viewBox", box);
+    this.live.setAttribute("viewBox", box);
+    const [x, y, w, h] = box.split(" ").map(Number);
+    this.box = { x, y, w, h };
+    this.layoutTokens();
   }
 
   /** Puts a token on a place (the token glides there). */
@@ -234,6 +261,10 @@ export class Overview {
     const key = (pl: { pos: Pos; stair: number }) => (pl.pos === OFF || pl.pos === 0 ? "pad" : `${pl.pos}:${pl.stair}`);
     const groups = new Map<string, number[]>();
     this.places.forEach((pl, i) => { if (pl.pos !== OUT) groups.set(key(pl), [...(groups.get(key(pl)) ?? []), i]); });
+    // board units → pixels of the token layer, as the drawing is fitted ("meet") into the same box
+    const W = this.tokenLayer.clientWidth, H = this.tokenLayer.clientHeight, b = this.box, zoom = Math.min(W / b.w, H / b.h) || 0;
+    const ox = (W - b.w * zoom) / 2 - b.x * zoom, oy = (H - b.h * zoom) / 2 - b.y * zoom, size = Math.round(120 * zoom);
+    if (size !== this.tokenSize) { this.tokenSize = size; this.tokens.forEach((t) => { t.style.width = t.style.height = `${size}px`; }); }
     this.places.forEach((pl, i) => {
       const t = this.tokens[i];
       if (pl.pos === OUT) { t.style.opacity = "0"; return; }
@@ -243,7 +274,8 @@ export class Overview {
       if (key(pl) === "pad") { dx = (i - 1.5) * U; dy = 8; }
       else if (n > 1) { dx = (k - (n - 1) / 2) * 30; dy = n > 2 ? (k % 2 ? 14 : -14) : 0; }
       t.style.opacity = pl.pos === OFF ? ".75" : "1";
-      t.style.transform = `translate(${c.x + dx}px, ${c.y + dy}px)${n > 1 && key(pl) !== "pad" ? " scale(.8)" : ""}`;
+      const x = ox + (c.x + dx) * zoom - size / 2, y = oy + (c.y + dy) * zoom - size / 2;
+      t.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)${n > 1 && key(pl) !== "pad" ? " scale(.8)" : ""}`;
     });
     const where = ({ pos }: { pos: Pos }) => pos === OFF ? "at Home" : pos === OUT ? "out" : pos === 0 ? "on Start"
       : pos === this.end ? "at the festival" : isShortcut(pos) ? "on the Shortcut" : `on square ${pos}`;

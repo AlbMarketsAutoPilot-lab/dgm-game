@@ -6,14 +6,15 @@ No DOM: the renderer (Step 3–4), the UI (Step 5) and the computer players (Ste
 **Same seed, same game.** The engine draws its random numbers in the same order as the simulator, so it plays
 exactly the simulator's games. `test/equivalence.test.ts` checks this game by game against the simulator itself
 (both boards, 2–4 players), and `npm run test:sim` reproduces the published 100,000-game numbers of
-`docs/analysis/measure-long.md` and `measure-short.md` exactly.
+`docs/analysis/measure-long.md` and `measure-short.md` exactly. The app draws the first player at random (`first`);
+the simulator always starts with seat 0, which is the engine's default, so the comparison is unchanged.
 
 ## Use
 
 ```ts
 import { BOARDS, Game, runTurn, simplePlayer } from "./engine";
 
-const game = new Game(BOARDS.long, { players: 4 });   // optional: seed
+const game = new Game(BOARDS.long, { players: 4 });   // optional: seed, first (the seat that opens every round, default 0)
 while (!game.over) runTurn(game, simplePlayer);       // a computer game
 game.winner; game.events;                             // seat of the winner, everything that happened
 ```

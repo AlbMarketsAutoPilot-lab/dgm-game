@@ -7,7 +7,10 @@ Two areas plus the players:
   Good squares have a green frame and ▲, bad squares a red frame and ▼. The Shortcuts run inside wider walls as small
   stones. Start is four squares long at the top left (everyone waits there); the festival (gold, a star) is in the
   middle. **Tap any square** to see its tale, what it does and which throw gets the current player there; on the long
-  board the first tap zooms in ("Whole board" zooms out). Small die faces mark the squares reachable with one die.
+  board the first tap zooms in ("Whole board" zooms out). Small die faces 1–5 mark where one throw stops (a 6 always
+  throws again; a doubled throw marks 2, 4 … 10 squares; none on the Puddle). The tokens are page elements laid over
+  the drawing, so their glide runs on the graphics chip (P1, owner approved 15 Oct: the whole board was repainted on
+  every frame of every hop before).
 - **Stage = the action area** (`stage.ts`): the big square with its animated illustration, the token hopping square
   by square, jumps gliding; sparks, a stamp ("Lucky!", "Don't get mad!"), a jolt for bad luck, confetti for the win,
   the Bonus card flying in when it is played. Above it, whose turn it is and their hand of cards: Bonus card and
@@ -24,14 +27,20 @@ Two areas plus the players:
   6 a popup ("A 6! Roll again!") and a "Roll again" button; "Throw 1 of 3" on the sledge square. The die is passed ("Pass the die to Red ▶") only from one person to another; computer players
   (GCD §8.6) play by themselves. A line under "Blue's turn" says what the turn is about (At Home: roll a 6…, Stuck in
   the Bog…, Needs exactly 4…); a waiting player is told why ("landed on …, which says miss turns"). The game opens
-  with "You need a 6 to enter". Only the newest story moment is shown (no list of earlier ones, owner).
+  with the first player drawn at random (the avatars light up in turn and stop on them; "Red starts!"; U3, owner
+  approved 15 Oct), then "You need a 6 to enter". Only the newest story moment is shown (no list of earlier ones, owner).
+- **Continue and Leave** (`save.ts`, U1 / U2, owner approved 15 Oct): after every turn the seed, the first player and
+  every answer given to the engine are saved on this device; "Continue game" on the start screen plays the game again
+  up to that turn (a changed board file or engine version refuses the save instead). Reloading mid-turn brings back
+  the start of that turn with the same throws. "Leave" (players' bar) asks first, then goes to the start screen; the
+  game stays saved. A finished game is no longer saved.
 - **Die** (`dice.ts`): the total beside the die is exactly the squares walked; the 6 that lets you in (or out of the
   Bog) is shown apart ("6 to enter · 2", R15).
 - **Regions** (`stage.ts`): a plain square shows its region's postcard picture; a signboard "Now entering ·
   Countryside" when a token reaches a new region. Everyone's avatar shows "needs 4" when an exact throw of 1–5 wins.
 - **Spoil question** (`spoil.ts`, R14, owner Step 5b): a person holding a Bonus card is asked "Spoil Blue's luck?"
   for each reward another player lands on: "Spoil it!", "Let it go", or "Don't ask me again this game" (from then
-  on that person's answer is "Let it go"; for this game only, nothing is stored). No auto-focus: the game is played by tapping, not by holding Enter.
+  on that person's answer is "Let it go"; for this game only, saved with the game). Also in a computer player's turn. No auto-focus: the game is played by tapping, not by holding Enter.
 
 - **Stamps** (`stage.ts`): a big word on the square for the big moments ("Woohoo!", "Ouch!", "Bump!", "Dodged it!",
   "New postcard!", …), one at a time; never in the popups (owner).
@@ -47,4 +56,7 @@ Accessibility: tokens differ by colour and shape, good/bad by colour and ▲/▼
 **Offline and install (Step 7):** `public/manifest.webmanifest` (name, colours, icons in `public/icons/`, drawn from the
 four tokens) and `public/sw.js` (only in the built game: pages network-first, everything else cache-first; the page
 hands over the files it loaded before the worker took charge). `.github/workflows/pages.yml` tests, builds and
-publishes `dist/` to GitHub Pages on every push to `main`.
+publishes `dist/` to GitHub Pages on every push to `main`. The worker touches only its own caches (`dgm-…`): on GitHub
+Pages all projects of an account share one address. The built page carries a Content-Security-Policy (only the
+game's own files; `vite.config.ts`, S1). `.github/workflows/checks.yml` runs typecheck, all tests, the 100,000-game
+check and the build on every push and pull request, and weekly (C1).
