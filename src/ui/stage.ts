@@ -245,7 +245,8 @@ export class Stage {
   private resize(): void {
     const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
     // The token stands half over the card's bottom edge: at most .74 of the height keeps it whole.
-    this.wrap.style.setProperty("--card", `${Math.max(64, Math.min(w * 0.7, h * 0.74))}px`);
+    // (No more than that even on the smallest phones: the note's lane under it must never touch the token, owner 16 Oct.)
+    this.wrap.style.setProperty("--card", `${Math.max(36, Math.min(w * 0.7, h * 0.74))}px`);
     this.moveTo(this.index, 0);
   }
 }

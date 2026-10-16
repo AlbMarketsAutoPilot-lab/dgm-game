@@ -13,7 +13,7 @@ const STATE = () => ({
   round: document.querySelector(".hud .st")?.textContent,
   // Owner, 16 Oct: a computer player's moments are a note under the picture, never a story popup
   story: [...document.querySelectorAll(".pop.story:not([hidden]) .pop-kicker")].map((k) => k.textContent.trim()),
-  note: document.querySelector(".chat:not([hidden])")?.textContent.trim(),
+  note: document.querySelector(".note:not([hidden])")?.textContent.trim(),
   // A lantern spent to leave: the popup's count must be the one the players' bar shows (owner, 16 Oct: it said
   // "0 lanterns left" with one still on the player)
   spent: [...document.querySelectorAll(".pop:not([hidden])")].filter((p) => /^A Lantern for (the Road|a Way Out)$/.test(p.querySelector(".pop-title")?.textContent ?? ""))
@@ -42,12 +42,13 @@ export async function playGame(browser, url, { board, players, people, brk, spen
   const turns = [], t0 = Date.now();
   let save = null, end = null, broke = null;
   const spent = [], computerPops = new Set(), NAMES = ["Blue", "Red", "Green", "Yellow"];
-  let spends = 0, notes = 0, lastNote = "";
+  let spends = 0, notes = 0, aheads = 0, lastNote = "";
   while (Date.now() - t0 < 15 * 60_000) {
     const s = await page.evaluate(STATE);
     if (s.save) save = JSON.parse(s.save);
     for (const k of s.story) if (!people.includes(NAMES.indexOf(k))) computerPops.add(`a story popup for ${k} (a computer player)`);
-    if (s.note && s.note !== lastNote) notes++;
+    if (s.note && s.note !== lastNote && !people.includes(NAMES.indexOf(s.note.split(" ")[0]))) notes++; // a computer player's note
+    if (s.note && s.note !== lastNote && people.includes(NAMES.indexOf(s.note.split(" ")[0])) && / Roll a [1-5]/.test(s.note)) aheads++; // what is ahead, for a person
     lastNote = s.note ?? "";
     if (s.spent) {
       spends++;
@@ -103,5 +104,5 @@ export async function playGame(browser, url, { board, players, people, brk, spen
     return { diffs, compared: allPeople ? turns.length : 0 };
   }, { board, players, people, save, turns, end, spend });
   await ctx.close();
-  return { ...check, diffs: [...check.diffs, ...new Set(spent), ...computerPops, ...(people.length < players && !notes ? ["no computer player's note seen"] : [])], turns: turns.length, spends, notes, broke, errors, ms: Date.now() - t0 };
+  return { ...check, diffs: [...check.diffs, ...new Set(spent), ...computerPops, ...(people.length < players && !notes ? ["no computer player's note seen"] : []), ...(!aheads ? ["no \"what's ahead\" notice seen"] : [])], turns: turns.length, spends, notes, aheads, broke, errors, ms: Date.now() - t0 };
 }
