@@ -338,9 +338,9 @@ export class GameScreen {
         // A person throws every die themselves (owner): after a 6, and on "throw 3 times".
         if (e.type === "roll" && !comp && e.player === seat && (rolls.length || sum || this.paid === seat)) await this.rollAgain(rolls, sum);
         if (e.type === "roll" && this.paid === e.player) this.paid = -1;
-        await this.play(e);
-        if (e.type === "roll") rolls.push(e.value);
         const after = fresh.slice(fresh.indexOf(e) + 1);
+        await this.play(e, after[0]);
+        if (e.type === "roll") rolls.push(e.value);
         if (e.type === "roll" && e.value === 6 && sum <= 0 && !comp && e.player === seat && after[0]?.type !== "released" && after.some((x) => x.type === "roll" && x.player === seat)) await this.sixParty(seat);
         this.collect(e);
       }
@@ -442,7 +442,8 @@ export class GameScreen {
 
   // ---- Showing one engine event ----
 
-  private async play(e: GameEvent): Promise<void> {
+  /** `next`: the event that follows it in the same step (the engine is already past it when this one is shown). */
+  private async play(e: GameEvent, next?: GameEvent): Promise<void> {
     const st = this.stage, M = MOMENTS;
     switch (e.type) {
       case "round": this.round = e.round; this.render(); break;
@@ -463,7 +464,10 @@ export class GameScreen {
         if (e.paid) { // owner, 15 Oct: a lantern spent to leave at once; the lantern's own event follows quietly
           this.paid = e.player;
           const m = e.where === "start" ? M.paidHome : M.paidBog;
-          await this.story(e.player, { ...m, text: fill(m.text, { p: this.name(e.player) }), art: artFor("lantern", "A lantern spent") }, `${this.game.players[e.player].lanterns - 1} lantern${this.game.players[e.player].lanterns === 2 ? "" : "s"} left.`, "good");
+          // The lantern's own event follows at once and carries the count (owner, 16 Oct: the engine had already taken
+          // the lantern, so "lanterns - 1" took it twice: "0 lanterns left" with one still shown on the player)
+          const left = next?.type === "lanternLost" && next.player === e.player ? next.left : this.game.players[e.player].lanterns;
+          await this.story(e.player, { ...m, text: fill(m.text, { p: this.name(e.player) }), art: artFor("lantern", "A lantern spent") }, `${left} lantern${left === 1 ? "" : "s"} left.`, "good");
         } else await this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
         await this.wait(900);
         break;
