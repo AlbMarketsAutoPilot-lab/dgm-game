@@ -82,6 +82,9 @@ export class GameScreen {
   private spendNow = false;
   /** Where each token is shown (follows the events, one step behind the engine's final state). */
   private readonly places: Pos[];
+  /** Each player's lanterns as shown, set by the lantern events of the turn on screen (null: the engine's count). The
+   * engine can be ahead: a lantern spent, then three 6s in the same turn, already counted the lantern won back. */
+  private readonly lit: (number | null)[];
   /** What decides this game (U1: saved after every turn, so it can be continued). */
   private readonly seed: number;
   private readonly answers: Answer[] = [];
@@ -136,6 +139,7 @@ export class GameScreen {
     this.hud = root.querySelector(".hud")!;
     this.act = root.querySelector(".act")!;
     this.places = this.game.players.map((p) => p.pos);
+    this.lit = this.game.players.map(() => null);
     this.places.forEach((pos, i) => this.overview.setPlace(i, pos));
     this.overview.setRoadblock(this.game.roadblock);
     this.bar.addEventListener("click", (e) => {
@@ -368,6 +372,7 @@ export class GameScreen {
     }
     this.turns++;
     this.save();
+    this.lit.fill(null); // the turn is over: the engine's count is the one on screen
     this.render();
     if (this.game.over) return;
     await this.wait(300);
@@ -472,6 +477,10 @@ export class GameScreen {
         await this.wait(900);
         break;
       case "released": {
+        // The lantern's own event follows at once and carries the count (owner, 16 Oct: the engine had already taken
+        // the lantern, so "lanterns - 1" took it twice: "0 lanterns left" with one still shown on the player)
+        const left = next?.type === "lanternLost" && next.player === e.player ? next.left : this.game.players[e.player].lanterns;
+        if (e.paid) this.lit[e.player] = left;
         if (e.where === "start") { this.places[e.player] = START; st.show(e.player, START); this.overview.setPlace(e.player, START); }
         if (e.bySix) this.dice.released(e.where); // R15: the 6 that lets you in (or out of the Bog) moves nobody
         this.render();
@@ -480,9 +489,6 @@ export class GameScreen {
         if (e.paid) { // owner, 15 Oct: a lantern spent to leave at once; the lantern's own event follows quietly
           this.paid = e.player;
           const m = e.where === "start" ? M.paidHome : M.paidBog;
-          // The lantern's own event follows at once and carries the count (owner, 16 Oct: the engine had already taken
-          // the lantern, so "lanterns - 1" took it twice: "0 lanterns left" with one still shown on the player)
-          const left = next?.type === "lanternLost" && next.player === e.player ? next.left : this.game.players[e.player].lanterns;
           await this.story(e.player, { ...m, text: fill(m.text, { p: this.name(e.player) }), art: artFor("lantern", "A lantern spent") }, `${left} lantern${left === 1 ? "" : "s"} left.`, "good", `spends a lantern to set off: ${left} left`);
         } else await this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good",
           e.where === "start" ? "" : e.bySix ? "▲ The Bog: a 6, out!" : "▼ The Bog: no 6 in 3 tries, out anyway");
@@ -560,15 +566,19 @@ export class GameScreen {
       }
       case "lanternLost":
         sound.play("lantern-out");
+        this.lit[e.player] = e.left;
         if (this.paid === e.player) { this.render(); await this.wait(600); break; } // spent by choice: already told
         st.celebrate("bad");
         st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
+        this.render();
         await this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad",
           e.left > 0 ? `▼ A lantern goes out: ${e.left} left` : "▼ Last lantern gone: one more slip and out");
         this.render();
         await this.wait(1600);
         break;
       case "lanternWon": sound.play("lantern-on"); st.celebrate("good"); st.stamp("good", "Three sixes!");
+        this.lit[e.player] = e.total;
+        this.render();
         await this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good", `▲ Three 6s: a lantern lit again (${e.total} now)`); this.render(); await this.wait(1400); break;
       case "out":
         sound.play("out");
@@ -703,14 +713,19 @@ export class GameScreen {
     void this.pops.show({ kind: "info", title: c.title, text: c.text, art: cardFace(k, c.title), kicker: "Card", outcome: have || undefined, tone: n ? "good" : "" });
   }
 
+  /** A player's lanterns as shown now (see `lit`). */
+  private lanterns(seat: number): number {
+    return this.lit[seat] ?? this.game.players[seat].lanterns;
+  }
+
   private playerInfo(seat: number): void {
-    const p = this.game.players[seat], B = this.board, lines: string[] = [];
+    const p = this.game.players[seat], B = this.board, lines: string[] = [], lanterns = this.lanterns(seat);
     const pos = this.places[seat];
-    const or = p.lanterns >= 1 ? ", or a lantern spent" : "";
+    const or = lanterns >= 1 ? ", or a lantern spent" : "";
     const where = p.out ? "Out of the game." : pos === OFF ? `At Home: needs a 6 to set off${or}.` : p.trapped ? `Stuck in the Bog: needs a 6${or}.` : pos === 0 ? "On Start."
       : `On square ${pos}: ${B.endTile - pos} squares to the festival.`;
     lines.push(where);
-    lines.push(`${lanternSvg.replace("<svg", '<svg class="inl"')} ${p.lanterns} lantern${p.lanterns === 1 ? "" : "s"}${p.lanterns === 0 ? ": one more slip and it's over" : ""}.`);
+    lines.push(`${lanternSvg.replace("<svg", '<svg class="inl"')} ${lanterns} lantern${lanterns === 1 ? "" : "s"}${lanterns === 0 ? ": one more slip and it's over" : ""}.`);
     if (p.bonus) lines.push(`<b>Bonus card${p.bonus > 1 ? ` ×${p.bonus}` : ""}</b>: cancel a punishment for yourself, or cancel a reward for another player. Once.`);
     if (p.jailPass) lines.push(`<b>Bog boots</b>: walk through the Bog once.`);
     if (p.snakeLeader) lines.push(`<b>Snake Leader</b>: beware the very last square.`);
@@ -801,8 +816,8 @@ export class GameScreen {
 
   private render(): void {
     const P = this.game.players, cur = this.seat;
-    const bar = `<div class="avs">` + P.map((p, i) => `<button class="avatar${i === cur ? " now" : ""}${p.out ? " gone" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${p.lanterns} lanterns${p.bonus ? `, ${p.bonus} Bonus card` : ""}. Tap for details">`
-      + `${tokenSvg(i, "tok", true)}<span class="badge l">${lanternSvg}${p.out ? "✕" : p.lanterns}</span>`
+    const bar = `<div class="avs">` + P.map((p, i) => `<button class="avatar${i === cur ? " now" : ""}${p.out ? " gone" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${this.lanterns(i)} lanterns${p.bonus ? `, ${p.bonus} Bonus card` : ""}. Tap for details">`
+      + `${tokenSvg(i, "tok", true)}<span class="badge l">${lanternSvg}${p.out ? "✕" : this.lanterns(i)}</span>`
       + (p.bonus || p.jailPass ? `<span class="badge c">${artFor(p.bonus ? "card" : "boots", "")}${p.bonus + p.jailPass}</span>` : "")
       + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">${robotSvg}</span>` : "")
       + (this.need(i) ? `<span class="need" aria-hidden="true">needs ${this.need(i)}</span>` : "") + `</button>`).join("")
