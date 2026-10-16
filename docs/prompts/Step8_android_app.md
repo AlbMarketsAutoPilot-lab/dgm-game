@@ -93,6 +93,12 @@ What the web game must not do inside the app (Step B):
   one command that builds the game and copies it into the app, like KAJ's `npm run android:assets`. The session asks
   the owner for the KAJ app's `AndroidManifest.xml` and Gradle files, so the privacy and backup settings are exactly
   KAJ's.
+  **Built (owner approved C.1–C.3, 16 Oct)**: C.1 the backup text in `privacy.html`; C.2 the icon (option A: the
+  whole picture; `android/icon-source.png`, `tools/android/icons.py`); C.3 the project in `android/` (KAJ's files with
+  only the changes listed in section 5, Gradle wrapper 8.11.1, `npm run android:assets` = `tools/android/assets.mjs`,
+  `test/android-app.test.ts`). D3 checked on 16 Oct 2026: Google Play requires target API 36 since 31 Aug 2026, the
+  same as KAJ. One addition to KAJ: "Back to the game" on the copyright and privacy pages opens the folder `./`, which
+  the app answers with `index.html`. A release build (unsigned) and lint passed in the session.
 - **Step D: the owner builds it.** A guide with every Command Prompt line: get the project; copy the game in; open it
   in Android Studio; make the signing key once and back it up (outside the project folder); build the signed APK;
   install it on the Galaxy S25.

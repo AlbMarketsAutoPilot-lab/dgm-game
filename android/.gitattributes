@@ -1,0 +1,4 @@
+# Windows needs gradlew.bat with Windows line ends; gradlew is for Mac and Linux.
+gradlew.bat text eol=crlf
+gradlew text eol=lf
+*.jar binary

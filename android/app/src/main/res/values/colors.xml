@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The game's ink purple (D7), shown while the game loads -->
+    <color name="ink">#4b2377</color>
+</resources>
