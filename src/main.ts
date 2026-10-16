@@ -5,6 +5,7 @@ import { GameScreen, type Setup } from "./ui/app";
 import type { SavedGame } from "./ui/save";
 import { guideSeen, showGuide } from "./ui/guide";
 import { showSetup } from "./ui/setup";
+import { back, inApp } from "./ui/android";
 
 const root = document.querySelector<HTMLElement>("#app")!;
 let last: Setup | null = null;
@@ -22,8 +23,12 @@ function menu(): void {
 // The first time on this device: the short "How to play" guide, then the start screen.
 document.fonts.load('100px "Patrick Hand"').finally(() => (guideSeen() ? menu() : void showGuide().then(menu)));
 
+// The Android app (Step 8): its Back button asks the page first (B2). Not on the web.
+if (inApp()) (window as Window & { dgmBack?: () => boolean }).dgmBack = () => back();
+
 // Offline (Step 7): only in the built game, so development always shows the latest code. Works without it too.
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
+// Not in the Android app (B3): its files are already on the phone, and a worker could keep an old version.
+if (import.meta.env.PROD && "serviceWorker" in navigator && !inApp()) {
   navigator.serviceWorker.register("./sw.js").then(() => navigator.serviceWorker.ready).then((r) => {
     const files = performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.startsWith(location.origin));
     r.active?.postMessage({ cache: files });

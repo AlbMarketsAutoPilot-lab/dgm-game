@@ -16,6 +16,9 @@ html { font-size: clamp(16px, min(1.05vw, 1.9vh), 30px); }
 html, body { margin: 0; height: 100%; background: var(--table); color: var(--ink); overscroll-behavior: none; }
 body, button { font-family: "Patrick Hand", "Comic Sans MS", cursive; }
 #app { height: 100dvh; }
+/* B5, the Android app (owner, 16 Oct): the app tells the page the size of the camera cut-out (--cut-*, as in KAJ) and
+   the game keeps clear of that side. On the web they are not set: 0, nothing moves. */
+#app { padding: var(--cut-t, 0px) var(--cut-r, 0px) var(--cut-b, 0px) var(--cut-l, 0px); }
 button {
   font: inherit; font-size: 1.25rem; color: var(--ink); background: var(--paper);
   min-height: 3.25rem; min-width: 3.25rem; padding: .375rem 1.125rem;
@@ -393,7 +396,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .pc.locked .pic { opacity: .18; filter: grayscale(1); }
 .pc.locked h3 { opacity: .6; } .pc.locked .post { background: #e0d6c0; }
 .pc .how { font-size: .9rem; opacity: .85; }
-.album { position: fixed; inset: 0; z-index: 10; overflow: auto; background: var(--paper); padding: 0 .75rem 1.875rem; }
+.album { position: fixed; inset: 0; z-index: 10; overflow: auto; background: var(--paper); padding: 0 calc(.75rem + var(--cut-r, 0px)) calc(1.875rem + var(--cut-b, 0px)) calc(.75rem + var(--cut-l, 0px)); border-top: var(--cut-t, 0px) solid var(--paper); }
 .album-top { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem 0; background: var(--paper); border-bottom: .125rem dashed rgba(75, 35, 119, .3); }
 .album-top h2 { margin: 0; font-weight: normal; font-size: 1.8rem; } .album-top h2 span { font-size: 1.2rem; opacity: .8; }
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18.75rem), 1fr)); gap: .875rem; max-width: 62.5rem; margin: .875rem auto 0; }
@@ -440,7 +443,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 }
 
 /* ---- How to play (first time on this device, and from the start screen) ---- */
-.howto { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: .75rem; overflow: auto; background: rgba(43, 18, 72, .55); }
+.howto { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: calc(.75rem + var(--cut-t, 0px)) calc(.75rem + var(--cut-r, 0px)) calc(.75rem + var(--cut-b, 0px)) calc(.75rem + var(--cut-l, 0px)); overflow: auto; background: rgba(43, 18, 72, .55); }
 .g-card {
   position: relative; width: min(100%, 30rem); max-height: 100%; overflow: auto; display: flex; flex-direction: column; align-items: center; text-align: center;
   gap: clamp(.25rem, 1.2vh, .625rem); padding: clamp(.75rem, 3vh, 1.5rem) 1rem; background: var(--paper);
