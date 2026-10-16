@@ -1,6 +1,7 @@
 // The game screen (owner's design, 14–15 Oct): the whole board is the info area (where am I, what is ahead; tap a
 // square to see what it does), the stage is the action area (the square, the token, the die). Every story moment,
-// choice and the win are popups over the whole board. The players sit in a row on top (portrait) or a column on the
+// choice and the win are popups over the whole board; a computer player's moments are one chat-style note under the
+// picture instead (owner, 16 Oct). The players sit in a row on top (portrait) or a column on the
 // right (landscape); tap one to see everything about them. All rules come from the engine (src/engine); this file
 // only shows its events, in order, and answers its decisions.
 import { BOARDS, Game, OFF, OUT, START, randomSeed, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
@@ -15,7 +16,7 @@ import { sound } from "./sound";
 import { switchIcon } from "./sound-switch";
 import { SpoilQuestion } from "./spoil";
 import { Stage } from "./stage";
-import { MOMENTS, fill, outcome, taleOf, type Tale } from "./tales";
+import { MOMENTS, brief, fill, outcome, taleOf, type Tale } from "./tales";
 import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 import { clearGame, replay, saveGame, type SavedGame } from "./save";
 
@@ -37,7 +38,7 @@ const leaveSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v1
 const lanternSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6M12 2v2M8 7h8l-1 11H9zM8 7c0-2 8-2 8 0M9.5 18h5v2.5h-5z" fill="#f2c230" stroke="#4b2377" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
 const CARD_INFO = {
-  bonus: { icon: "card", title: "Bonus card", text: "With this card you have the power to cancel a punishment for yourself or cancel a reward for another player. Use any time at your will." },
+  bonus: { icon: "card", title: "Bonus card", text: "Cancel your own bad luck, or another player's good luck. Once, whenever you like." },
   jailPass: { icon: "boots", title: "Bog boots", text: "When the Bog would catch you, you're asked: wear them and walk straight through, or keep them for later. Once worn, they're worn out." },
   snakeLeader: { icon: "snake-crown", title: "Snake Leader", text: "You rode the sea snake. Careful: if you land on the very last square, the snake wants its ride back." },
 };
@@ -86,6 +87,8 @@ export class GameScreen {
   private turns = 0;
   /** Continued from a saved game. */
   private readonly resumed: boolean;
+  /** A computer player's note under the picture (owner, 16 Oct: no popups for computer players). */
+  private readonly chat: HTMLElement;
   /** The players left this game (U2): nothing more happens on this screen. */
   private gone = false;
 
@@ -122,6 +125,9 @@ export class GameScreen {
     this.overview = new Overview(ov, board, players, (pos) => this.squareInfo(pos));
     this.pops = new Popups(ov, root.querySelector(".game")!, root.querySelector(".controls")!);
     this.stage = new Stage(root.querySelector(".stage")!, board);
+    this.chat = Object.assign(document.createElement("div"), { className: "chat", hidden: true });
+    this.chat.setAttribute("role", "status");
+    root.querySelector(".strip-wrap")!.append(this.chat);
     this.dice = new Dice(root.querySelector(".dice")!);
     this.bar = root.querySelector(".players")!;
     this.hud = root.querySelector(".hud")!;
@@ -188,8 +194,7 @@ export class GameScreen {
       const first = this.name(this.game.first);
       await this.pops.show({
         kind: "info", art: artFor("house", "Home"), kicker: `${first} starts`, title: "You need a 6 to enter",
-        text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> A 6 always gives you one more throw, and the throws add up. No 6 in three throws: you set off anyway, but a lantern goes out.",
-        outcome: "First to the Festival of Lights wins. You need the exact number to get in.",
+        text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: you set off anyway, but a lantern goes out. In a hurry? Spend a lantern to set off at once. Careful: <b>lanterns are your lives</b>. With none left, the next one you lose puts you out of the game.",
         buttons: [{ label: "Let's go!", value: "ok", primary: true }],
       });
     }
@@ -291,7 +296,10 @@ export class GameScreen {
     const seat = (this.seat = this.nextSeat()), p = this.game.players[seat], comp = this.setup.computer[seat];
     this.told = [];
     this.paid = -1; this.spendNow = false;
-    if (!comp) { await this.readFirst(); this.pops.clear(); } // a person's turn starts with the whole board in view
+    await this.readFirst();
+    this.note(null);
+    if (!comp) this.pops.clear(); // a person's turn starts with the whole board in view
+    else this.pops.closeStory(); // a computer's turn: the last story goes, what the player opened stays
     this.overview.setCurrent(seat);
     this.overview.zoomOutAll();
     this.dice.clear();
@@ -305,8 +313,9 @@ export class GameScreen {
     this.overview.setReach(p.skip > 0 || p.trapped || p.pos === OFF || p.slow ? null : pl, p.double);
     if (p.skip > 0) {
       const who = this.name(seat), left = p.skip - 1, cause = this.waitCause[seat];
-      await this.story(seat, { title: MOMENTS.wait.title, text: cause ? `${who} landed on <b>${cause}</b>, which says “miss turns”. So ${who} skips this turn.` : fill(MOMENTS.wait.text, { p: who }), art: artFor("big-clock", "Waiting") },
-        left > 0 ? `${left} more turn${left > 1 ? "s" : ""} to wait after this one.` : `Next turn ${who} plays again.`);
+      const more = left > 0 ? `${left} more turn${left > 1 ? "s" : ""} to wait after this one.` : `Next turn ${who} plays again.`;
+      await this.story(seat, { title: MOMENTS.wait.title, text: cause ? `${who} landed on <b>${cause}</b>: miss turns.` : fill(MOMENTS.wait.text, { p: who }), art: artFor("big-clock", "Waiting") },
+        more, "", `skips this turn${left > 0 ? ` (${left} more to wait)` : ""}`);
       if (comp) await this.wait(1400); else await this.ask([{ label: "OK, skip this turn", value: "ok" }]);
     } else if (comp) {
       await this.wait(800);
@@ -362,6 +371,7 @@ export class GameScreen {
     if (comp || next === seat || this.setup.computer[next]) await this.wait(comp ? 1300 : 2200);
     else await this.ask([{ label: `Pass the die to ${PLAYERS[next].name} ▶`, value: "ok" }]); // a label is plain text
     this.setAct([]);
+    if (comp) { await this.readFirst(); this.note(null); } // the note goes with the turn (owner, 16 Oct)
   }
 
   /** Journey postcards (GCD §12): a person earns one the first time on this device; a stamp on the square says so. */
@@ -392,7 +402,7 @@ export class GameScreen {
     sound.play("six");
     this.stage.celebrate("good");
     this.stage.stamp("good", "A six!");
-    await this.story(seat, { title: "A 6!", text: "Lucky you: a 6 always gives you one more throw, and the throws add up. Roll again!", art: artFor("lanterns", "A six") }, "Three 6s in a row win a lantern.", "good");
+    await this.story(seat, { title: "A 6!", text: "One more throw: the throws add up, then you move. Three 6s in a row light a lantern.", art: artFor("lanterns", "A six") }, "Roll again!", "good");
   }
 
   /** Waits for a person to throw the next die of this turn. */
@@ -452,7 +462,7 @@ export class GameScreen {
       case "roll": sound.play("dice"); await this.dice.roll(e.value); break;
       case "skipTurn": await this.wait(500); break;
       case "noSix":
-        await this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`);
+        await this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`, "", `${e.where === "start" ? "At Home" : "▼ The Bog"}: no 6, try ${e.tries} of 3`);
         await this.wait(900);
         break;
       case "released": {
@@ -467,8 +477,9 @@ export class GameScreen {
           // The lantern's own event follows at once and carries the count (owner, 16 Oct: the engine had already taken
           // the lantern, so "lanterns - 1" took it twice: "0 lanterns left" with one still shown on the player)
           const left = next?.type === "lanternLost" && next.player === e.player ? next.left : this.game.players[e.player].lanterns;
-          await this.story(e.player, { ...m, text: fill(m.text, { p: this.name(e.player) }), art: artFor("lantern", "A lantern spent") }, `${left} lantern${left === 1 ? "" : "s"} left.`, "good");
-        } else await this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good");
+          await this.story(e.player, { ...m, text: fill(m.text, { p: this.name(e.player) }), art: artFor("lantern", "A lantern spent") }, `${left} lantern${left === 1 ? "" : "s"} left.`, "good", `spends a lantern to set off: ${left} left`);
+        } else await this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good",
+          e.bySix ? `▲ A 6: ${e.where === "start" ? "onto the board" : "out of the Bog"}, throws again` : "No 6 in three tries: sets off anyway");
         await this.wait(900);
         break;
       }
@@ -476,11 +487,12 @@ export class GameScreen {
         await st.walk(e.path.map((s) => s.pos), (pos) => { sound.play("step"); this.places[e.player] = pos; this.overview.setPlace(e.player, pos); });
         this.arrived(e.from, e.to);
         this.dice.moved();
+        if (this.setup.computer[e.player]) await this.story(e.player, { title: "", text: "" }, "", "", e.to === this.board.endTile ? "▶ reaches the Festival of Lights!" : `▶ moves to square ${e.to}`);
         break;
       case "overshoot": {
         const need = this.board.endTile - this.places[e.player];
         await this.story(e.player, { ...M.overshoot, art: artFor("lanterns", "Festival"), text: fill(M.overshoot.text, { n: need }) },
-          `Rolled ${e.squares}, needed exactly ${need}: you stay where you are.${need === 6 ? " A 6 can never finish: a 6 always throws again, so the total is at least 7." : ""}`, "bad");
+          `Rolled ${e.squares}, needed exactly ${need}: you stay where you are.${need === 6 ? " A 6 can never finish: it always throws again." : ""}`, "bad", `▼ Rolled ${e.squares}, needs exactly ${need}: stays`);
         await this.wait(1100);
         break;
       }
@@ -491,7 +503,7 @@ export class GameScreen {
         st.celebrate(tone);
         st.stamp(tone);
         this.noteWait(e);
-        await this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone);
+        await this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone, `${tone === "good" ? "▲" : "▼"} ${tl.title}: ${brief(this.board, e.tile)}`);
         await this.wait(1700);
         break;
       }
@@ -509,34 +521,35 @@ export class GameScreen {
         this.overview.setPlace(e.victim, START);
         st.celebrate("bump");
         st.stamp("bad", "Bump!");
-        await this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad");
+        await this.story(e.player, { title: M.capture.title, text: fill(M.capture.text, { p: this.name(e.player), o: this.name(e.victim) }), art: this.twoTokens(e.player, e.victim) }, `${this.name(e.victim)} goes back to Start.`, "bad", `bumps ${this.name(e.victim)}: ${this.name(e.victim)} goes back to Start`);
         this.render();
         await this.wait(1400);
         break;
-      case "roadblockHit": st.celebrate("bad"); await this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad"); await this.wait(1300); break;
+      case "roadblockHit": st.celebrate("bad"); await this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad", "▼ Fallen tree: back 10 squares"); await this.wait(1300); break;
       case "trapped": sound.play("bog"); if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
-        await this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "A 6 gets you out, or spend a lantern.", "bad"); await this.wait(1100); break;
+        await this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "A 6 gets you out, or spend a lantern.", "bad", "▼ The Bog: stuck until a 6"); await this.wait(1100); break;
       case "bogBoots": sound.play("card"); st.celebrate("good"); st.stamp("good", "Not today, Bog!");
-        await this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good"); this.render(); await this.wait(1300); break;
+        await this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good", "▲ Bog boots: walks straight through the Bog"); this.render(); await this.wait(1300); break;
       case "card": sound.play("card"); this.render(); await this.wait(300); break;
       case "bonusUsed": {
         sound.play("card");
         const m = e.use === "defend" ? M.bonusDefend : M.bonusAttack;
         st.cardPlayed();
         st.stamp(e.use === "defend" ? "good" : "bad", e.use === "defend" ? "Dodged it!" : "Spoiled!");
-        await this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad");
+        await this.story(e.player, { title: m.title, text: fill(m.text, { p: this.name(e.player), o: this.name(e.target) }), art: cardFace("bonus", "Bonus card") }, "The Bonus card is used up.", e.use === "defend" ? "good" : "bad",
+          e.use === "defend" ? "▲ Bonus card: dodges the bad luck" : `▼ Bonus card: cancels ${this.name(e.target)}'s luck`);
         this.render();
         await this.wait(1500);
         break;
       }
       case "doubleNext": this.render(); break;
       case "snakeLeader": this.render(); st.stamp("good", "Snake Leader!");
-        await this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "You hold the Snake Leader card.", "good"); await this.wait(1200); break;
+        await this.story(e.player, { ...M.snakeLeader, text: fill(M.snakeLeader.text, { p: this.name(e.player) }), art: cardFace("snakeLeader", "Snake Leader") }, "Snake Leader: on the very last square, the snake wants its ride back.", "good", "▲ becomes the Snake Leader"); await this.wait(1200); break;
       case "swap": {
         const mine = this.places[e.player];
         this.places[e.other] = mine;
         this.overview.setPlace(e.other, mine);
-        await this.story(e.player, { title: M.swap.title, text: fill(M.swap.text, { p: this.name(e.player), o: this.name(e.other) }), art: this.twoTokens(e.player, e.other) }, "", "good");
+        await this.story(e.player, { title: M.swap.title, text: fill(M.swap.text, { p: this.name(e.player), o: this.name(e.other) }), art: this.twoTokens(e.player, e.other) }, `${this.name(e.player)} and ${this.name(e.other)} trade places.`, "good", `swaps places with ${this.name(e.other)}`);
         await this.wait(900);
         break;
       }
@@ -545,17 +558,18 @@ export class GameScreen {
         if (this.paid === e.player) { this.render(); await this.wait(600); break; } // spent by choice: already told
         st.celebrate("bad");
         st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
-        await this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad");
+        await this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad",
+          e.left > 0 ? `▼ A lantern goes out: ${e.left} left` : "▼ Last lantern gone: one more slip and out");
         this.render();
         await this.wait(1600);
         break;
       case "lanternWon": sound.play("lantern-on"); st.celebrate("good"); st.stamp("good", "Three sixes!");
-        await this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good"); this.render(); await this.wait(1400); break;
+        await this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good", `▲ Three 6s: a lantern lit again (${e.total} now)`); this.render(); await this.wait(1400); break;
       case "out":
         sound.play("out");
         this.places[e.player] = OUT;
         this.overview.setPlace(e.player, OUT);
-        await this.story(e.player, { ...M.out, text: fill(M.out.text, { p: this.name(e.player) }), art: artFor("lantern", "Lights out") }, "Out of the game.", "bad");
+        await this.story(e.player, { ...M.out, text: fill(M.out.text, { p: this.name(e.player) }), art: artFor("lantern", "Lights out") }, "Out of the game.", "bad", "✕ out of the game");
         this.render();
         await this.wait(1800);
         break;
@@ -593,13 +607,29 @@ export class GameScreen {
   /** A story moment, in a popup (only the newest one: owner, no list of earlier moments). */
   // Owner, 15 Oct: two popups in a row went too fast to read. A story popup now stays at least as long as it takes to
   // read it (about 4 words a second, at least 1.5 s, at most 5 s: owner) before the next one replaces it.
-  private async story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = ""): Promise<void> {
+  // Owner, 16 Oct: a computer player's moments are not popups but one note under the picture, rules only (`note`).
+  private async story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = "", note = ""): Promise<void> {
     await this.readFirst();
     const c: PopupContent = { title: t.title, text: t.text, art: t.art, outcome: result || undefined, tone, kicker: `${tokenSvg(seat, "kick", true)}${this.name(seat)}` };
     this.told.unshift(c);
+    const words = (x: string) => x.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+    if (this.setup.computer[seat] && note) {
+      this.note(seat, note, tone);
+      this.readUntil = Date.now() + Math.min(3000, Math.max(1200, 400 + words(note) * 250));
+      return;
+    }
     void this.pops.show(c);
-    const words = `${t.title} ${t.text} ${result}`.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
-    this.readUntil = Date.now() + Math.min(5000, Math.max(1500, 500 + words * 250));
+    this.readUntil = Date.now() + Math.min(5000, Math.max(1500, 500 + words(`${t.title} ${t.text} ${result}`) * 250));
+  }
+
+  /** The note under the picture, like a chat message from that player; `null` takes it away. */
+  private note(seat: number | null, text = "", tone: "good" | "bad" | "" = ""): void {
+    const wrap = this.chat.parentElement!;
+    if (seat === null) { this.chat.hidden = true; this.chat.replaceChildren(); wrap.classList.remove("chatting"); return; }
+    this.chat.className = `chat ${tone}`;
+    this.chat.innerHTML = `${tokenSvg(seat, "chat-tok", true)}<p><b style="color:${PLAYERS[seat].text}">${this.name(seat)}</b> ${text}</p>`;
+    this.chat.hidden = false;
+    wrap.classList.add("chatting");
   }
 
   /**
@@ -626,8 +656,8 @@ export class GameScreen {
     const x = taleOf(B, pos);
     let c: PopupContent;
     if (x) c = { title: x.tale.title, text: x.tale.text, art: this.pic(x.icon, x.tale.title), outcome: outcome(B, x.tile), tone: x.tile.cat === "R" ? "good" : "bad" };
-    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to leave Home, or spend a lantern to set off at once. No 6 in three throws: a lantern goes out, and you set off anyway with that third throw." };
-    else if (pos === B.endTile) c = { ...MOMENTS.end, art: artFor("lanterns", "Festival"), outcome: "You need the exact number to get in. Too much, and you stay where you are. A 6 can never land here exactly: a 6 always throws again and adds up." };
+    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to set off, or spend a lantern. No 6 in three throws: a lantern goes out, and you set off anyway." };
+    else if (pos === B.endTile) c = { ...MOMENTS.end, art: artFor("lanterns", "Festival"), outcome: "You need the exact number to get in. Too much, and you stay where you are. A 6 never lands here: it throws again." };
     else {
       const lm = B.story.landmarks[pos], region = B.story.regions.find((r) => pos >= r.from && pos <= r.to)?.name ?? "";
       c = lm ? { title: esc(lm.name), text: `A landmark of the ${esc(region)}. Nothing happens here: enjoy the view.`, art: artFor(lm.icon, lm.name) }

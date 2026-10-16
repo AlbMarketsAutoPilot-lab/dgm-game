@@ -18,7 +18,10 @@ Two areas plus the players:
   it does and where to get it. Below it, the die (tap it) and one big action button.
 - **Popups** (`popup.ts`) over the whole board: every story moment, choice and the win. A story popup stays until the
   next one replaces it, or until it is closed with ✕; the moments earlier in the same turn are listed under it. A
-  choice is explained in the popup; its buttons wait in the action area.
+  choice is explained in the popup; its buttons wait in the action area. **Rule first** (owner, 16 Oct): what happens
+  is the popup's first line, then the story in one short sentence. **Computer players** (owner, 16 Oct) get no popups:
+  each moment is one chat-style note under the picture, rules only ("Red ▼ The Bog: stuck until a 6"), replaced by the
+  next and gone when that player's turn ends (`app.ts`, `note`; texts from `tales.ts`, `brief`).
 - **Players** (`app.ts`): round avatars on top (portrait) or on the right (landscape), with lanterns and cards (a computer player wears a small robot badge); tap one
   for everything about that player (place, squares to go, cards, waiting, a tip for the next throw).
 - **Narrative** (`tales.ts`): a tale per event square and rule moment, for young adults first. What a
@@ -54,8 +57,9 @@ lantern and go"; the Bog boots are offered ("Wear your Bog boots?"), as the Bonu
 enough to read (about 4 words a second, 1.5–5 s) before the next one replaces it, with an hourglass turning where the
 buttons go meanwhile.
 
-**How to play** (`guide.ts`, owner 15 Oct): four short pages, once per device before the start screen, and from "How
-to play" on the start screen (texts: draft for the owner's approval). **Keyboard** (U5): Escape closes the popup on
+**How to play** (`guide.ts`, owner 15–16 Oct): eight short pages, rules only, three with pictures of the real game
+screen (`src/assets/guide/`, made by `npm run guide:shots`), once per device before the start screen, and from "How
+to play" on the start screen. **Keyboard** (U5): Escape closes the popup on
 top, the album and the guide; the whole board is one Tab stop, the arrow keys walk the road, Enter / Space tells what a
 square does. All text from data is escaped once, in `src/render/html.ts` (S3).
 

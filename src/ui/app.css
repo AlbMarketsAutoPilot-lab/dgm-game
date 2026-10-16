@@ -121,9 +121,10 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .pop-kicker .kick { width: 1.25rem; height: 1.25rem; }
 .pop-title { margin: 0; font-weight: normal; font-size: 1.75rem; line-height: 1.05; }
 .pop-text { margin: .125rem 0 0; font-size: 1.12rem; line-height: 1.3; }
+.pop-outcome + .pop-text { margin-top: .5rem; }
 .pop-text .line { display: block; margin-bottom: .1875rem; }
 .pop-text .inl { width: 1rem; height: 1rem; vertical-align: -.125rem; }
-.pop-outcome { margin: .5rem 0 0; padding: .375rem .625rem; font-size: 1.15rem; line-height: 1.2; border-radius: .625rem; background: #efe5cf; border-left: .375rem solid var(--ink); }
+.pop-outcome { margin: .25rem 0 0; padding: .375rem .625rem; font-size: 1.15rem; line-height: 1.2; border-radius: .625rem; background: #efe5cf; border-left: .375rem solid var(--ink); }
 .pop.good .pop-outcome { border-color: var(--good); color: var(--good); background: #e5f0dc; }
 .pop.bad .pop-outcome { border-color: var(--bad); color: #9c2b20; background: #f6e0d8; }
 .pop-sub { margin: .5rem 0 0; font-size: .95rem; opacity: .8; }
@@ -217,8 +218,28 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 
 /* ---- The stage ---- */
 .stage { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.strip-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; --card: 12.5rem; }
-.strip { position: absolute; left: 0; top: 50%; display: flex; gap: calc(var(--card) * .12); margin-top: calc(var(--card) * -0.56); will-change: transform; }
+.strip-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; --card: 12.5rem; container-type: size; }
+/* Owner, 16 Oct: a computer player's moment is one note under the picture, like a chat message (no popup). While it
+   shows, the square and the token move up a little to make room. */
+.strip-wrap.chatting { --lift: min(1.75rem, 9cqh); }
+.strip, .stage-token { transition: margin-top .25s ease, top .25s ease; }
+.chat {
+  position: absolute; left: .75rem; bottom: .625rem; z-index: 2; max-width: calc(100% - 1.5rem);
+  display: flex; align-items: flex-end; gap: .375rem; pointer-events: none;
+  animation: chat-in .28s cubic-bezier(.2, 1.4, .4, 1);
+}
+.chat .chat-tok { width: 1.75rem; height: 1.75rem; flex: 0 0 auto; }
+.chat p {
+  position: relative; margin: 0; padding: .3125rem .75rem .375rem; font-size: 1.05rem; line-height: 1.2;
+  background: #fffdf6; color: var(--ink); border: .1875rem solid var(--ink); border-radius: 1rem 1rem 1rem .25rem;
+  box-shadow: 0 .1875rem 0 rgba(75, 35, 119, .25);
+}
+/* the bubble's tail, pointing at the player's token */
+.chat p::before { content: ""; position: absolute; left: -.5625rem; bottom: -.1875rem; border: .375rem solid transparent; border-right-color: var(--ink); border-bottom-color: var(--ink); }
+.chat.good p { background: #eef6e8; } .chat.bad p { background: #fbece6; }
+.chat p b { font-weight: normal; }
+@keyframes chat-in { from { opacity: 0; transform: translateY(.75rem) scale(.9); transform-origin: left bottom; } }
+.strip { position: absolute; left: 0; top: 50%; display: flex; gap: calc(var(--card) * .12); margin-top: calc(var(--card) * -0.56 - var(--lift, 0px)); will-change: transform; }
 .card {
   position: relative; flex: 0 0 auto; width: var(--card); height: var(--card);
   border: .3125rem solid var(--ink); border-radius: 1.125rem;
@@ -259,7 +280,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 
 /* The token standing on the square (half over its bottom edge) */
 .stage-token {
-  position: absolute; left: 50%; top: 50%; width: calc(var(--card) * .36); height: calc(var(--card) * .36);
+  position: absolute; left: 50%; top: calc(50% - var(--lift, 0px)); width: calc(var(--card) * .36); height: calc(var(--card) * .36);
   transform: translate(-50%, calc(var(--card) * .3)); pointer-events: none;
 }
 .stage-token svg { width: 100%; height: 100%; display: block; }
@@ -437,6 +458,10 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .g-art { width: clamp(4.5rem, 22vh, 9rem); aspect-ratio: 1; flex: 0 0 auto; border: .1875rem solid var(--ink); border-radius: .875rem; background: #fffdf6; overflow: hidden; display: grid; place-items: center; }
 .g-art > svg { width: 100%; height: 100%; display: block; }
 .g-art .card-face { width: 70%; height: 92%; }
+/* A picture of the game screen (owner, 16 Oct): as high as the drawings, as wide as it is */
+.g-art.shot { width: auto; max-width: 100%; height: clamp(4.5rem, 22vh, 9rem); aspect-ratio: auto; background: var(--paper); }
+.g-art.shot img { display: block; height: 100%; max-width: 100%; object-fit: contain; }
+.g-two { display: flex; gap: .25rem; } .g-two .tok { width: clamp(2rem, 8vh, 3.5rem); height: clamp(2rem, 8vh, 3.5rem); }
 .g-step { margin: 0; font-size: .95rem; opacity: .75; }
 .g-card h2 { margin: 0; font-weight: normal; font-size: clamp(1.4rem, 4vh, 1.9rem); line-height: 1.1; }
 .g-text { margin: 0; font-size: clamp(1rem, 2.6vh, 1.2rem); line-height: 1.3; }
@@ -445,7 +470,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .g-buttons { display: flex; gap: .625rem; width: 100%; justify-content: center; }
 .g-buttons button { flex: 1 1 0; max-width: 12rem; }
 .g-skip { position: absolute; right: .5rem; top: .5rem; min-height: 2.75rem; min-width: 0; padding: .125rem .75rem; font-size: 1rem; box-shadow: none; border-width: .125rem; }
-@media (max-height: 420px) { .g-card { flex-direction: row; flex-wrap: wrap; justify-content: center; text-align: left; } .g-art { width: 5rem; } .g-card > :not(.g-art):not(.g-skip) { flex: 1 1 60%; } .g-step { padding-right: 4rem; } }
+@media (max-height: 420px) { .g-card { flex-direction: row; flex-wrap: wrap; justify-content: center; text-align: left; } .g-art { width: 5rem; } .g-art.shot { width: auto; height: 5rem; } .g-card > :not(.g-art):not(.g-skip) { flex: 1 1 60%; } .g-step { padding-right: 4rem; } }
 /* Postcards and How to play: side by side under "Let's go!" */
 .setup .s-more { display: flex; gap: .5rem; justify-content: center; flex: 1 1 100%; }
 .setup .s-more button { flex: 0 1 auto; font-size: 1.05rem; padding-inline: .75rem; white-space: nowrap; }
@@ -483,3 +508,4 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .hourglass svg { width: 2.25rem; height: 2.25rem; animation: hourglass-turn 1.6s ease-in-out infinite; }
 @keyframes hourglass-turn { 0%, 55% { transform: rotate(0); } 85%, 100% { transform: rotate(180deg); } }
 @media (prefers-reduced-motion: reduce) { .hourglass svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .chat { animation: none; } .strip, .stage-token { transition: none; } }
