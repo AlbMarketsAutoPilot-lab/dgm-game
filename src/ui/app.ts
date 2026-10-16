@@ -8,6 +8,7 @@ import { BOARDS, Game, OFF, OUT, START, randomSeed, simplePlayer, type Answer, t
 import { artFor } from "../render/art";
 import { esc } from "../render/html";
 import { cardFace } from "../render/art-modern";
+import { inApp } from "./android";
 import { Dice } from "./dice";
 import { Overview, reachSteps } from "./overview";
 import { PLAYERS, tokenSvg } from "./players";
@@ -253,7 +254,7 @@ export class GameScreen {
       const fx = sound.settings.fx, music = sound.settings.music;
       const v = await this.pops.show({
         kind: "info", kicker: "Settings", title: "Sound and music", art: `<div class="one snd-art">${switchIcon("fx", true)}</div>`,
-        text: "Sound effects and the buzz on phones, and quiet music under the game. Saved on this device.",
+        text: inApp() ? "Sound effects and quiet music under the game. Saved on this device." : "Sound effects and the buzz on phones, and quiet music under the game. Saved on this device.", // the app never vibrates (B4)
         buttons: [
           { label: `Sound effects: ${fx ? "on" : "off"}`, value: "fx", primary: fx },
           { label: `Music: ${music ? "on" : "off"}`, value: "music", primary: music },

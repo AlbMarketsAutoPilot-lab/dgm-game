@@ -6,6 +6,8 @@
 // and the choice is kept on this device. Web Audio: browsers allow sound only after a tap, so the sound starts, and all
 // sounds are prepared, at the first tap or key press.
 // The game never waits for a sound.
+// The Android app never vibrates: vibration needs a permission, and the app asks for none (owner, 16 Oct, B4).
+import { inApp } from "./android";
 
 export type Effect =
   | "dice" | "step" | "six" | "good" | "bad" | "bump" | "jump-up" | "jump-down" | "bog" | "card"
@@ -81,7 +83,7 @@ class Sound {
   play(name: Effect): void {
     if (!this.settings.fx) return;
     const buzz = BUZZ[name];
-    if (buzz !== undefined) try { navigator.vibrate?.(buzz); } catch { /* no vibration here */ }
+    if (buzz !== undefined && !inApp()) try { navigator.vibrate?.(buzz); } catch { /* no vibration here */ }
     const ctx = this.start();
     if (!ctx || ctx.state !== "running") return;
     void this.buffer(name).then((b) => {
