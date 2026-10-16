@@ -82,7 +82,8 @@ What the web game must not do inside the app (Step B):
   - B6: `privacy.html` §5 becomes (owner's approved text): "In the web version on phones, when the sound switch is on,
     the game can make the phone vibrate briefly at exciting moments (for example a 6 or a win); this uses no personal
     information and is off when sound is off. The Android app never vibrates: it asks for no permissions at all." The
-    backup text (D10) is added once the owner approves its wording.
+    backup text (D10), approved by the owner on 16 Oct (Step C.1), is in §3 ("Android backup"), §7 and the summary box;
+    effective date 16 October 2026.
 
   The outside links (D8) need no web change: the app opens them in the phone's browser (Step C), and Back on the
   copyright and privacy pages returns to the game. Then all the existing checks (`npm run typecheck`, `npm test`,
