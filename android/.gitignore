@@ -1,0 +1,14 @@
+# Made by Android Studio and the build: never on GitHub.
+.gradle/
+.idea/
+.kotlin/
+*.iml
+local.properties
+build/
+captures/
+# The game's files: copied in by "npm run android:assets" from the web build.
+app/src/main/assets/
+# Rule 6: the signing key never goes on GitHub.
+*.jks
+*.keystore
+app/release/

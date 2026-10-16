@@ -18,6 +18,13 @@ Node 22. `npm install`, then:
 | `npm run test:sim` | Slow (~1 min): reproduces the published 100,000-game measurements |
 | `npm run test:browser` | The game in a real browser (10–20 min; `QUICK=1` for a few): whole games checked against the engine turn by turn, every screen at 19 sizes, the published build (security policy, offline, guide, keyboard, accessibility). Needs Chromium: `npx playwright install chromium` once (or `CHROMIUM_PATH=…`). See `tools/browser/` |
 | `npm run typecheck` / `npm run build` | TypeScript check / production build in `dist/` |
+| `npm run android:assets` | Builds the game and copies it into the Android app (`android/app/src/main/assets/`) |
+
+## Android app
+
+`android/` is the Android Studio project: the game inside a WebView, built like the owner's KAJ app, with no
+permissions (plan and decisions: `docs/prompts/Step8_android_app.md`). Run `npm run android:assets` first, then open
+`android/` in Android Studio. The icon comes from `android/icon-source.png` (`tools/android/icons.py`).
 
 ## Copyright and privacy
 
