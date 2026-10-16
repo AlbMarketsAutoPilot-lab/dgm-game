@@ -239,7 +239,7 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 - Inclusive: every event has a colour **and** an icon; big buttons; one-tap play; high contrast; reduced motion; no timers. **No read-aloud** (owner, I-7; C3).
 
 ## 15. Technology ✅ (all free)
-TypeScript + Vite, HTML Canvas, PWA on GitHub Pages, Android via Capacitor on Google Play. The rules engine reads the frozen board files (`data/board-long.json`, `data/board-short.json`) and is covered by tests that reproduce the simulator's numbers.
+TypeScript + Vite, HTML Canvas, PWA on GitHub Pages; Android: the web game inside a WebView on Google Play, built like the owner's KAJ app (owner, 16 Oct 2026: no Capacitor; plan: `docs/prompts/Step8_android_app.md`). The rules engine reads the frozen board files (`data/board-long.json`, `data/board-short.json`) and is covered by tests that reproduce the simulator's numbers.
 
 ## 16. Owner decisions on I-1 (14 Oct 2026)
 
