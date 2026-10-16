@@ -60,23 +60,31 @@ What the web game must not do inside the app (Step B):
 | D7 | Loading colour | The game's ink purple `#4b2377` |
 | D8 | Links on the copyright and privacy pages | Open in the phone's browser. **The app never asks for online access or any other access.** Giving internet access when opening a link is the user's own choice |
 | D9 | Permissions | **None. If any permission is required, that part is removed** (rule 8) |
-| D10 | Backup | Off, following the same method as KAJ. `privacy.html` promises saved data never leaves the device. No outside access; for everything on privacy, follow the KAJ example |
+| D10 | Backup | **As KAJ: `android:allowBackup="true"`** (owner, 16 Oct: "do as KAJ, change privacy"). `privacy.html` is changed to say so; its new text is approved by the owner before it is built. No outside access; for everything on privacy, follow the KAJ example |
 | D11 | App icon | **The owner's own picture** (a robot runner on a winding numbered road to a crown, on marble), given in the chat on 16 Oct. It is added to the repository and shown on the phone's icon shapes (round, square, squircle) for approval before it is built in (Step C) |
+| D12 | Orientation | **Both, upright and sideways** (owner, 16 Oct): the game is built and tested for both. Unlike KAJ, which is locked sideways (`sensorLandscape`) |
+| D13 | Back button | **As KAJ** (owner, 16 Oct): on the game screen it shows the existing "Leave this game?" popup, the same as the Leave button on the web. On the start screen the app closes |
 
 ## 4. Steps (each one stops for the owner's approval)
 
 - **Step A: the decisions.** ✅ Done (section 3).
 - **Step B: the small web changes the app needs.** They work only inside the app; the web version stays exactly the
-  same:
-  - `window.dgmBack()`;
-  - no offline worker in the app;
-  - no vibration in the app;
-  - the camera cut-out edges (D6);
-  - outside links to the phone's browser (D8).
+  same. Approved by the owner on 16 Oct (B2–B6; B1 waits for the owner's answer):
+  - B1: how the page knows it is inside the app;
+  - B2: `window.dgmBack()` (D13);
+  - B3: no offline worker in the app;
+  - B4: no vibration in the app. The sound popup's text in the app becomes "Sound effects and quiet music under the
+    game. Saved on this device." (owner's approved text);
+  - B5: the camera cut-out (D6): the app tells the page its size (`--cut-l`, `--cut-t`, `--cut-r`, `--cut-b`, as in
+    KAJ); on the web it is 0, so nothing moves;
+  - B6: `privacy.html` §5 becomes (owner's approved text): "In the web version on phones, when the sound switch is on,
+    the game can make the phone vibrate briefly at exciting moments (for example a 6 or a win); this uses no personal
+    information and is off when sound is off. The Android app never vibrates: it asks for no permissions at all." The
+    backup text (D10) is added once the owner approves its wording.
 
-  Screenshots first, then the code, then all the existing checks (`npm run typecheck`, `npm test`, `npm run build`,
-  `npm run test:browser`). If a text in `privacy.html` must change (for example about vibration in the app), it is
-  proposed first.
+  The outside links (D8) need no web change: the app opens them in the phone's browser (Step C), and Back on the
+  copyright and privacy pages returns to the game. Then all the existing checks (`npm run typecheck`, `npm test`,
+  `npm run build`, `npm run test:browser`).
 - **Step C: the Android project in `android/`.** `MainActivity.java` (KAJ's, adapted as in section 2), the manifest
   with no permissions (D9) and backup as in KAJ (D10), the colours, the name (D2), the icon (D11, shown first). Plus
   one command that builds the game and copies it into the app, like KAJ's `npm run android:assets`. The session asks
@@ -90,3 +98,89 @@ What the web game must not do inside the app (Step B):
   continuing a game; the copyright and privacy pages, and their links opening the browser. The owner reports back;
   only approved fixes are made.
 - **Step F: Google Play** (later): the App Bundle, Play App Signing, the store texts for approval.
+
+## 5. The KAJ app's files (given by the owner on 16 Oct, the model for Step C)
+
+Copied as the owner gave them. For *Don't Get Mad!* only the decisions in section 3 differ (app ID, name, orientation;
+versions checked on the day of building, D3).
+
+`AndroidManifest.xml`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- No permissions: the game is fully offline. -->
+    <application
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:appCategory="game"
+        android:allowBackup="true"
+        android:theme="@style/Theme.KAJ">
+        <!-- configChanges: turning the phone must not restart the game. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+```
+
+`app/build.gradle.kts`:
+
+```kotlin
+plugins {
+    id("com.android.application")
+}
+
+android {
+    namespace = "com.kaj.game"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.kaj.game"
+        minSdk = 24 // Android 7.0
+        targetSdk = 36
+        versionCode = 3 // 1: first review; 2: internal test of 1.0.0
+        versionName = "1.0.1"
+    }
+
+    // R8 shrinks the Java part (owner, 2026-10-14, Play Console's advice); the game itself is the
+    // web page in assets, which R8 does not touch. Upload the mapping file Play asks for.
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation("androidx.activity:activity:1.10.1")
+    implementation("androidx.webkit:webkit:1.17.1")
+}
+```
+
+Project `build.gradle.kts`:
+
+```kotlin
+plugins {
+    id("com.android.application") version "8.10.1" apply false
+}
+```
+
+The KAJ `MainActivity.java` is described in section 2 (one WebView, `WebViewAssetLoader` on
+`https://appassets.androidplatform.net/assets/index.html`, `window.kajBack()`, cut-out sizes as `--cut-*`, bars hidden,
+`onRenderProcessGone`, `onPause` / `onResume`).
