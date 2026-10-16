@@ -30,7 +30,7 @@ try {
   const results = await Promise.all(GAMES.map((g) => playGame(browser, dev.url, g).catch((e) => ({ diffs: [String(e)], errors: [], turns: 0, compared: 0 }))));
   results.forEach((r, i) => {
     const g = GAMES[i], bad = [...r.diffs, ...r.errors, ...(g.brk && !r.broke?.same ? [`${g.brk.kind}: board not the same after Continue`] : [])];
-    report.add("whole games", g.name, !bad.length, bad.length ? bad.slice(0, 3).join(" | ") : `${r.turns} turns${r.spends ? `, lantern count checked in ${r.spends} "spent a lantern" popups` : ""}${r.notes ? `, ${r.notes} computer notes and no computer popup` : ""}${r.compared ? `, ${r.compared} compared with the engine` : ", winner and final board compared"}`);
+    report.add("whole games", g.name, !bad.length, bad.length ? bad.slice(0, 3).join(" | ") : `${r.turns} turns${r.spends ? `, lantern count checked in ${r.spends} "spent a lantern" popups` : ""}${r.notes ? `, ${r.notes} computer notes and no computer popup` : ""}${r.aheads ? `, ${r.aheads} "what's ahead" notices` : ""}${r.compared ? `, ${r.compared} compared with the engine` : ", winner and final board compared"}`);
   });
 
   // 2. Screen sizes

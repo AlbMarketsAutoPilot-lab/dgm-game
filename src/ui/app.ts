@@ -1,7 +1,7 @@
 // The game screen (owner's design, 14–15 Oct): the whole board is the info area (where am I, what is ahead; tap a
 // square to see what it does), the stage is the action area (the square, the token, the die). Every story moment,
-// choice and the win are popups over the whole board; a computer player's moments are one chat-style note under the
-// picture instead (owner, 16 Oct). The players sit in a row on top (portrait) or a column on the
+// choice and the win are popups over the whole board. Under the picture, a lane of its own holds one short note (owner,
+// 16 Oct): a computer player's events (no popups for them), and before a person rolls, the first square ahead. The players sit in a row on top (portrait) or a column on the
 // right (landscape); tap one to see everything about them. All rules come from the engine (src/engine); this file
 // only shows its events, in order, and answers its decisions.
 import { BOARDS, Game, OFF, OUT, START, randomSeed, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
@@ -87,8 +87,8 @@ export class GameScreen {
   private turns = 0;
   /** Continued from a saved game. */
   private readonly resumed: boolean;
-  /** A computer player's note under the picture (owner, 16 Oct: no popups for computer players). */
-  private readonly chat: HTMLElement;
+  /** The note under the picture (owner, 16 Oct): a computer player's event, or what is ahead before a person rolls. */
+  private readonly line: HTMLElement;
   /** The players left this game (U2): nothing more happens on this screen. */
   private gone = false;
 
@@ -125,9 +125,11 @@ export class GameScreen {
     this.overview = new Overview(ov, board, players, (pos) => this.squareInfo(pos));
     this.pops = new Popups(ov, root.querySelector(".game")!, root.querySelector(".controls")!);
     this.stage = new Stage(root.querySelector(".stage")!, board);
-    this.chat = Object.assign(document.createElement("div"), { className: "chat", hidden: true });
-    this.chat.setAttribute("role", "status");
-    root.querySelector(".strip-wrap")!.append(this.chat);
+    // The lane is always there (empty without a note), so the square never grows and shrinks; the square and the token
+    // size themselves above it (stage.ts), so a note never covers them
+    const lane = root.querySelector(".stage")!.appendChild(Object.assign(document.createElement("div"), { className: "note-lane" }));
+    this.line = lane.appendChild(Object.assign(document.createElement("div"), { className: "note", hidden: true }));
+    this.line.setAttribute("role", "status");
     this.dice = new Dice(root.querySelector(".dice")!);
     this.bar = root.querySelector(".players")!;
     this.hud = root.querySelector(".hud")!;
@@ -329,9 +331,12 @@ export class GameScreen {
       this.spendNow = v === "spend";
       this.dice.ready(false);
     } else {
+      const ahead = this.ahead(seat);
+      if (ahead) this.note(seat, ahead.text, ahead.tone);
       this.dice.ready(true);
       await Promise.race([this.ask([{ label: "Roll the die", value: "roll" }]), this.dice.tapped()]);
       this.dice.ready(false);
+      this.note(null); // gone with the throw
     }
     this.setAct([]);
     this.overview.setReach(null);
@@ -462,7 +467,7 @@ export class GameScreen {
       case "roll": sound.play("dice"); await this.dice.roll(e.value); break;
       case "skipTurn": await this.wait(500); break;
       case "noSix":
-        await this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`, "", `${e.where === "start" ? "At Home" : "▼ The Bog"}: no 6, try ${e.tries} of 3`);
+        await this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`, "", e.where === "start" ? "" : `▼ The Bog: no 6, try ${e.tries} of 3`);
         await this.wait(900);
         break;
       case "released": {
@@ -479,7 +484,7 @@ export class GameScreen {
           const left = next?.type === "lanternLost" && next.player === e.player ? next.left : this.game.players[e.player].lanterns;
           await this.story(e.player, { ...m, text: fill(m.text, { p: this.name(e.player) }), art: artFor("lantern", "A lantern spent") }, `${left} lantern${left === 1 ? "" : "s"} left.`, "good", `spends a lantern to set off: ${left} left`);
         } else await this.story(e.player, { ...(e.bySix ? (e.where === "start" ? M.leaveHome : M.leaveBog) : M.thirdThrow), art: artFor(e.where === "start" ? "house" : "boot-in-mud", "Leaving") }, "", "good",
-          e.bySix ? `▲ A 6: ${e.where === "start" ? "onto the board" : "out of the Bog"}, throws again` : "No 6 in three tries: sets off anyway");
+          e.where === "start" ? "" : e.bySix ? "▲ The Bog: a 6, out!" : "▼ The Bog: no 6 in 3 tries, out anyway");
         await this.wait(900);
         break;
       }
@@ -487,12 +492,11 @@ export class GameScreen {
         await st.walk(e.path.map((s) => s.pos), (pos) => { sound.play("step"); this.places[e.player] = pos; this.overview.setPlace(e.player, pos); });
         this.arrived(e.from, e.to);
         this.dice.moved();
-        if (this.setup.computer[e.player]) await this.story(e.player, { title: "", text: "" }, "", "", e.to === this.board.endTile ? "▶ reaches the Festival of Lights!" : `▶ moves to square ${e.to}`);
         break;
       case "overshoot": {
         const need = this.board.endTile - this.places[e.player];
         await this.story(e.player, { ...M.overshoot, art: artFor("lanterns", "Festival"), text: fill(M.overshoot.text, { n: need }) },
-          `Rolled ${e.squares}, needed exactly ${need}: you stay where you are.${need === 6 ? " A 6 can never finish: it always throws again." : ""}`, "bad", `▼ Rolled ${e.squares}, needs exactly ${need}: stays`);
+          `Rolled ${e.squares}, needed exactly ${need}: you stay where you are.${need === 6 ? " A 6 can never finish: it always throws again." : ""}`, "bad");
         await this.wait(1100);
         break;
       }
@@ -607,13 +611,15 @@ export class GameScreen {
   /** A story moment, in a popup (only the newest one: owner, no list of earlier moments). */
   // Owner, 15 Oct: two popups in a row went too fast to read. A story popup now stays at least as long as it takes to
   // read it (about 4 words a second, at least 1.5 s, at most 5 s: owner) before the next one replaces it.
-  // Owner, 16 Oct: a computer player's moments are not popups but one note under the picture, rules only (`note`).
+  // Owner, 16 Oct: a computer player's moments are not popups but one note under the picture, rules only (`note`;
+  // none: nothing is shown).
   private async story(seat: number, t: Tale & { art?: string }, result = "", tone: "good" | "bad" | "" = "", note = ""): Promise<void> {
     await this.readFirst();
     const c: PopupContent = { title: t.title, text: t.text, art: t.art, outcome: result || undefined, tone, kicker: `${tokenSvg(seat, "kick", true)}${this.name(seat)}` };
     this.told.unshift(c);
     const words = (x: string) => x.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
-    if (this.setup.computer[seat] && note) {
+    if (this.setup.computer[seat]) { // only the events have a note (owner, 16 Oct); the rest of a computer's turn is quiet
+      if (!note) return;
       this.note(seat, note, tone);
       this.readUntil = Date.now() + Math.min(3000, Math.max(1200, 400 + words(note) * 250));
       return;
@@ -622,14 +628,30 @@ export class GameScreen {
     this.readUntil = Date.now() + Math.min(5000, Math.max(1500, 500 + words(`${t.title} ${t.text} ${result}`) * 250));
   }
 
-  /** The note under the picture, like a chat message from that player; `null` takes it away. */
+  /** The note under the picture: the player's token and name, then the rule ("▼ The Bog: stuck until a 6"); `null` clears it. */
   private note(seat: number | null, text = "", tone: "good" | "bad" | "" = ""): void {
-    const wrap = this.chat.parentElement!;
-    if (seat === null) { this.chat.hidden = true; this.chat.replaceChildren(); wrap.classList.remove("chatting"); return; }
-    this.chat.className = `chat ${tone}`;
-    this.chat.innerHTML = `${tokenSvg(seat, "chat-tok", true)}<p><b style="color:${PLAYERS[seat].text}">${this.name(seat)}</b> ${text}</p>`;
-    this.chat.hidden = false;
-    wrap.classList.add("chatting");
+    if (seat === null) { this.line.hidden = true; this.line.replaceChildren(); return; }
+    const mark = /^[▲▼✕]/.test(text) ? `<b class="m">${text[0]}</b> ` : "";
+    this.line.className = `note ${tone}`;
+    this.line.innerHTML = `${tokenSvg(seat, "tok", true)}<p><b style="color:${PLAYERS[seat].text}">${this.name(seat)}</b> ${mark}${mark ? text.slice(2) : text}</p>`;
+    this.line.hidden = false;
+  }
+
+  /**
+   * Before a person rolls (owner, 16 Oct): the first good or bad square one throw can reach (1–5 squares; a 6 always
+   * throws again), and what it does. The Snake's last square only for the Snake Leader; the fallen tree is not a square.
+   */
+  private ahead(seat: number): { text: string; tone: "good" | "bad" } | null {
+    const p = this.game.players[seat], pos = this.places[seat], B = this.board;
+    if (p.out || p.skip > 0 || p.trapped || p.slow || pos === OFF || pos === OUT) return null;
+    for (const { face, steps } of reachSteps(p.double)) {
+      const sq = pos + steps, t = B.tiles[sq];
+      if (sq >= B.endTile) return null;
+      if (!t || (t.requires && !p.snakeLeader)) continue;
+      // the same short rule words as the computer players' notes: "Blue ▼ Roll a 2: back to Start"
+      return { tone: t.cat === "R" ? "good" : "bad", text: `${t.cat === "R" ? "▲" : "▼"} Roll a ${face}${p.double ? " (doubled)" : ""}: ${brief(B, t)}` };
+    }
+    return null;
   }
 
   /**

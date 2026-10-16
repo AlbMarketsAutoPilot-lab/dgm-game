@@ -7,7 +7,8 @@
 // Fitting (owner, 15 Oct: "buttons cut, you need to scroll to see them"): a popup sits over the board when it fits
 // there. When it does not (phones: the board is under half the screen), it moves to the big layer, over everything
 // above the die and the action button (so a choice's buttons stay in view). When even that is too small, the popup gets
-// compact, and only its text scrolls: its own buttons stay pinned at its bottom. Fitted again when the screen turns.
+// compact (a small picture beside the title, the words across the whole width), and only its text scrolls: its own
+// buttons stay pinned at its bottom. Fitted again when the screen turns or the controls change.
 export interface PopupButton {
   label: string;
   value: string;
@@ -60,10 +61,14 @@ export class Popups {
     this.full = document.createElement("div");
     this.full.className = "pop-layer pop-big pop-full";
     screen.append(this.big, this.full);
-    new ResizeObserver(() => {
+    // The controls grow when a choice puts its buttons there: watched too, so a popup never covers them (owner, 16 Oct:
+    // "Spoil it!" was hidden under its own popup on phones held sideways)
+    const ro = new ResizeObserver(() => {
       screen.style.setProperty("--ctl", `${controls.offsetHeight}px`);
       this.refit();
-    }).observe(screen);
+    });
+    ro.observe(screen);
+    ro.observe(controls);
     // U5: Escape closes the popup on top (a choice or the results are put aside, as with ✕). Ends with the screen.
     const onKey = (e: KeyboardEvent) => {
       if (!screen.isConnected) return document.removeEventListener("keydown", onKey);
@@ -102,7 +107,6 @@ export class Popups {
     });
   }
 
-  /** Closes everything (a new turn). */
   /** Closes the story popup on screen, if that is all it is (info popups the player opened and choices stay). */
   closeStory(): void {
     if (!this.base || this.base.c.buttons?.length || (this.base.c.kind ?? "story") !== "story") return;
@@ -111,6 +115,7 @@ export class Popups {
     this.back.hidden = true;
   }
 
+  /** Closes everything (a new turn). */
   clear(): void {
     this.closeInfos();
     this.drop(this.base, "replaced");
@@ -123,15 +128,19 @@ export class Popups {
     return !!this.base && !this.base.el.hidden;
   }
 
-  /** Over the board if it fits there; else in the big layer; else compact, with only the text scrolling. */
+  /**
+   * Over the board if it fits there; else in the big layer; else compact over the board (phones held sideways: the
+   * board side is free from top to bottom, owner 16 Oct); else compact in the big layer, with only the text scrolling.
+   */
   private fit(el: HTMLElement): void {
     if (el.hidden) return;
     const over = () => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
-    el.classList.remove("compact");
-    if (el.parentElement !== this.layer) this.layer.append(el);
-    if (!over()) return;
-    (el.dataset.own ? this.full : this.big).append(el);
-    if (over()) el.classList.add("compact");
+    const wide = el.dataset.own ? this.full : this.big;
+    for (const [layer, compact] of [[this.layer, false], [wide, false], [this.layer, true], [wide, true]] as const) {
+      el.classList.toggle("compact", compact);
+      if (el.parentElement !== layer) layer.append(el);
+      if (!over()) return;
+    }
   }
 
   /** The screen changed size: fit the open popups again. */

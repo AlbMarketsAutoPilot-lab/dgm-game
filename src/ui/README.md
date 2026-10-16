@@ -19,9 +19,13 @@ Two areas plus the players:
 - **Popups** (`popup.ts`) over the whole board: every story moment, choice and the win. A story popup stays until the
   next one replaces it, or until it is closed with ✕; the moments earlier in the same turn are listed under it. A
   choice is explained in the popup; its buttons wait in the action area. **Rule first** (owner, 16 Oct): what happens
-  is the popup's first line, then the story in one short sentence. **Computer players** (owner, 16 Oct) get no popups:
-  each moment is one chat-style note under the picture, rules only ("Red ▼ The Bog: stuck until a 6"), replaced by the
-  next and gone when that player's turn ends (`app.ts`, `note`; texts from `tales.ts`, `brief`).
+  is the popup's first line, then the story in one short sentence. **The note under the picture** (owner, 16 Oct): a lane
+  of its own between the picture and the die (the square and the token size themselves above it, so it never covers
+  them), in the same style as a popup's rule line. **Computer players** get no popups: only their events show there,
+  rules only ("Red ▼ The Bog: stuck until a 6"; good and bad squares, cards, bumps, the Bog and its tries, lanterns,
+  out), replaced by the next and gone when that player's turn ends. **Before a person rolls**, the same note shows the
+  first good or bad square one throw can reach ("Blue ▼ Roll a 2: back to Start"), gone with the throw (`app.ts`,
+  `note`, `ahead`; rule words from `tales.ts`, `brief`).
 - **Players** (`app.ts`): round avatars on top (portrait) or on the right (landscape), with lanterns and cards (a computer player wears a small robot badge); tap one
   for everything about that player (place, squares to go, cards, waiting, a tip for the next throw).
 - **Narrative** (`tales.ts`): a tale per event square and rule moment, for young adults first. What a
@@ -73,9 +77,11 @@ sound; quiet when the app is in the background.
 
 **Every screen size** (owner, 15 Oct): all sizes in `app.css` are rem, and the root size grows on big screens (PC).
 A popup that does not fit over the board moves over everything above the controls (or the whole screen, when it has
-its own buttons), then gets compact with only its words scrolling; its buttons are never cut (`popup.ts`, `fit`). The
-start screen fits without scrolling in one column (portrait) or two (wider than tall). The turn panel sizes itself by
-its own width (container query). Checked at 19 sizes from 280 × 653 to 2560 × 1440: see
+its own buttons), then gets compact over the board (a phone held sideways), then compact above the controls: a small
+picture beside the title, the words across the whole width, only they scroll; its buttons are never cut, and a popup
+never covers the action buttons (owner, 16 Oct; `popup.ts`, `fit`). The start screen fits without scrolling in one
+column (portrait) or two (wider than tall). The turn panel sizes itself by its own width (container query). Checked at
+22 sizes from 280 × 653 and a folded phone held sideways (653 × 280) to 2560 × 1440: see
 `docs/analysis/audit-code-2026-10-15.md` §6.
 
 Every rule comes from the engine (`src/engine`); this folder only shows its events and answers its decisions.
