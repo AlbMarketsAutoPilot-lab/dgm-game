@@ -61,7 +61,12 @@ class Sound {
     // A soft click on every button, when sound is on
     addEventListener("click", (e) => { if ((e.target as Element | null)?.closest?.("button")) this.play("tap"); }, { capture: true });
     // Quiet when the game is in the background
-    document.addEventListener("visibilitychange", () => { if (document.hidden) void this.ctx?.suspend(); else if (this.ctx) void this.ctx.resume(); });
+    document.addEventListener("visibilitychange", () => this.away(document.hidden));
+  }
+
+  /** The game went to the background (true) or came back (false): the page told us, or the Android app (A12). */
+  away(away: boolean): void {
+    if (away) void this.ctx?.suspend(); else if (this.ctx) void this.ctx.resume();
   }
 
   /** Called when a switch changes (the switches on screen show the new state). */

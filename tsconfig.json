@@ -16,5 +16,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "test", "vite.config.ts", "vitest.sim.config.ts"]
+  "include": ["src", "test", "vite.config.ts", "vitest.sim.config.ts", "capacitor.config.ts"]
 }

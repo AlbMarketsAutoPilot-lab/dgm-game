@@ -6,6 +6,12 @@
   --table: #d9cdb3;
   --good: #24702f; /* text: 5.4:1 on paper (WCAG AA) */
   --bad: #c0392b; /* text: 4.8:1 on paper */
+  /* A10 (owner, 16 Oct 2026): the screen edges the game keeps clear (status bar, notch, navigation bar). The Android
+     app gets the real ones from Capacitor (--safe-area-inset-*); a browser has its own env() values, as before. */
+  --sa-t: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sa-r: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --sa-b: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --sa-l: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 * { box-sizing: border-box; }
 /* Every size in this file is in rem, so the whole game grows with this one size on big screens (PC, owner 15 Oct):
@@ -15,7 +21,7 @@ html { font-size: clamp(16px, min(1.05vw, 1.9vh), 30px); }
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; background: var(--table); color: var(--ink); overscroll-behavior: none; }
 body, button { font-family: "Patrick Hand", "Comic Sans MS", cursive; }
-#app { height: 100dvh; }
+#app { height: 100dvh; padding: var(--sa-t) var(--sa-r) 0 var(--sa-l); } /* the bottom: in the controls and the start screen */
 button {
   font: inherit; font-size: 1.25rem; color: var(--ink); background: var(--paper);
   min-height: 3.25rem; min-width: 3.25rem; padding: .375rem 1.125rem;
@@ -283,7 +289,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 
 
 /* Controls: the die (tap it) and the one action button */
-.controls { display: flex; align-items: center; gap: .875rem; padding: .5rem .75rem calc(.625rem + env(safe-area-inset-bottom)); border-top: .125rem dashed rgba(75, 35, 119, .3); min-height: 5.375rem; }
+.controls { display: flex; align-items: center; gap: .875rem; padding: .5rem .75rem calc(.625rem + var(--sa-b)); border-top: .125rem dashed rgba(75, 35, 119, .3); min-height: 5.375rem; }
 .dice { display: flex; flex-direction: column; align-items: center; gap: .125rem; min-width: 4.5rem; }
 .die {
   width: 4.125rem; height: 4.125rem; min-width: 0; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); padding: .5rem; gap: .125rem;
@@ -308,7 +314,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup {
   --gap: clamp(.25rem, 1.4vh, 1rem); --btn: clamp(2.5rem, 6.2vh, 3.5rem);
   display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: var(--gap);
-  max-width: 35rem; min-height: 100%; margin: 0 auto; padding: var(--gap) .75rem calc(var(--gap) + env(safe-area-inset-bottom));
+  max-width: 35rem; min-height: 100%; margin: 0 auto; padding: var(--gap) .75rem calc(var(--gap) + var(--sa-b));
   text-align: center; background: var(--paper);
 }
 .setup > * { width: 100%; min-width: 0; }
@@ -393,7 +399,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .pc.locked .pic { opacity: .18; filter: grayscale(1); }
 .pc.locked h3 { opacity: .6; } .pc.locked .post { background: #e0d6c0; }
 .pc .how { font-size: .9rem; opacity: .85; }
-.album { position: fixed; inset: 0; z-index: 10; overflow: auto; background: var(--paper); padding: 0 .75rem 1.875rem; }
+.album { position: fixed; inset: 0; z-index: 10; overflow: auto; background: var(--paper); padding: 0 calc(.75rem + var(--sa-r)) calc(1.875rem + var(--sa-b)) calc(.75rem + var(--sa-l)); border-top: var(--sa-t) solid var(--paper); }
 .album-top { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem 0; background: var(--paper); border-bottom: .125rem dashed rgba(75, 35, 119, .3); }
 .album-top h2 { margin: 0; font-weight: normal; font-size: 1.8rem; } .album-top h2 span { font-size: 1.2rem; opacity: .8; }
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18.75rem), 1fr)); gap: .875rem; max-width: 62.5rem; margin: .875rem auto 0; }
@@ -440,7 +446,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 }
 
 /* ---- How to play (first time on this device, and from the start screen) ---- */
-.howto { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: .75rem; overflow: auto; background: rgba(43, 18, 72, .55); }
+.howto { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: calc(.75rem + var(--sa-t)) calc(.75rem + var(--sa-r)) calc(.75rem + var(--sa-b)) calc(.75rem + var(--sa-l)); overflow: auto; background: rgba(43, 18, 72, .55); }
 .g-card {
   position: relative; width: min(100%, 30rem); max-height: 100%; overflow: auto; display: flex; flex-direction: column; align-items: center; text-align: center;
   gap: clamp(.25rem, 1.2vh, .625rem); padding: clamp(.75rem, 3vh, 1.5rem) 1rem; background: var(--paper);
@@ -511,4 +517,13 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   .players { grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "leave" "avs"; gap: .375rem; padding: .375rem .5rem; }
   .avs { display: grid; grid-template-columns: repeat(2, 2.75rem); gap: .875rem .875rem; align-content: center; padding: .25rem .5rem; }
   .avatar { width: 2.75rem; }
+}
+/* A10 (owner, 16 Oct 2026): sideways, the navigation bar runs under all three columns, so the whole game stays above
+   it (upright, only the controls at the bottom need to). Popups over the whole screen stay above it too. */
+@media (orientation: landscape) {
+  #app:has(> .game) { padding-bottom: var(--sa-b); }
+  .controls { padding-bottom: .625rem; }
+}
+@media (orientation: portrait) {
+  .pop-full { bottom: var(--sa-b); }
 }

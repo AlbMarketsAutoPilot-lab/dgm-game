@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Don\'t Get Mad!</string>
+    <string name="title_activity_main">Don\'t Get Mad!</string>
+    <string name="package_name">al.connect.dontgetmad</string>
+    <string name="custom_url_scheme">al.connect.dontgetmad</string>
+</resources>

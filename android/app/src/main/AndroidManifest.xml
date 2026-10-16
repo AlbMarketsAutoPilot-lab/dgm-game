@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- A7 (owner, 16 Oct 2026): no backup. The privacy policy says saved data never leaves the device, so neither
+         Google's cloud backup nor a transfer to a new phone may copy it. -->
+    <application
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:targetApi="31">
+
+        <!-- Both orientations (Android's default; the game lays itself out for each). Android 12+ splash from the launch theme -->
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+    </application>
+
+    <!-- A9: the only permission, for the short buzzes (with the sound switch) -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- A6: no internet. Removed here, so no library can add it back; the game's files are all on the phone -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+</manifest>

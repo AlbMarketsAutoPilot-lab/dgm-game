@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The game's ink purple (icon background, splash) and its table colour (behind the status and navigation bars) -->
+<resources>
+    <color name="ink">#4B2377</color>
+    <color name="table">#D9CDB3</color>
+    <color name="ic_launcher_background">#4B2377</color>
+    <color name="colorPrimary">#4B2377</color>
+    <color name="colorPrimaryDark">#4B2377</color>
+    <color name="colorAccent">#F2C230</color>
+</resources>

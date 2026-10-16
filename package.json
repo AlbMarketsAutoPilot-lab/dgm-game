@@ -1,8 +1,8 @@
 {
   "name": "dgm-game",
   "private": true,
-  "version": "0.1.0",
-  "description": "Don't Get Mad! — a hand-drawn family race game (web + Android).",
+  "version": "1.0.0",
+  "description": "Don't Get Mad! \u2014 a hand-drawn family race game (web + Android).",
   "author": "Connect AL",
   "license": "UNLICENSED",
   "type": "module",
@@ -15,9 +15,13 @@
     "test:watch": "vitest",
     "test:sim": "vitest run --config vitest.sim.config.ts",
     "test:browser": "node tools/browser/run.mjs",
-    "guide:shots": "node tools/browser/guide-shots.mjs"
+    "guide:shots": "node tools/browser/guide-shots.mjs",
+    "android": "npm run android:sync && node tools/android/open.mjs",
+    "android:sync": "npm run build && cap sync android",
+    "android:version": "node tools/android/version.mjs"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.3",
     "@types/node": "^26.6.5",
     "axe-core": "4.14.0",
     "playwright": "1.64.1",
@@ -26,6 +30,9 @@
     "vitest": "^5.0.4"
   },
   "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
     "@fontsource/patrick-hand": "^5.3.0"
   }
 }

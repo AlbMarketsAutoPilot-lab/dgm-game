@@ -19,6 +19,12 @@ Node 22. `npm install`, then:
 | `npm run test:browser` | The game in a real browser (10–20 min; `QUICK=1` for a few): whole games checked against the engine turn by turn, every screen at 19 sizes, the published build (security policy, offline, guide, keyboard, accessibility). Needs Chromium: `npx playwright install chromium` once (or `CHROMIUM_PATH=…`). See `tools/browser/` |
 | `npm run typecheck` / `npm run build` | TypeScript check / production build in `dist/` |
 
+## Android app
+
+The same game, packed with Capacitor (`android/`, `capacitor.config.ts`), built and signed by the owner in their own
+Android Studio: step by step, for Windows, in [`docs/android/README.md`](docs/android/README.md).
+`npm run android` builds the game, copies it into `android/` and opens Android Studio.
+
 ## Copyright and privacy
 
 © 2026 Connect AL. All rights reserved (see `LICENSE`). The game shows the notice on its start screen, with links to
