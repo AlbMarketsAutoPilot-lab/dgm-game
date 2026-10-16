@@ -11,6 +11,13 @@ const STATE = () => ({
   board: document.querySelector(".overview-board")?.getAttribute("aria-label"),
   who: document.querySelector(".hud b")?.textContent,
   round: document.querySelector(".hud .st")?.textContent,
+  // Owner, 16 Oct: a computer player's moments are a note under the picture, never a story popup
+  story: [...document.querySelectorAll(".pop.story:not([hidden]) .pop-kicker")].map((k) => k.textContent.trim()),
+  note: document.querySelector(".chat:not([hidden])")?.textContent.trim(),
+  // A lantern spent to leave: the popup's count must be the one the players' bar shows (owner, 16 Oct: it said
+  // "0 lanterns left" with one still on the player)
+  spent: [...document.querySelectorAll(".pop:not([hidden])")].filter((p) => /^A Lantern for (the Road|a Way Out)$/.test(p.querySelector(".pop-title")?.textContent ?? ""))
+    .map((p) => { const who = p.querySelector(".pop-kicker")?.textContent?.trim(); return { who, said: p.querySelector(".pop-outcome")?.textContent, bar: document.querySelector(`.avatar[aria-label^="${who}"]`)?.getAttribute("aria-label") }; })[0],
 });
 
 // The players' answers: roll, use the Bonus card on their own bad luck, wear the Bog boots, let others' luck go (the
@@ -34,9 +41,19 @@ export async function playGame(browser, url, { board, players, people, brk, spen
   await page.click(".setup .go");
   const turns = [], t0 = Date.now();
   let save = null, end = null, broke = null;
+  const spent = [], computerPops = new Set(), NAMES = ["Blue", "Red", "Green", "Yellow"];
+  let spends = 0, notes = 0, lastNote = "";
   while (Date.now() - t0 < 15 * 60_000) {
     const s = await page.evaluate(STATE);
     if (s.save) save = JSON.parse(s.save);
+    for (const k of s.story) if (!people.includes(NAMES.indexOf(k))) computerPops.add(`a story popup for ${k} (a computer player)`);
+    if (s.note && s.note !== lastNote) notes++;
+    lastNote = s.note ?? "";
+    if (s.spent) {
+      spends++;
+      const said = s.spent.said?.match(/^(\d+) lanterns? left/)?.[1], bar = s.spent.bar?.match(/: (\d+) lanterns/)?.[1];
+      if (said === undefined || said !== bar) spent.push(`${s.spent.who} spent a lantern: popup "${s.spent.said}", players' bar "${s.spent.bar}"`);
+    }
     if (s.win) { end = { board: s.board, title: await page.textContent(".pop.win .pop-title") }; break; }
     if (s.act.length) {
       const t = pick(s.act, spend), start = /^(Roll the die|Roll for a 6|Spend a lantern|OK, skip this turn)/.test(t);
@@ -86,5 +103,5 @@ export async function playGame(browser, url, { board, players, people, brk, spen
     return { diffs, compared: allPeople ? turns.length : 0 };
   }, { board, players, people, save, turns, end, spend });
   await ctx.close();
-  return { ...check, turns: turns.length, broke, errors, ms: Date.now() - t0 };
+  return { ...check, diffs: [...check.diffs, ...new Set(spent), ...computerPops, ...(people.length < players && !notes ? ["no computer player's note seen"] : [])], turns: turns.length, spends, notes, broke, errors, ms: Date.now() - t0 };
 }

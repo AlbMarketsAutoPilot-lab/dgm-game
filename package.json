@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:sim": "vitest run --config vitest.sim.config.ts",
-    "test:browser": "node tools/browser/run.mjs"
+    "test:browser": "node tools/browser/run.mjs",
+    "guide:shots": "node tools/browser/guide-shots.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

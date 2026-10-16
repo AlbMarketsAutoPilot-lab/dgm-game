@@ -103,6 +103,14 @@ export class Popups {
   }
 
   /** Closes everything (a new turn). */
+  /** Closes the story popup on screen, if that is all it is (info popups the player opened and choices stay). */
+  closeStory(): void {
+    if (!this.base || this.base.c.buttons?.length || (this.base.c.kind ?? "story") !== "story") return;
+    this.drop(this.base, "replaced");
+    this.base = null;
+    this.back.hidden = true;
+  }
+
   clear(): void {
     this.closeInfos();
     this.drop(this.base, "replaced");
@@ -180,8 +188,8 @@ export class Popups {
         <h2 class="pop-title">${c.title}</h2>
       </div>
       <div class="pop-body">
-        ${c.text ? `<p class="pop-text">${c.text}</p>` : ""}
         ${c.outcome ? `<p class="pop-outcome">${c.outcome}</p>` : ""}
+        ${c.text ? `<p class="pop-text">${c.text}</p>` : ""}
         ${c.more ?? ""}
         ${c.buttons?.length ? `<div class="pop-buttons"></div>` : ""}
       </div>`;

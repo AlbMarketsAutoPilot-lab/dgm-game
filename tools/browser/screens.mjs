@@ -50,6 +50,13 @@ const CHECK = () => {
       if (r.width && r.height && (r.top < q.top - 2 || r.bottom > q.bottom + 2 || r.left < q.left - 2 || r.right > q.right + 2)) { bad.push(`spills out of .${panel.className.split(" ")[0]}: ${el.tagName.toLowerCase()}.${[...el.classList].join(".")} "${(el.textContent || "").trim().slice(0, 20)}"`); break; }
     }
   }
+  // the computer player's note stays inside the picture area, clear of the die and the buttons
+  for (const n of document.querySelectorAll(".chat:not([hidden])")) {
+    const r = n.getBoundingClientRect(), q = n.parentElement.getBoundingClientRect();
+    if (r.top < q.top - 1 || r.bottom > q.bottom + 1 || r.left < q.left - 1 || r.right > q.right + 1) bad.push(`note spills out of the picture (${Math.round(r.width)}×${Math.round(r.height)} in ${Math.round(q.width)}×${Math.round(q.height)})`);
+  }
+  // the guide's pictures of the game are loaded and shown
+  for (const img of document.querySelectorAll(".howto img")) if (!img.complete || !img.naturalWidth || img.getBoundingClientRect().height < 20) bad.push(`guide picture not shown: ${img.alt.slice(0, 30)}`);
   for (const p of document.querySelectorAll(".pop:not([hidden])")) if (p.scrollHeight > p.clientHeight + 2) bad.push(`popup scrolls: "${p.querySelector(".pop-title")?.textContent}" (${p.scrollHeight} > ${p.clientHeight})`);
   const se = document.scrollingElement; if (!cover && se.scrollHeight > vh + 1 || se.scrollWidth > vw + 1) bad.push(`page scrolls ${se.scrollWidth}x${se.scrollHeight}`);
   const smallest = Math.min(...[...document.querySelectorAll("button")].filter((b) => visible(b) && !b.closest("[hidden]")).map((b) => { const r = b.getBoundingClientRect(); return Math.min(r.width, r.height); }));
@@ -75,7 +82,7 @@ const SETUP_GAME = async (kind) => {
   const act = (n) => s.setAct([{ label: "Use the card: dodge it!", value: "a", primary: true }, { label: "Keep the card", value: "b" }, { label: "Don't ask me again this game", value: "c" }].slice(0, n));
   switch (kind) {
     case "turn": Object.assign(p, { pos: -1, skip: 0, double: false }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Pass the die to Yellow ▶", value: "roll" }]); s.dice.ready(true); break;
-    case "intro": s.pops.show({ kind: "info", art: "", kicker: "Red starts", title: "You need a 6 to enter", text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> A 6 always gives you one more throw, and the throws add up. No 6 in three throws: you set off anyway, but a lantern goes out.", outcome: "First to the Festival of Lights wins. You need the exact number to get in.", buttons: [{ label: "Let's go!", value: "ok", primary: true }] }); break;
+    case "intro": s.pops.show({ kind: "info", art: "", kicker: "Red starts", title: "You need a 6 to enter", text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: you set off anyway, but a lantern goes out. In a hurry? Spend a lantern to set off at once. Careful: <b>lanterns are your lives</b>. With none left, the next one you lose puts you out of the game.", buttons: [{ label: "Let's go!", value: "ok", primary: true }] }); break;
     case "story": s.story(0, { ...SQUARE_TALES[tile.icon] }, "Back to square 2. Then miss 3 turns.", "bad"); s.setAct([{ label: "Pass the die to Red ▶", value: "ok" }]); break;
     case "defend": s.choose({ kind: "bonusDefend", player: 0, square: sq, tile }); break;
     case "spoil": s.choose({ kind: "bonusAttack", player: 1, target: 0, square: sq, tile: { ...tile, cat: "R" } }); break;
@@ -86,12 +93,15 @@ const SETUP_GAME = async (kind) => {
     case "win": s.pops.show({ kind: "win", tone: "good", art: "", kicker: "The end of the journey", title: "Yellow made it!", text: "Thousands of lanterns rise over the square as Yellow walks into the Festival of Lights. Music, food stalls, and a very well-earned sit-down.", more: `<p class="pop-sub">New postcards: <b>Home Town, Countryside, Forest, River &amp; Lake, The Bog, Three Sixes</b></p>`, buttons: [{ label: "Play again: same players", value: "again", primary: true }, { label: "New game: change players or board", value: "new" }, { label: "Postcard album", value: "album" }] }); break;
     case "sound": void s.soundSwitches(); break;
     case "home": Object.assign(p, { pos: -1, skip: 0, double: false, lanterns: 3 }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Roll for a 6", value: "roll", primary: true }, { label: "Spend a lantern (3 left)", value: "spend" }]); s.dice.ready(true); break;
+    // a computer player's note under the picture (owner, 16 Oct), the longest one the boards can make
+    case "note": s.note(1, "▼ Forgot Your Keys AGAIN!!!: back to square 92, then misses 2 turns", "bad"); break;
     case "boots": void s.choose({ kind: "bogBoots", player: 0, square: 30 }); break;
     case "welcome": s.pops.show({ kind: "info", art: "", kicker: "Saved game", title: "Welcome back!", text: "The journey goes on where you left it: round 23, <b>Yellow</b> plays next.", buttons: [{ label: "Let's go on!", value: "ok", primary: true }] }); break;
   }
   if (kind === "defend") act(2); if (kind === "spoil") act(3);
 };
-export const SCREENS = ["setup", "album", "guide", "guide-last", "turn", "intro", "story", "defend", "spoil", "player", "card", "square", "leave", "win", "welcome", "sound", "home", "boots"];
+const GUIDE_PAGES = 8;
+export const SCREENS = ["setup", "album", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "note", "intro", "story", "defend", "spoil", "player", "card", "square", "leave", "win", "welcome", "sound", "home", "boots"];
 
 /** Checks every screen at every size; returns the problems found. */
 export async function checkScreens(browser, url, sizes = SIZES) {
@@ -106,13 +116,14 @@ export async function checkScreens(browser, url, sizes = SIZES) {
         await page.waitForSelector(".go");
         await page.click('[data-players="4"]');
         if (scr === "album") { await page.click(".album-open"); await page.waitForSelector(".album"); }
-        if (scr.startsWith("guide")) { await page.click(".how-open"); await page.waitForSelector(".howto"); if (scr === "guide-last") for (let i = 0; i < 3; i++) await page.click(".g-next"); }
+        if (scr.startsWith("guide")) { await page.click(".how-open"); await page.waitForSelector(".howto"); for (let i = 1; i < Number(scr.slice(6)); i++) await page.click(".g-next"); }
       } else {
         await page.goto(url + "/gallery.html");
         await page.evaluate(async () => { document.body.innerHTML = ""; await import("/node_modules/@fontsource/patrick-hand/index.css"); await import("/src/ui/app.css"); await document.fonts.load('20px "Patrick Hand"'); });
         await page.evaluate(SETUP_GAME, scr);
       }
       await page.waitForTimeout(250);
+      await page.evaluate(() => Promise.all([...document.querySelectorAll(".howto img")].map((m) => m.decode().catch(() => {}))));
       const r = await page.evaluate(CHECK);
       if (r.smallest < 40) r.bad.push(`a button only ${r.smallest}px`);
       combos++;
