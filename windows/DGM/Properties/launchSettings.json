@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "DGM (Package)": {
+      "commandName": "MsixPackage"
+    }
+  }
+}

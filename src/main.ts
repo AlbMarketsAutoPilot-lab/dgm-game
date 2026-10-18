@@ -6,6 +6,7 @@ import type { SavedGame } from "./ui/save";
 import { guideSeen, showGuide } from "./ui/guide";
 import { showSetup } from "./ui/setup";
 import { back, inApp } from "./ui/android";
+import { startWindowsApp, windowsApp } from "./ui/windows";
 
 const root = document.querySelector<HTMLElement>("#app")!;
 let last: Setup | null = null;
@@ -26,9 +27,13 @@ document.fonts.load('100px "Patrick Hand"').finally(() => (guideSeen() ? menu() 
 // The Android app (Step 8): its Back button asks the page first (B2). Not on the web.
 if (inApp()) (window as Window & { dgmBack?: () => boolean }).dgmBack = () => back();
 
+// The Windows app: Esc works like the Android Back button, F11 is full screen. Not on the web or Android.
+const windows = windowsApp();
+if (windows) startWindowsApp(windows);
+
 // Offline (Step 7): only in the built game, so development always shows the latest code. Works without it too.
-// Not in the Android app (B3): its files are already on the phone, and a worker could keep an old version.
-if (import.meta.env.PROD && "serviceWorker" in navigator && !inApp()) {
+// Not in the Android or Windows app (B3): its files are already on the device, and a worker could keep an old version.
+if (import.meta.env.PROD && "serviceWorker" in navigator && !inApp() && !windows) {
   navigator.serviceWorker.register("./sw.js").then(() => navigator.serviceWorker.ready).then((r) => {
     const files = performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.startsWith(location.origin));
     r.active?.postMessage({ cache: files });
