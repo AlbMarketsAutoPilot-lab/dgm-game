@@ -14,7 +14,7 @@
     Version="1.0.0.0" />
 
   <Properties>
-    <DisplayName>Don’t Get Mad</DisplayName>
+    <DisplayName>Don't Get Mad</DisplayName>
     <PublisherDisplayName>Connect AL</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -32,7 +32,7 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="Don’t Get Mad"
+        DisplayName="Don't Get Mad"
         Description="A hand-drawn family race game."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"

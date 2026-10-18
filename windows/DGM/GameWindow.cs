@@ -32,7 +32,7 @@ public sealed class GameWindow : Window
 
     public GameWindow()
     {
-        Title = "Don’t Get Mad";
+        Title = "Don't Get Mad";
         Content = new Grid { Background = new SolidColorBrush(Background), Children = { web } };
         PlaceWindow();
         _ = ShowGameAsync();
@@ -140,7 +140,7 @@ public sealed class GameWindow : Window
             {
                 new TextBlock
                 {
-                    Text = "Don’t Get Mad needs the Microsoft Edge WebView2 Runtime, which this PC does not have.\n\n"
+                    Text = "Don't Get Mad needs the Microsoft Edge WebView2 Runtime, which this PC does not have.\n\n"
                         + "Please install it from Microsoft's page:\n"
                         + "https://developer.microsoft.com/microsoft-edge/webview2/consumer/\n\n"
                         + "Then open the game again.",
