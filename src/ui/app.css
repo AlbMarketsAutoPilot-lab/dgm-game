@@ -16,6 +16,9 @@ html { font-size: clamp(16px, min(1.05vw, 1.9vh), 30px); }
 html, body { margin: 0; height: 100%; background: var(--table); color: var(--ink); overscroll-behavior: none; }
 body, button { font-family: "Patrick Hand", "Comic Sans MS", cursive; }
 #app { height: 100dvh; }
+/* The Windows app (windows.ts): a game, not a page, so no text selection. Typing in a box still works. */
+.windows-app { -webkit-user-select: none; user-select: none; }
+.windows-app :is(input, textarea) { -webkit-user-select: text; user-select: text; }
 /* B5, the Android app (owner, 16 Oct): the app tells the page the size of the camera cut-out (--cut-*, as in KAJ) and
    the game keeps clear of that side. On the web they are not set: 0, nothing moves. */
 #app { padding: var(--cut-t, 0px) var(--cut-r, 0px) var(--cut-b, 0px) var(--cut-l, 0px); }

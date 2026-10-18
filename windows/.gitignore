@@ -1,0 +1,8 @@
+.vs/
+bin/
+obj/
+AppPackages/
+BundleArtifacts/
+*.user
+# Copied from dist/ by: npm run windows:assets
+DGM/Game/

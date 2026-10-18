@@ -15,7 +15,7 @@ describe("inside the Android app or not (B1)", () => {
 
   it("the web keeps its offline worker, Back hook and vibration: each app-only part sits behind inApp()", () => {
     const main = read("src/main.ts"), sound = read("src/ui/sound.ts");
-    expect(main).toContain('if (import.meta.env.PROD && "serviceWorker" in navigator && !inApp())'); // B3
+    expect(main).toContain('if (import.meta.env.PROD && "serviceWorker" in navigator && !inApp() && !windows)'); // B3
     expect(main).toContain("if (inApp()) (window as Window & { dgmBack?: () => boolean }).dgmBack"); // B2
     expect(sound).toContain("if (buzz !== undefined && !inApp())"); // B4
   });
