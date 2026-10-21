@@ -28,35 +28,35 @@ function dice(): string {
 export const GUIDE: Page[] = [
   {
     art: () => artFor("lanterns", "The Festival of Lights"), title: "Welcome to Don't Get Mad!",
-    text: "A race game for 2 to 4 players: friends on one device, or the computer. <b>Be the first to reach the Festival of Lights</b> in the middle of the board!",
+    text: "A race game for 2 to 4 players: humans or computer. <b>Be the first to reach the final square of the board</b> and you win!",
   },
   {
-    art: () => artFor("house", "Home"), title: "Roll a 6 to set off",
-    text: "You need a <b>6</b> to step onto the board. No 6 in three throws? You set off anyway, but a lantern goes out. Or <b>spend a lantern</b> to set off at once.",
+    art: () => artFor("house", "Home"), title: "Roll a 6 to enter the game",
+    text: "Roll a <b>6</b> to start the game. No 6 in three turns? You start, but <b>lose a lantern</b>. Or decide to <b>spend a lantern</b> to start at once, without waiting for a 6.",
   },
   {
     art: shot(lanternsShot, "The players at the top of the screen, each with their number of lanterns"), shot: true, title: "Lanterns are your lives",
-    text: "You have <b>3</b>. With none left, losing one more puts you <b>out of the game</b>. Three 6s in a row light one again.",
+    text: "You start with <b>3 lanterns</b>. <b>Three 6s in a row</b> earn you one lantern! If you need a lantern but have none, you are <b>out of the game</b>!",
   },
   {
     art: dice, title: "Sixes add up",
-    text: "A 6 throws again, up to three throws. Then you move by the total: <b>6 + 6 + 3 = 15 squares</b>.",
+    text: "Roll a <b>6</b> and you earn the right to roll again! Up to three rolls if they are all 6s. Then you move by the total: <b>6 + 6 + 3 = 15 squares</b> in one move.",
   },
   {
     art: shot(squareShot, "A square tapped on the board, telling what it does"), shot: true, title: "Good and bad squares",
-    text: "<b class=\"g\">Green ▲</b> helps, <b class=\"r\">red ▼</b> sets you back. The Bog holds you until a 6. The Sea Snake gives a big ride… with a twist. <b>Tap any square</b> to see what it does.",
+    text: "<b class=\"g\">Green ▲</b> helps, <b class=\"r\">red ▼</b> sets you back. Read what lies on your path in the game notifications, or <b>tap any square</b> on the game board to discover your destiny.",
   },
   {
-    art: shot(cardsShot, "The Bonus card and the Bog boots, at the top of the screen"), shot: true, title: "Bonus card and Bog boots",
-    text: "Win them on the board. <b>Bonus card</b>: cancel your bad luck, or another player's good luck. <b>Bog boots</b>: walk through the Bog once.",
+    art: shot(cardsShot, "The Bonus card and the Bog boots, at the top of the screen"), shot: true, title: "Bonus card",
+    text: "Win cards during the game. <b>Bonus card</b>: cancels your punishment or another player's reward. <b>Bog boots</b>: escape the Bog at once!",
   },
   {
     art: () => `<div class="g-two">${tokenSvg(0, "tok", true)}${tokenSvg(1, "tok", true)}</div>`, title: "Bump!",
-    text: "Only one token fits on a square. Land on a player, and <b>they go back to Start</b>.",
+    text: "Only one player per square. If you land on another player's square, <b>they go back to the start</b>!",
   },
   {
     art: () => artFor("lanterns", "The finish"), title: "The exact number",
-    text: "To reach the festival you need <b>the exact number</b>. 4 to go? Roll a 4. Too much, and you stay where you are.",
+    text: "If you are 1 square away from the last square, you need to <b>roll a 1</b> to land there and win. If you roll more, you have just <b>wasted this turn</b>.",
   },
 ];
 
