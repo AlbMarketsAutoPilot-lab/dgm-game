@@ -4,7 +4,7 @@
 // 16 Oct): a computer player's events (no popups for them), and before a person rolls, the first square ahead. The players sit in a row on top (portrait) or a column on the
 // right (landscape); tap one to see everything about them. All rules come from the engine (src/engine); this file
 // only shows its events, in order, and answers its decisions.
-import { BOARDS, Game, OFF, START, randomSeed, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
+import { BOARDS, Game, OFF, START, normalPlayer, randomSeed, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
 import { artFor } from "../render/art";
 import { esc } from "../render/html";
 import { cardFace } from "../render/art-modern";
@@ -26,7 +26,12 @@ export interface Setup {
   players: number;
   /** true = computer player (GCD §8.6) for that seat. */
   computer: boolean[];
+  /** The computer players' level (owner, 22 Oct 2026: chosen on the start screen, the same for every computer seat). */
+  level: Level;
 }
+
+/** Easy = the simple player measured since I-7; Normal = uses spare lanterns (GCD R21, §8.6). */
+export type Level = "easy" | "normal";
 
 // `?fast` in the address fast-forwards whole games, for testing: only in development and in the browser-test build
 // (`vite build --mode browsertest`), never in the published game (S4). "Reduce motion" only stops the animations.
@@ -290,7 +295,7 @@ export class GameScreen {
     const id = (Object.keys(BOARDS) as (keyof typeof BOARDS)[]).find((k) => BOARDS[k] === this.board);
     if (!id) return;
     saveGame({
-      board: id, players: this.setup.players, computer: this.setup.computer, seed: this.seed, first: this.game.first,
+      board: id, players: this.setup.players, computer: this.setup.computer, level: this.setup.level, seed: this.seed, first: this.game.first,
       answers: this.answers, turns: this.turns, quiet: this.spoil.silenced, cards: this.newCards.map((c) => c.id), round: this.roundOf(this.nextSeat()),
     });
   }
@@ -397,7 +402,7 @@ export class GameScreen {
 
   /** A person's choice (R21: the road, the bonus card), in a popup. */
   private async decide(d: Decision): Promise<Answer> {
-    if (this.setup.computer[d.player]) return simplePlayer(d, this.game);
+    if (this.setup.computer[d.player]) return (this.setup.level === "normal" ? normalPlayer : simplePlayer)(d, this.game);
     if (d.kind === "bonusAttack" && !this.spoil.asks(d.player)) return false;
     if (d.kind === "spendLantern") return this.spendNow; // chosen with the buttons before the turn
     const v = await this.choose(d);
@@ -726,7 +731,7 @@ export class GameScreen {
     if (p.slow) lines.push(`Next turn: moves exactly 1 square.`);
     lines.push(this.tip(seat));
     void this.pops.show({
-      kind: "info", kicker: this.setup.computer[seat] ? "Computer player" : "Player", title: this.name(seat),
+      kind: "info", kicker: this.setup.computer[seat] ? `Computer player · ${this.setup.level === "normal" ? "Normal" : "Easy"}` : "Player", title: this.name(seat),
       art: `<div class="one">${tokenSvg(seat, "tok", true)}</div>`, text: lines.filter(Boolean).map((l) => `<span class="line">${l}</span>`).join(""),
     });
   }

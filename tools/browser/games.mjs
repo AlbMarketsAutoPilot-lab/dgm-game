@@ -28,7 +28,7 @@ const pick = (list, spend = false) => (spend ? list.find((t) => t.startsWith("Sp
   ?? list.find((t) => t.startsWith("Wear the boots")) ?? list.find((t) => t === "Let it go") ?? list.find((t) => /^Pass the die|^Let's go/.test(t)) ?? list[0];
 
 /** Plays one game; `brk` = { kind: "reload" | "leave", at: n } interrupts it at the n-th turn and continues it. */
-export async function playGame(browser, url, { board, players, people, brk, spend = false }) {
+export async function playGame(browser, url, { board, players, people, brk, spend = false, level = "normal" }) {
   const { ctx, page, errors } = await newPage(browser);
   await page.goto(`${url}/?fast`);
   await page.waitForSelector(".setup .go");
@@ -38,6 +38,7 @@ export async function playGame(browser, url, { board, players, people, brk, spen
     const computer = (await page.textContent(`[data-seat="${i}"] b`)) === "Computer";
     if (computer === people.includes(i)) await page.click(`[data-seat="${i}"]`);
   }
+  if (people.length < players) await page.click(`[data-level="${level}"]`); // owner, 22 Oct 2026: Easy or Normal
   await page.click(".setup .go");
   const turns = [], t0 = Date.now();
   let save = null, end = null, broke = null;
@@ -74,9 +75,10 @@ export async function playGame(browser, url, { board, players, people, brk, spen
     else await page.waitForTimeout(25);
   }
   // The same game in the engine, in the page (the development server serves the engine's source)
-  const check = await page.evaluate(async ({ board, players, people, save, turns, end, spend }) => {
-    const { BOARDS, Game, OFF, runTurn, simplePlayer: computer } = await import("/src/engine/index.ts");
-    const simplePlayer = (d, g) => (d.kind === "spendLantern" ? spend && people.includes(d.player) : computer(d, g));
+  const check = await page.evaluate(async ({ board, players, people, save, turns, end, spend, level }) => {
+    const { BOARDS, Game, OFF, runTurn, simplePlayer: easy, normalPlayer } = await import("/src/engine/index.ts");
+    const simplePlayer = (d, g) => (!people.includes(d.player) ? (level === "normal" ? normalPlayer : easy)(d, g)
+      : d.kind === "spendLantern" ? spend : easy(d, g));
     const NAMES = ["Blue", "Red", "Green", "Yellow"], g = new Game(BOARDS[board], { players, seed: save.seed, first: save.first });
     const where = (p) => p === OFF ? "at Home" : p === 0 ? "on Start" : p === g.board.endTile ? "at the festival" : `on square ${p}`;
     const label = () => `The whole board. ${g.players.map((p, i) => `${NAMES[i]} ${where(p.pos)}`).join(", ")}.`;
@@ -102,7 +104,7 @@ export async function playGame(browser, url, { board, players, people, brk, spen
     if (!end?.title?.startsWith(winner)) diffs.push(`winner: screen "${end?.title}", engine ${winner}`);
     if (end?.board !== label()) diffs.push(`final board: screen "${end?.board}", engine "${label()}"`);
     return { diffs, compared: allPeople ? turns.length : 0 };
-  }, { board, players, people, save, turns, end, spend });
+  }, { board, players, people, save, turns, end, spend, level });
   await ctx.close();
   return { ...check, diffs: [...check.diffs, ...new Set(spent), ...computerPops, ...(people.length < players && !notes ? ["no computer player's note seen"] : []), ...(!aheads ? ["no \"what's ahead\" notice seen"] : [])], turns: turns.length, spends, notes, aheads, broke, errors, ms: Date.now() - t0 };
 }

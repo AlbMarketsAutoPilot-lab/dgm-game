@@ -336,9 +336,15 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup .go { font-size: 1.6rem; padding: .25rem 2.5rem; }
 .setup .continue { display: flex; flex-direction: column; align-items: center; justify-content: center; width: auto; max-width: 100%; font-size: 1.45rem; line-height: 1.1; padding: .25rem 1.75rem; }
 .setup .continue small { font-size: .95rem; opacity: .85; }
-/* Short portrait screens: the players in two columns */
-/* Short portrait screens: the players in two columns, each with its name over Person / Computer */
+/* The computer players' level (owner, 22 Oct 2026): Easy / Normal under the seats */
+.setup .level { margin-top: var(--gap); }
+/* Short portrait screens: the players in two columns, each with its name over Person / Computer; the level on one line */
 @media (orientation: portrait) and (max-height: 760px) {
+  .setup .level { display: flex; align-items: center; justify-content: center; gap: .5rem; margin-top: calc(var(--gap) * .5); }
+  .setup .seats { margin-top: calc(var(--gap) * .5); }
+  .setup .level h2 { margin: 0; }
+  .setup .level .row { flex-wrap: nowrap; gap: .375rem; }
+  .setup .level .pick { padding: 0 .625rem; }
   .setup .seats { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)); }
   .setup .seat { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "tok name" "tok role"; column-gap: .5rem; row-gap: 0; line-height: 1.05; }
   .setup .seat .mini { grid-area: tok; width: 1.75rem; height: 1.75rem; }
@@ -408,7 +414,13 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 
 /* The smallest screens (owner, 15 Oct: everything in view): a folded phone drops the start screen's tagline; a phone
    held sideways makes the picture of a popup that is still too tall smaller, so the words and buttons get the room */
-@media (max-width: 300px) { .setup .sub { display: none; } }
+@media (max-width: 300px), (orientation: portrait) and (max-height: 600px) { .setup .sub { display: none; } }
+/* The narrowest phones: the seats side by side too */
+@media (orientation: portrait) and (max-width: 300px) {
+  .setup .seats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .setup .seat { padding-inline: .375rem; column-gap: .375rem; }
+  .setup .seat b { overflow: hidden; text-overflow: ellipsis; }
+}
 @media (max-height: 420px) {
   .pop.compact, .pop.compact:has(.pop-art .card-face) { grid-template-columns: clamp(2.5rem, 12%, 3.25rem) 1fr; }
   .pop.compact .pop-head { padding-right: 2.75rem; }

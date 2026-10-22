@@ -149,12 +149,15 @@ All events belong to a few families. The exact squares, sizes and amounts were d
 ### 8.5 Measurements of the paper game with the real rules (before I-6)
 See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Excitement is high (captures, late overtakes). Boredom fails the target (21% of players wait 10+ turns, mostly waiting to enter and in the trap). Small options are measured there and wait for the owner's decision.
 
-### 8.6 Computer players ✅ (owner, step I-7)
-- Any seat can be a computer player. It plays as the **simple player** the simulator measured (`types: "simple"` in `tools/sim/engine.mjs`), so every fairness and excitement number in this document holds for it:
+### 8.6 Computer players ✅ (owner, step I-7; levels: owner, 22 Oct 2026)
+- Any seat can be a computer player. The Easy level plays as the **simple player** the simulator measured (`types: "simple"` in `tools/sim/engine.mjs`), so every fairness and excitement number in this document holds for it:
   - (there are no crossroads any more: R20 was removed, owner 15 Oct 2026);
   - it uses its **Bonus card** on its own next punishment (R14, the "defend" use);
   - Bog boots: always worn (a person is asked, owner 15 Oct). Never spends a lantern to leave Home or the Bog.
 - It has no other choice to make: everything else is the dice (R21).
+- **Two levels** (owner, 22 Oct 2026), chosen on the start screen ("Computer players: Easy / Normal", the same for every computer seat; Normal unless chosen otherwise):
+  - **Easy** = the simple player above, unchanged.
+  - **Normal** = spends a spare lantern to leave the Bog at once (at Home it rolls for a 6); uses the Bonus card like Easy, except on the Bog itself when it holds the Bog boots: then it wears the boots; otherwise shields a punishment worth 10 squares or more (a square back = 1, a missed turn = 4, the Bog = 10 without boots); never tries the last lantern. Measured: wins 30.4% (long) / 31.9% (short) against 3 Easy (`docs/analysis/stepH-lanterns.md`).
 
 ## 9. Story: "The Journey" (P4)
 

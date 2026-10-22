@@ -85,7 +85,7 @@ const SETUP_GAME = async (kind) => {
   const root = document.querySelector("#app") ?? document.body.appendChild(Object.assign(document.createElement("main"), { id: "app" }));
   // the gallery page's own style fixes the squares at 180 px: not part of the game (the stage sizes them itself)
   for (const st of document.head.querySelectorAll("style")) st.textContent = st.textContent.replace(/\.card \{ --card: 180px;[^}]*\}/, "");
-  const s = new GameScreen(root, { board: BOARDS.long, players: 4, computer: [false, false, false, false] }, () => {});
+  const s = new GameScreen(root, { board: BOARDS.long, players: 4, computer: [false, false, false, false], level: "normal" }, () => {});
   s.gone = true; // the play loop stops at its next pause; the screen stays
   await new Promise((r) => setTimeout(r, 50));
   s.pops.clear();
