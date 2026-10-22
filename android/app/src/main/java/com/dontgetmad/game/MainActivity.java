@@ -59,6 +59,9 @@ public class MainActivity extends ComponentActivity {
             attrs.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
             getWindow().setAttributes(attrs);
         }
+        // The screen stays on while the app is open (owner, 22 Oct 2026). No permission is needed; in the background
+        // or with the phone locked, Android lets the screen turn off as usual.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         showGame(savedInstanceState);
         hideSystemBars();
 
