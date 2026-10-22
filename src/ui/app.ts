@@ -17,7 +17,7 @@ import { sound } from "./sound";
 import { switchIcon } from "./sound-switch";
 import { SpoilQuestion } from "./spoil";
 import { Stage } from "./stage";
-import { MOMENTS, brief, fill, outcome, taleOf, type Tale } from "./tales";
+import { MOMENTS, NO_SWAP, brief, fill, outcome, taleOf, type Tale } from "./tales";
 import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 import { clearGame, replay, saveGame, type SavedGame } from "./save";
 
@@ -409,10 +409,15 @@ export class GameScreen {
     }
   }
 
+  /** A swap square (R10) with nobody ahead of the player: nothing happens. */
+  private noSwap(seat: number, t: Tile, at?: readonly Pos[]): boolean {
+    return t.type === "swapLeader" && this.game.swapPartner(seat, at) < 0;
+  }
+
   /** A person's choice (R21: the road, the bonus card), in a popup. */
   private async decide(d: Decision): Promise<Answer> {
     if (this.setup.computer[d.player]) return (this.setup.level === "normal" ? normalPlayer : simplePlayer)(d, this.game);
-    if (d.kind === "bonusAttack" && !this.spoil.asks(d.player)) return false;
+    if (d.kind === "bonusAttack" && (!this.spoil.asks(d.player) || this.noSwap(d.target, d.tile))) return false; // no card spent on nothing
     if (d.kind === "spendLantern") return this.spendNow; // chosen with the buttons before the turn
     const v = await this.choose(d);
     this.pops.clear();
@@ -546,7 +551,9 @@ export class GameScreen {
         st.celebrate(tone);
         st.stamp(tone);
         this.noteWait(e);
-        await this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, outcome(this.board, e.tile), tone, `${tone === "good" ? "▲" : "▼"} ${tl.title}: ${brief(this.board, e.tile)}`);
+        const still = this.noSwap(e.player, e.tile, this.places); // the places as shown: the swap itself comes later
+        await this.story(e.player, { ...tl, art: this.pic(taleOf(this.board, e.square)?.icon ?? "card", tl.title) }, still ? NO_SWAP.outcome : outcome(this.board, e.tile), tone,
+          `${tone === "good" ? "▲" : "▼"} ${tl.title}: ${still ? NO_SWAP.brief : brief(this.board, e.tile)}`);
         await this.wait(1700);
         break;
       }
