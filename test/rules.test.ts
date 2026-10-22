@@ -162,6 +162,10 @@ describe("R10 swap with the leader", () => {
   });
   it("nobody ahead: nothing happens", () =>
     expect(play({ tiles: swap, dice: [5], setup: [{ pos: 70 }, { pos: 20 }], turns: 1 }).P[0].pos).toBe(75));
+  it("swapPartner: the furthest player ahead, not one behind; -1 when nobody is ahead (the texts say: nothing happens)", () => {
+    const { game } = play({ tiles: swap, dice: [], setup: [{ pos: 75 }, { pos: 120 }, { pos: 90 }], turns: 0, players: 3 });
+    expect([game.swapPartner(0), game.swapPartner(1), game.swapPartner(0, [75, 20, 40])]).toEqual([1, -1, -1]);
+  });
   it("as measured: the swapped leader's waiting turns are cleared", () => {
     const { P } = play({ tiles: swap, dice: [5], setup: [{ pos: 70 }, { pos: 95, skip: 1 }], turns: 1 });
     expect([P[1].pos, P[1].skip]).toEqual([75, 0]);

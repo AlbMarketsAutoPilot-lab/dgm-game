@@ -93,6 +93,19 @@ export class Game implements GameView {
     return li;
   }
 
+  /**
+   * R10: the seat the player `pi` swaps places with: the one furthest ahead of it, not on END; -1 when nobody is ahead
+   * (then nothing happens). `at`: the places to judge by (default: the engine's own).
+   */
+  swapPartner(pi: number, at: readonly Pos[] = this.players.map((q) => q.pos)): number {
+    let best = -1;
+    at.forEach((pos, i) => {
+      if (i !== pi && this.progress(pos) > this.progress(at[pi]) && pos !== this.index.end
+        && (best < 0 || this.progress(pos) > this.progress(at[best]))) best = i;
+    });
+    return best;
+  }
+
   /** One player's turn. Yields when a player must choose; returns at the end of the turn. */
   *turn(): Turn {
     if (this.over) throw new Error("the game is over");
@@ -411,11 +424,7 @@ export class Game implements GameView {
         break;
       }
       case "swapLeader": { // R10: change place with the player closest to END
-        let best = -1;
-        this.players.forEach((q, i) => {
-          if (i !== pi && this.progress(q.pos) > this.progress(p.pos) && q.pos !== this.index.end
-            && (best < 0 || this.progress(q.pos) > this.progress(this.players[best].pos))) best = i;
-        });
+        const best = this.swapPartner(pi);
         if (best >= 0) {
           const q = this.players[best], a = p.pos;
           this.emit({ type: "swap", player: pi, other: best });

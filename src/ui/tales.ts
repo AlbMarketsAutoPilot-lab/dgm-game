@@ -93,6 +93,9 @@ export const MOMENTS = {
 export const fill = (s: string, v: { p?: string; o?: string; n?: number | string }) =>
   s.replace(/\{p\}/g, esc(v.p)).replace(/\{o\}/g, esc(v.o)).replace(/\{n\}/g, esc(v.n));
 
+/** R10 with nobody ahead of the player: the engine does nothing (owner, 22 Oct 2026). The popup line, then the note. */
+export const NO_SWAP = { outcome: "Nobody is ahead of you, so nothing happens.", brief: "nobody ahead, nothing happens" };
+
 /** What a square does, in plain words, from the engine's tile. */
 export function outcome(board: Board, t: Tile): string {
   const place = (n: number) => (n === 0 ? "Start" : `square ${n}`);
