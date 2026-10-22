@@ -32,11 +32,11 @@ export const GUIDE: Page[] = [
   },
   {
     art: () => artFor("house", "Home"), title: "Roll a 6 to enter the game",
-    text: "Roll a <b>6</b> to start the game. No 6 in three turns? You start, but <b>lose a lantern</b>. Or decide to <b>spend a lantern</b> to start at once, without waiting for a 6.",
+    text: "Roll a <b>6</b> to start the game. No 6 in three turns? You start, but <b>lose a lantern</b>. Or <b>spend a lantern</b> to start at once, without waiting for a 6.",
   },
   {
-    art: shot(lanternsShot, "The players at the top of the screen, each with their number of lanterns"), shot: true, title: "Lanterns are your lives",
-    text: "You start with <b>3 lanterns</b>. <b>Three 6s in a row</b> earn you one lantern! If you need a lantern but have none, you are <b>out of the game</b>!",
+    art: shot(lanternsShot, "The players at the top of the screen, each with their number of lanterns"), shot: true, title: "Keep your last lantern",
+    text: "You start with <b>3 lanterns</b>. <b>Three 6s in a row</b> earn you one more! You need to keep a lantern to finish the game.",
   },
   {
     art: dice, title: "Sixes add up",
@@ -48,7 +48,7 @@ export const GUIDE: Page[] = [
   },
   {
     art: shot(cardsShot, "The Bonus card and the Bog boots, at the top of the screen"), shot: true, title: "Bonus card",
-    text: "Win cards during the game. <b>Bonus card</b>: cancels your punishment or another player's reward. <b>Bog boots</b>: escape the Bog at once!",
+    text: "Win cards during the game. <b>Bonus card</b>: cancels your punishment or another player's reward. <b>Bog boots</b>: escape the Bog at once! <b>A lantern</b> can cancel your punishment too!",
   },
   {
     art: () => `<div class="g-two">${tokenSvg(0, "tok", true)}${tokenSvg(1, "tok", true)}</div>`, title: "Bump!",
