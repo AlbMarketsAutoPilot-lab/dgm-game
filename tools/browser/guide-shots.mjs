@@ -20,7 +20,7 @@ try {
     const root = document.body.appendChild(Object.assign(document.createElement("main"), { id: "app" }));
     // A game in the middle: Blue has a Bonus card, the players have 3, 2, 3 and 1 lanterns (private parts reached on
     // purpose: this is a tool, like the browser tests)
-    const s = new GameScreen(root, { board: BOARDS.long, players: 4, computer: [false, true, true, true] }, () => {});
+    const s = new GameScreen(root, { board: BOARDS.long, players: 4, computer: [false, true, true, true], level: "normal" }, () => {});
     s.gone = true;
     await new Promise((r) => setTimeout(r, 50));
     s.pops.clear();

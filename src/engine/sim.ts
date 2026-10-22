@@ -6,15 +6,14 @@ import type { Board, Decider, GameEvent } from "./types";
 export interface PlayerRecord {
   /** Times sent back to Start by another player. */
   captured: number;
-  /** Lanterns at the end (0 when out). */
+  /** Lanterns at the end. */
   lanterns: number;
   minLanterns: number;
-  out: boolean;
-  outRound: number | null;
   /** Round in which the player left Home. */
   enterRound: number;
-  /** Lanterns lost (3 throws without a 6) and won (three 6s in a row). */
+  /** Lanterns lost (3 throws without a 6), spent (to leave Home or the Bog, or as a shield) and won (three 6s in a row). */
   lanternsLost: number;
+  lanternsSpent: number;
   lanternsWon: number;
   /** Turns with at least one throw, and turns that began with at least 1 / 2 / 3 sixes in a row. */
   throwTurns: number;
@@ -23,7 +22,6 @@ export interface PlayerRecord {
 
 export interface GameRecord {
   winner: number;
-  lastStanding: boolean;
   rounds: number;
   players: PlayerRecord[];
 }
@@ -32,8 +30,8 @@ export interface GameRecord {
 export function recordOf(game: Game): GameRecord {
   const L = game.board.rules.lifelines;
   const P: PlayerRecord[] = game.players.map(() => ({
-    captured: 0, lanterns: 0, minLanterns: L, out: false, outRound: null, enterRound: 0,
-    lanternsLost: 0, lanternsWon: 0, throwTurns: 0, sixes: [0, 0, 0],
+    captured: 0, lanterns: 0, minLanterns: L, enterRound: 0,
+    lanternsLost: 0, lanternsSpent: 0, lanternsWon: 0, throwTurns: 0, sixes: [0, 0, 0],
   }));
   let round = 0, cur = -1, rolls = 0, run = 0, runOn = false;
   const endTurn = () => {
@@ -51,14 +49,16 @@ export function recordOf(game: Game): GameRecord {
         if (runOn) { if (e.value === 6) run++; else runOn = false; }
         break;
       case "released": if (e.where === "start") P[e.player].enterRound = round; break;
-      case "lanternLost": P[e.player].lanternsLost++; P[e.player].minLanterns = Math.min(P[e.player].minLanterns, e.left); break;
+      case "lanternLost":
+        if (e.why === "wait") P[e.player].lanternsLost++; else P[e.player].lanternsSpent++;
+        P[e.player].minLanterns = Math.min(P[e.player].minLanterns, e.left);
+        break;
       case "lanternWon": P[e.player].lanternsWon++; break;
-      case "out": P[e.player].lanternsLost++; P[e.player].out = true; P[e.player].outRound = round; break;
     }
   }
   endTurn();
-  game.players.forEach((p, i) => { P[i].captured = p.captured; P[i].lanterns = p.lanterns; if (p.out) P[i].minLanterns = -1; });
-  return { winner: game.winner!, lastStanding: game.lastStanding, rounds: game.round, players: P };
+  game.players.forEach((p, i) => { P[i].captured = p.captured; P[i].lanterns = p.lanterns; });
+  return { winner: game.winner!, rounds: game.round, players: P };
 }
 
 /** Plays one whole game. Returns null when it stopped at the round limit without a winner. */

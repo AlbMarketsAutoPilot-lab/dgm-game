@@ -3,9 +3,11 @@
 // up to the same turn when it is continued. Saved only in this browser (C1: nothing leaves the device). Reloading in
 // the middle of a turn brings back the start of that turn, with the same throws: no luck to be won by reloading.
 import { BOARDS, Game, type Answer, type Board, type BoardId } from "../engine";
+import type { Level } from "./app";
 
 /** Bump when a rule change in the engine would play a saved game differently (old saves are then dropped). */
-const VERSION = 2; // 2 (owner, 15 Oct): the Bog boots and spending a lantern are answers too; older saves would replay wrong
+const VERSION = 3; // 2 (owner, 15 Oct): the Bog boots and spending a lantern are answers too; 3 (owner, 22 Oct 2026): nobody
+// is out, the lantern shield ("card" / "lantern" / "take"). Older saves would replay wrong
 const KEY = "dgm.game.v1";
 
 export interface SavedGame {
@@ -15,6 +17,8 @@ export interface SavedGame {
   boardHash: string;
   players: number;
   computer: boolean[];
+  /** The computer players' level (owner, 22 Oct 2026). */
+  level: Level;
   seed: number;
   first: number;
   /** Every answer given to the engine, in order (roads, Bonus cards; people and computer players). */
@@ -46,7 +50,8 @@ export function parseSave(x: unknown): SavedGame | null {
   if (!Object.prototype.hasOwnProperty.call(BOARDS, s.board) || s.boardHash !== boardHash(BOARDS[s.board])) return null;
   if (!isInt(s.players, 1, 4) || !isInt(s.seed, 0, 2 ** 32) || !isInt(s.first, 0, s.players - 1)) return null;
   if (!Array.isArray(s.computer) || s.computer.length !== s.players || !s.computer.every((c) => typeof c === "boolean")) return null;
-  if (!Array.isArray(s.answers) || !s.answers.every((a) => a === true || a === false || a === "main" || a === "shortcut")) return null;
+  if (s.level !== "easy" && s.level !== "normal") return null;
+  if (!Array.isArray(s.answers) || !s.answers.every((a) => a === true || a === false || a === "main" || a === "shortcut" || a === "card" || a === "lantern" || a === "take")) return null;
   if (!isInt(s.turns, 0, 1e6) || !isInt(s.round, 0, 1e6)) return null;
   if (!Array.isArray(s.quiet) || !s.quiet.every((q) => isInt(q, 0, s.players - 1))) return null;
   if (!Array.isArray(s.cards) || !s.cards.every((c) => typeof c === "string")) return null;

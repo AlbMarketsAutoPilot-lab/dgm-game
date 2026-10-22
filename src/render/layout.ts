@@ -6,7 +6,7 @@
 // ring to the Festival of Lights in the middle. Squares touch; a thin wall separates the rings, with one opening where
 // the road steps into the next ring. No empty margins: the squares get all the space.
 // The boards have no Shortcut (owner, 15 Oct) and no stair steps; a board with a Shortcut is refused (C2).
-import { BOARDS, OFF, OUT } from "../engine";
+import { BOARDS, OFF } from "../engine";
 import type { Board, Pos } from "../engine";
 
 export interface Point {
@@ -173,7 +173,7 @@ function drawingsFor(board: Board): [number, number][] {
 
 /** Centre of a token's place (engine `Pos`). */
 export function pointOf(layout: BoardLayout, pos: Pos): Point {
-  if (pos === OFF || pos === OUT || pos === 0) return layout.start.centre;
+  if (pos === OFF || pos === 0) return layout.start.centre;
   if (pos === layout.board.endTile) return layout.end;
   return layout.squares[pos];
 }

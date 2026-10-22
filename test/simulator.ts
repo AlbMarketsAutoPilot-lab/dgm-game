@@ -3,7 +3,7 @@
 import { simulate as simulateJs } from "../tools/sim/engine.mjs";
 
 export interface SimPlayerRecord {
-  six1: number; six2: number; six3: number; throwTurns: number; captured: number; life: number; out: boolean;
+  six1: number; six2: number; six3: number; throwTurns: number; captured: number; life: number; out: boolean; spent: number; maxDry: number;
   gainTriple: number; minLife: number; outRound: number | null; enterRound: number; lostWait: number;
 }
 export interface SimResult {

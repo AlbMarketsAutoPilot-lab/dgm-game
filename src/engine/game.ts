@@ -2,13 +2,13 @@
 // Ported from tools/sim/engine.mjs (the measured simulator). With the same seed it plays exactly the same games,
 // throw for throw; test/equivalence.test.ts checks this against the simulator itself.
 //
-// A turn is a generator: it runs until the engine needs a player's choice (R21: the road at a crossroads, the bonus
-// card), yields a Decision, and continues with the Answer passed to next(). Everything that happens is appended to
+// A turn is a generator: it runs until the engine needs a player's choice (R21: the Bonus card, a spare lantern, the
+// Bog boots), yields a Decision, and continues with the Answer passed to next(). Everything that happens is appended to
 // `events`, in order, for the renderer and the UI. `runTurn` plays a turn with a decider function (computer players,
 // simulations, tests).
-import { BoardIndex, OFF, OUT, START, isShortcut, shortcutOf, shortcutPos } from "./board";
+import { BoardIndex, OFF, START, isShortcut, shortcutOf, shortcutPos } from "./board";
 import { type Rng, d6, randomSeed, rng } from "./rng";
-import type { Answer, Board, Decider, Decision, GameEvent, GameView, PlayerState, Pos, Road, Spot, Tile } from "./types";
+import type { Answer, Board, Decider, Decision, Defence, GameEvent, GameView, PlayerState, Pos, Road, Spot, Tile } from "./types";
 
 export interface GameOptions {
   /** 1–4 players (the app offers 2–4, R12). */
@@ -44,8 +44,6 @@ export class Game implements GameView {
   /** R19: the square of the fallen tree, or null. */
   roadblock: number | null;
   winner: number | null = null;
-  /** True when the winner won as the last player left in the game (R18). */
-  lastStanding = false;
   /** True when the game stopped at maxRounds without a winner. */
   capped = false;
   /** Seat that opens every round. */
@@ -70,7 +68,7 @@ export class Game implements GameView {
     this.roadblock = opts.roadblock ?? null;
     this.players = Array.from({ length: opts.players }, (_, seat) => ({
       seat, pos: OFF, skip: 0, trapped: false, tries: 0, slow: false, double: false, snakeLeader: false,
-      bonus: 0, jailPass: 0, lanterns: board.rules.lifelines, out: false,
+      bonus: 0, jailPass: 0, lanterns: board.rules.lifelines,
       stairAt: 0, stairLeft: 0, stairTotal: 0, onStair: false, road: null, captured: 0,
     }));
     opts.setup?.forEach((s, i) => Object.assign(this.players[i], s));
@@ -119,23 +117,20 @@ export class Game implements GameView {
     }
     this.runOn = false;
     p.road = null;
-    if (p.pos === this.index.end) { this.winner = pi; this.emit({ type: "win", player: pi, lastStanding: false }); }
+    if (p.pos === this.index.end) { this.winner = pi; this.emit({ type: "win", player: pi }); }
   }
 
   // ---- Turn order ----
 
-  /** Moves to the next seat still in the game; a new round starts at the first seat (R19 places the tree then). */
+  /** Moves to the next seat; a new round starts at the first seat (R19 places the tree then). */
   private advance(): boolean {
-    if (this.players.every((q) => q.out)) { this.capped = true; return false; }
-    do {
-      this.seat = (this.seat + 1) % this.players.length;
-      if (this.seat === this.first) {
-        if (this.round >= this.maxRounds) { this.capped = true; return false; }
-        this.round++;
-        this.emit({ type: "round", round: this.round });
-        if (this.roadblock === null) this.placeRoadblock();
-      }
-    } while (this.players[this.seat].out);
+    this.seat = (this.seat + 1) % this.players.length;
+    if (this.seat === this.first) {
+      if (this.round >= this.maxRounds) { this.capped = true; return false; }
+      this.round++;
+      this.emit({ type: "round", round: this.round });
+      if (this.roadblock === null) this.placeRoadblock();
+    }
     return true;
   }
 
@@ -147,7 +142,7 @@ export class Game implements GameView {
     this.emit({ type: "roll", player: p.seat, value: r });
     if (this.runOn) {
       if (r === 6) {
-        if (++this.run === 3 && !p.out) { p.lanterns++; this.emit({ type: "lanternWon", player: p.seat, total: p.lanterns }); }
+        if (++this.run === 3) { p.lanterns++; this.emit({ type: "lanternWon", player: p.seat, total: p.lanterns }); }
       } else this.runOn = false;
     }
     return r;
@@ -170,13 +165,13 @@ export class Game implements GameView {
 
   private *waitingTurn(pi: number): Turn {
     const p = this.players[pi], off = p.pos === OFF, where = off ? "start" : "trap";
-    // Owner, 15 Oct: with a lantern left, the player may spend it to leave at once (no throws for a 6), then throws to
-    // move as on any turn. Never offered with 0 lanterns (the next loss puts the player out, R18).
-    if (p.lanterns >= 1 && (yield { kind: "spendLantern", player: pi, where, tries: p.tries, lanterns: p.lanterns })) {
+    // R17: with a spare lantern, the player may spend it to leave at once (no throws for a 6), then throws to move as on
+    // any turn. Never the last lantern (owner, 22 Oct 2026).
+    if (p.lanterns >= 2 && (yield { kind: "spendLantern", player: pi, where, tries: p.tries, lanterns: p.lanterns })) {
       p.tries = 0;
       if (off) p.pos = START; else p.trapped = false;
       this.emit({ type: "released", player: pi, where, bySix: false, stairs: 0, paid: true });
-      this.loseLantern(pi); // never out: at least one lantern was left
+      this.loseLantern(pi, "leave");
       let n = p.slow ? 1 : this.throwSequence(0);
       p.slow = false;
       if (p.double) { n *= 2; p.double = false; }
@@ -194,17 +189,16 @@ export class Game implements GameView {
         if (p.double) { n *= 2; p.double = false; }
         yield* this.moveBy(pi, n);
       }
-    } else if (p.tries >= 2) { // 3rd throw without a 6: a lantern goes out, and you move anyway by that throw
+    } else if (p.tries >= 2 && p.lanterns >= 2) { // 3rd throw without a 6: a spare lantern goes out, you move by that throw
       p.tries = 0;
-      if (!this.loseLantern(pi)) {
-        if (off) p.pos = START; else p.trapped = false;
-        this.emit({ type: "released", player: pi, where, bySix: false, stairs: 0 });
-        let n = p.slow ? 1 : r;
-        p.slow = false;
-        if (p.double) { n *= 2; p.double = false; }
-        yield* this.moveBy(pi, n);
-      }
-    } else {
+      this.loseLantern(pi, "wait");
+      if (off) p.pos = START; else p.trapped = false;
+      this.emit({ type: "released", player: pi, where, bySix: false, stairs: 0 });
+      let n = p.slow ? 1 : r;
+      p.slow = false;
+      if (p.double) { n *= 2; p.double = false; }
+      yield* this.moveBy(pi, n);
+    } else { // owner, 22 Oct 2026: with only the last lantern, nothing is lost: keep throwing for a 6 on the next turns
       p.tries++;
       this.emit({ type: "noSix", player: pi, where, tries: p.tries });
     }
@@ -214,20 +208,12 @@ export class Game implements GameView {
     p.stairLeft = 0; p.onStair = false;
   }
 
-  /** R18. Returns true when the player is out. */
-  private loseLantern(pi: number): boolean {
+  /** R18: a spare lantern goes out. The last one never does (owner, 22 Oct 2026: nobody is out). */
+  private loseLantern(pi: number, why: "wait" | "leave" | "shield"): void {
     const p = this.players[pi];
+    if (p.lanterns < 2) throw new Error("the last lantern is never lost");
     p.lanterns--;
-    if (p.lanterns >= 0) { this.emit({ type: "lanternLost", player: pi, left: p.lanterns }); return false; }
-    p.lanterns = 0;
-    p.out = true; p.pos = OUT; p.trapped = false; p.skip = 0; this.clearStairs(p);
-    this.emit({ type: "out", player: pi });
-    const left = this.players.filter((q) => !q.out);
-    if (left.length === 1) {
-      this.winner = left[0].seat; this.lastStanding = true;
-      this.emit({ type: "win", player: this.winner, lastStanding: true });
-    }
-    return true;
+    this.emit({ type: "lanternLost", player: pi, left: p.lanterns, why });
   }
 
   // ---- Crossroads (R20) ----
@@ -358,12 +344,22 @@ export class Game implements GameView {
     if (!t || depth > MAX_DEPTH || (t.requires === "snakeLeader" && !p.snakeLeader)) return;
     this.emit({ type: "tile", player: pi, square, tile: t });
     // R14: the bonus card, used once: avoid one of your own punishments, or cancel another player's reward.
-    if (t.cat === "P" && p.bonus > 0 && (yield { kind: "bonusDefend", player: pi, square, tile: t })) {
-      p.bonus--; this.emit({ type: "bonusUsed", player: pi, use: "defend", target: pi, square }); return;
+    // R18 (owner, 22 Oct 2026): a spare lantern can also cancel your own punishment, except "the others double".
+    if (t.cat === "P") {
+      const card = p.bonus > 0, shield = t.type !== "doubleOthers" && p.lanterns >= 2;
+      if (card || shield) {
+        const a = (yield { kind: "punishment", player: pi, square, tile: t, card, shield, lanterns: p.lanterns }) as Defence;
+        if (a === "card" && card) {
+          p.bonus--; this.emit({ type: "bonusUsed", player: pi, use: "defend", target: pi, square }); return;
+        }
+        if (a === "lantern" && shield) {
+          this.emit({ type: "shield", player: pi, square }); this.loseLantern(pi, "shield"); return;
+        }
+      }
     }
     if (t.cat === "R") {
       for (const q of this.players) {
-        if (q.seat === pi || q.out || q.bonus <= 0) continue;
+        if (q.seat === pi || q.bonus <= 0) continue;
         if (yield { kind: "bonusAttack", player: q.seat, target: pi, square, tile: t }) {
           q.bonus--; this.emit({ type: "bonusUsed", player: q.seat, use: "attack", target: pi, square }); return;
         }
@@ -387,7 +383,7 @@ export class Game implements GameView {
       case "doubleOthers": {
         const others = this.players.filter((q) => q.seat !== pi);
         others.forEach((q) => { q.double = true; });
-        this.emit({ type: "doubleNext", players: others.filter((q) => !q.out).map((q) => q.seat) });
+        this.emit({ type: "doubleNext", players: others.map((q) => q.seat) });
         break;
       }
       case "extraRoll":
@@ -448,16 +444,53 @@ export function runTurn(game: Game, decide: Decider): GameEvent[] {
 }
 
 /**
- * The computer player (GCD §8.6) = the simulator's "simple" player, so every measured number holds for it:
- * always the Main Road, the bonus card on its own next punishment, never against another player, the Bog boots
- * always, and never a lantern spent to leave Home or the Bog.
+ * The Easy computer player (GCD §8.6) = the simulator's "simple" player, so every measured number holds for it:
+ * the bonus card on its own next punishment, never against another player, the Bog boots always, and never a spare
+ * lantern spent (to leave Home or the Bog, or as a shield).
  */
 export const simplePlayer: Decider = (d: Decision): Answer => {
   switch (d.kind) {
     case "road": return "main";
-    case "bonusDefend": return true;
+    case "punishment": return d.card ? "card" : "take";
     case "bonusAttack": return false;
     case "bogBoots": return true; // as the simulator: the boots always walk through
     case "spendLantern": return false; // as the simulator: always throws for a 6
+  }
+};
+
+/**
+ * What a punishment costs the Normal player, in squares (owner, 22 Oct 2026; the simulator's `worth`): a missed turn
+ * counts 4, the Bog 10 unless the player holds the Bog boots. "Nearest punishment" counts 0: the move is forward and
+ * the square reached asks again.
+ */
+export function punishmentWorth(t: Tile, p: PlayerState): number {
+  const bog = p.jailPass > 0 ? 0 : 10;
+  switch (t.type) {
+    case "prison": return bog;
+    case "skip": case "hospital": return 4 * t.turns!;
+    case "slowNext": return 3;
+    case "jump": return p.pos - t.to! + (t.then === "prison" ? bog : t.then === "hospital" ? 12 : t.then === "skip2" ? 8 : 0);
+    default: return 0;
+  }
+}
+
+/** The Normal player shields a punishment worth at least this many squares. */
+export const SHIELD_WORTH = 10;
+
+/**
+ * The Normal computer player (owner, 22 Oct 2026; the simulator's "normal" player): as the Easy player, but it
+ * spends a spare lantern to leave the Bog at once, uses the lantern shield on punishments worth about 10 squares or
+ * more when it has no Bonus card to use, and on the Bog itself wears the Bog boots rather than the card or a lantern.
+ */
+export const normalPlayer: Decider = (d: Decision, g: Readonly<GameView>): Answer => {
+  switch (d.kind) {
+    case "punishment": {
+      const p = g.players[d.player];
+      if (d.tile.type === "prison" && p.jailPass > 0) return "take"; // the boots walk through
+      if (d.card) return "card";
+      return d.shield && punishmentWorth(d.tile, p) >= SHIELD_WORTH ? "lantern" : "take";
+    }
+    case "spendLantern": return d.where === "trap";
+    default: return simplePlayer(d, g);
   }
 };

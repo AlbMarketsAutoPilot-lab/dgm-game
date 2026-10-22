@@ -22,10 +22,10 @@ try {
   const GAMES = [
     { name: "short board, 4 people, reloaded at turn 12", board: "short", players: 4, people: [0, 1, 2, 3], brk: { kind: "reload", at: 12 } },
     { name: "long board, 3 people, left at turn 20 and continued", board: "long", players: 3, people: [0, 1, 2], brk: { kind: "leave", at: 20 } },
-    { name: "short board, 1 person and 3 computer players", board: "short", players: 4, people: [0] },
+    { name: "short board, 1 person and 3 Easy computer players", board: "short", players: 4, people: [0], level: "easy" },
     { name: "long board, 2 people", board: "long", players: 2, people: [0, 1] },
-    { name: "short board, 2 people and 1 computer player", board: "short", players: 3, people: [0, 2] },
-    { name: "short board, 3 people who spend lanterns to leave Home and the Bog", board: "short", players: 3, people: [0, 1, 2], spend: true },
+    { name: "short board, 2 people and 1 Normal computer player", board: "short", players: 3, people: [0, 2], level: "normal" },
+    { name: "short board, 3 people who spend lanterns to leave Home and the Bog, and as shields", board: "short", players: 3, people: [0, 1, 2], spend: true },
   ].slice(0, quick ? 2 : undefined);
   const results = await Promise.all(GAMES.map((g) => playGame(browser, dev.url, g).catch((e) => ({ diffs: [String(e)], errors: [], turns: 0, compared: 0 }))));
   results.forEach((r, i) => {

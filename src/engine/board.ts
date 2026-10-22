@@ -4,7 +4,6 @@ import shortJson from "../../data/board-short.json";
 import type { Board, Fork, Pos, Tile, TileType } from "./types";
 
 export const OFF: Pos = -1; // waiting at Home, not yet on the board (R1)
-export const OUT: Pos = -2; // out of the game (R18)
 export const START: Pos = 0;
 
 const TILE_TYPES: readonly TileType[] = [
@@ -20,7 +19,8 @@ const FROZEN = {
   bonusPolicy: "defend",
   stairs: true,
   lifeOnTriple: true,
-  outAfterZero: true,
+  keepLast: true, // owner, 22 Oct 2026: nobody is out (R18)
+  shield: true, // owner, 22 Oct 2026: a spare lantern cancels your own punishment (R18)
 } as const;
 
 /** Rule fields of the simulator that the frozen game does not use. Refused if switched on. */

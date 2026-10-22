@@ -16,7 +16,7 @@ function played(board: "short" | "long", players: number, seed: number, first: n
     return a;
   });
   const save: SavedGame = {
-    v: 2, board, boardHash: boardHash(BOARDS[board]), players, computer: Array(players).fill(false), seed, first,
+    v: 3, board, boardHash: boardHash(BOARDS[board]), players, computer: Array(players).fill(false), level: "normal", seed, first,
     answers, turns, quiet: [], cards: [], round: g.round,
   };
   return { g, save };
@@ -43,6 +43,7 @@ describe("saved games", () => {
     expect(parseSave({ ...save, board: "__proto__" })).toBeNull();
     expect(parseSave({ ...save, first: 2 })).toBeNull();
     expect(parseSave({ ...save, computer: [true] })).toBeNull();
+    expect(parseSave({ ...save, level: "hard" as never })).toBeNull();
     expect(parseSave({ ...save, answers: ["<b>"] })).toBeNull();
     expect(parseSave(null)).toBeNull();
     expect(parseSave("x")).toBeNull();

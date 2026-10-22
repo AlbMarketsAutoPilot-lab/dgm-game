@@ -21,7 +21,7 @@ describe("which events earn which postcard", () => {
     [{ type: "released", player: 0, where: "trap", bySix: true, stairs: 0 }, []],
     [{ type: "move", player: 0, from: 1, to: 140, path: [], crossroads: false }, ["seaside"]],
     [{ type: "jump", player: 0, from: 40, to: 103, cause: "tile" }, ["river-lake"]],
-    [{ type: "win", player: 0, lastStanding: false }, ["festival"]],
+    [{ type: "win", player: 0 }, ["festival"]],
     [{ type: "snakeLeader", player: 0 }, ["snake-leader"]],
     [{ type: "tile", player: 0, square: 198, tile: L.tiles[198] }, ["forgot-keys"]],
     [{ type: "tile", player: 0, square: 193, tile: L.tiles[193] }, []], // forgot keys (once) is not AGAIN
@@ -34,7 +34,7 @@ describe("which events earn which postcard", () => {
     [{ type: "roll", player: 0, value: 6 }, []],
   ] as [GameEvent, string[]][])("%o → %o", (e, want) => expect(ids(e)).toEqual(want));
   it("computer players collect nothing", () => {
-    expect(postcardsFor(L, { type: "win", player: 1, lastStanding: false }, (seat) => seat === 0)).toEqual([]);
+    expect(postcardsFor(L, { type: "win", player: 1 }, (seat) => seat === 0)).toEqual([]);
   });
   it("a whole game: every postcard a person earns is in the list", () => {
     const g = new Game(S, { players: 2, seed: 7 });

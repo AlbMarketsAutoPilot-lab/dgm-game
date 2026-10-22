@@ -210,7 +210,8 @@
   "stairs": true,
   "lifelines": 3,
   "lifeOnTriple": true,
-  "outAfterZero": true,
+  "keepLast": true,
+  "shield": true,
   "roadblock": {
    "back": 10,
    "range": 10

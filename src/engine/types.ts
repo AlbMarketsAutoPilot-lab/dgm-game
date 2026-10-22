@@ -65,7 +65,10 @@ export interface BoardRules {
   stairs: true;
   lifelines: number;
   lifeOnTriple: true;
-  outAfterZero: true;
+  /** R17, R18 (owner, 22 Oct 2026): the last lantern is never lost or spent, so nobody is out. */
+  keepLast: true;
+  /** R18 (owner, 22 Oct 2026): a spare lantern can cancel the player's own punishment. */
+  shield: true;
   roadblock: { back: number; range: number };
   forks: Fork[];
   /** Replaced by R17 (stairs); kept in the files only so older reports can be reproduced. Ignored. */
@@ -98,7 +101,7 @@ export interface BoardStory {
 
 /**
  * A token's place. Numbers keep the simulator's encoding so the two engines can be compared game by game:
- * -1 = not yet on the board (waiting at Home), -2 = out of the game, 0 = the Start square, 1..lastTile = squares,
+ * -1 = not yet on the board (waiting at Home), 0 = the Start square, 1..lastTile = squares,
  * endTile = END, and square i (1..len) of the Shortcut of fork k is 1000 × (k + 1) + i (see `board.ts`).
  */
 export type Pos = number;
@@ -118,7 +121,7 @@ export interface PlayerState {
   skip: number;
   /** In the trap (R6). */
   trapped: boolean;
-  /** Failed throws so far at Home or in the trap (R17: 0, 1 or 2). */
+  /** Failed throws so far at Home or in the trap (R17: 0, 1, 2; more while waiting with only the last lantern). */
   tries: number;
   /** R9: next turn move exactly 1. */
   slow: boolean;
@@ -130,9 +133,8 @@ export interface PlayerState {
   bonus: number;
   /** Free passes (Bog boots) held: offered when the trap would catch the player (owner, 15 Oct). */
   jailPass: number;
-  /** R18 lifelines (story: Lanterns). Can reach 0 and the player still plays; the next loss is out. */
+  /** R18 lifelines (story: Lanterns). Never below 1: the last one is kept (owner, 22 Oct 2026). Spare = lanterns - 1. */
   lanterns: number;
-  out: boolean;
   /** R17 stair steps still to walk, on top of square `stairAt`; `stairTotal` = steps built. */
   stairAt: number;
   stairLeft: number;
@@ -146,20 +148,27 @@ export interface PlayerState {
 }
 
 /**
- * A choice the engine needs from a player (R21: the road and the bonus card; owner, 15 Oct: the Bog boots, and spending
- * a lantern to leave Home or the Bog at once instead of throwing for a 6).
+ * A choice the engine needs from a player (R21: the road, the bonus card, the Bog boots, spending a spare lantern to
+ * leave Home or the Bog at once, and the lantern shield).
  */
 export type Decision =
   | { kind: "road"; player: number; fork: number; square: number }
-  | { kind: "bonusDefend"; player: number; square: Pos; tile: Tile }
+  /**
+   * R14 / R18: landed on a punishment. `card` = the Bonus card may cancel it; `shield` = a spare lantern may cancel it
+   * (owner, 22 Oct 2026: never on "the others double", never the last lantern). Asked only when one of them is possible.
+   */
+  | { kind: "punishment"; player: number; square: Pos; tile: Tile; card: boolean; shield: boolean; lanterns: number }
   | { kind: "bonusAttack"; player: number; target: number; square: Pos; tile: Tile }
   /** The Bog would catch the player, who holds Bog boots: wear them (true) or keep them (false). */
   | { kind: "bogBoots"; player: number; square: Pos }
-  /** Waiting at Home or in the Bog with at least one lantern: spend one and leave now (true), or throw for a 6 (false). */
+  /** Waiting at Home or in the Bog with a spare lantern: spend one and leave now (true), or throw for a 6 (false). */
   | { kind: "spendLantern"; player: number; where: "start" | "trap"; tries: number; lanterns: number };
 
-/** The answer to a Decision: a Road for "road", true / false (yes or no) for the others. */
-export type Answer = Road | boolean;
+/** What cancels a punishment: the Bonus card, a spare lantern, or nothing ("take" it). */
+export type Defence = "card" | "lantern" | "take";
+
+/** The answer to a Decision: a Road for "road", a Defence for "punishment", true / false (yes or no) for the others. */
+export type Answer = Road | Defence | boolean;
 
 export type Decider = (decision: Decision, game: Readonly<GameView>) => Answer;
 
@@ -178,7 +187,7 @@ export type GameEvent =
   | { type: "turn"; player: number }
   | { type: "roll"; player: number; value: number }
   | { type: "skipTurn"; player: number; turnsLeft: number }
-  /** R17: a throw without a 6 at Home ("start") or in the trap; one stair step added. */
+  /** R17: a throw without a 6 at Home ("start") or in the trap. */
   | { type: "noSix"; player: number; where: "start" | "trap"; tries: number }
   /**
    * R1 / R6 / R17: the player leaves Home or the trap; `bySix` false = third throw, moving anyway; `paid` = left by
@@ -199,12 +208,14 @@ export type GameEvent =
   | { type: "bogBoots"; player: number }
   | { type: "card"; player: number; card: CardKind }
   | { type: "bonusUsed"; player: number; use: "defend" | "attack"; target: number; square: Pos }
+  /** R18 (owner, 22 Oct 2026): a spare lantern cancelled the player's own punishment (a lanternLost follows). */
+  | { type: "shield"; player: number; square: Pos }
   | { type: "wait"; player: number; turns: number }
   | { type: "slowNext"; player: number }
   | { type: "doubleNext"; players: number[] }
   | { type: "snakeLeader"; player: number }
   | { type: "swap"; player: number; other: number }
-  | { type: "lanternLost"; player: number; left: number }
+  /** `why`: 3 throws without a 6 (R17), spent to leave Home or the Bog (R17), or spent as a shield (R18). */
+  | { type: "lanternLost"; player: number; left: number; why: "wait" | "leave" | "shield" }
   | { type: "lanternWon"; player: number; total: number }
-  | { type: "out"; player: number }
-  | { type: "win"; player: number; lastStanding: boolean };
+  | { type: "win"; player: number };

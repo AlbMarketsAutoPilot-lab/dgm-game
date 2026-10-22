@@ -36,6 +36,9 @@ export const DEFAULTS = {
   lifeOnEscape6: false,  // owner idea B: a 6 that gets you out of Start or the trap gives a lifeline
   lifeOnBackToStart: false, // owner idea B: being sent to Start by a square (e.g. 10 "Back to start") costs a lifeline
   outAfterZero: false,   // owner (final): at 0 lifelines you play on ("Attention! no lifelines left"); the next loss = out   // squares that give a lifeline back (never above the starting number)
+  keepLast: false,       // owner, 22 Oct 2026 (R17, R18): the last lantern is never lost or spent, nobody is out; the 3rd throw
+                         // without a 6 and no spare lantern: nothing lost, keep throwing for a 6 on the next turns
+  shield: false,         // owner, 22 Oct 2026 (R18): a spare lantern cancels your own punishment (not "others double")
   roadblock: null,       // N2 roadblock event: { back, range } = the game puts it on a free plain square 1..range in front of the
                          // leader; the first player to land on it (anyone) goes back `back` squares, then it is placed again
   forks: [],             // N3 two roads: [{ at, merge, len, tiles }] = every token stops at the crossroads `at`; next turn it takes
@@ -46,6 +49,8 @@ export const DEFAULTS = {
   lifeRest: 0,           // candidate: rest (do not throw) this many turns in a row to win a lifeline back (0 = off)
   lifeRefuse: 0,         // candidate: refuse a reward worth at least this many squares to win a lifeline back (0 = off)
   types: null,           // player type per seat: "simple" (default choices) | "thoughtful" (written rules) | "wild" (always the wild road)
+                         // | "normal" (owner, 22 Oct 2026: the Normal computer player, uses spare lanterns; GCD §8.6)
+  shieldWorth: 10,       // normal player: shields a punishment worth at least this many squares
   bigLoss: 20,           // thoughtful player: a punishment / reward this big (squares) is "big"
 };
 
@@ -100,7 +105,7 @@ export function simulate(board, rules, games, seed) {
   for (let g = 0; g < games; g++) {
     const P = Array.from({ length: s.players }, () => ({
       pos: s.entry === "six" ? OFF : 0, skip: 0, trapped: false, slow: false, dbl: false, leader: false,
-      bonus: 0, jailPass: 0, captured: 0, tries: 0, rest: 0, life: s.lifelines, out: false, stairAt: 0, stairLeft: 0, onStair: false,
+      bonus: 0, jailPass: 0, captured: 0, tries: 0, spent: 0, rest: 0, life: s.lifelines, out: false, stairAt: 0, stairLeft: 0, onStair: false,
       six1: 0, six2: 0, six3: 0, throwTurns: 0, gainSix: 0, gainTriple: 0, gainEscape: 0, lostStart: 0, minLife: s.lifelines, lostWait: 0, lostCap: 0,
       lost: 0, waitEnter: 0, waitTrap: 0, dry: 0, maxDry: 0, rewards: 0, punish: 0, gained: 0, lostSq: 0,
       hits: new Set(), opp: new Map(),
@@ -147,6 +152,7 @@ export function simulate(board, rules, games, seed) {
       if (left.length === 1) { winner = left[0]; A.gamesLastStanding++; }
       return true;
     };
+    const spend = (p) => { p.life--; p.spent++; A.lifeSpent++; if (p.life < p.minLife) p.minLife = p.life; }; // R17 / R18: a spare lantern
     const setStairs = (p, off, k) => { if (k > 0) { p.stairAt = off ? 1 : p.pos + 1; p.stairLeft = k; A.stairSteps += k; } };
     const trap = (p) => { if (p.jailPass > 0) { p.jailPass--; A.jailPassUsed++; } else p.trapped = true; };
     // Moved by an event: no chaining (the destination square's own event does not trigger), but capture applies.
@@ -184,6 +190,23 @@ export function simulate(board, rules, games, seed) {
     };
     const wantsDefend = (i, t) => typeOf(i) === "thoughtful" ? swing(i, t) <= -s.bigLoss : s.bonusPolicy === "defend" || s.bonusPolicy === "first";
     const wantsAttack = (i, pi, t) => typeOf(i) === "thoughtful" ? swing(pi, t) >= s.bigLoss : s.bonusPolicy === "attack" || s.bonusPolicy === "first";
+    // Normal player (owner, 22 Oct 2026): what a punishment costs, in squares (a missed turn = 4, the Bog = 10 unless the
+    // boots walk through it). "Nearest punishment" counts 0: the move is forward, and the square reached asks again.
+    const bog = (p) => (p.jailPass > 0 ? 0 : 10);
+    const worth = (pi, t) => {
+      const p = P[pi];
+      switch (t.type) {
+        case "prison": return bog(p);
+        case "skip": case "hospital": return 4 * t.turns;
+        case "slowNext": return 3;
+        case "jump": return prog(p.pos) - prog(t.to) + (t.then === "prison" ? bog(p) : t.then === "hospital" ? 12 : t.then === "skip2" ? 8 : 0);
+        default: return 0;
+      }
+    };
+    // On the Bog itself the Normal player wears the boots rather than using the card or a lantern.
+    const bootsFirst = (pi, t) => typeOf(pi) === "normal" && t.type === "prison" && P[pi].jailPass > 0;
+    const canShield = (pi, t) => s.shield && t.cat === "P" && t.type !== "doubleOthers" && P[pi].life >= 2;
+    const wantsShield = (pi, t) => typeOf(pi) === "normal" && !bootsFirst(pi, t) && worth(pi, t) >= s.shieldWorth;
     // N3: the road taken from the crossroads.
     const takesWild = (pi) => {
       const ty = typeOf(pi);
@@ -227,9 +250,10 @@ export function simulate(board, rules, games, seed) {
     const applyTile = (pi, depth = 0) => {
       const p = P[pi], t = T[p.pos];
       if (!t || depth > 6 || (t.requires === "snakeLeader" && !p.leader)) return;
-      if (t.cat === "P" && p.bonus > 0 && wantsDefend(pi, t)) {
+      if (t.cat === "P" && p.bonus > 0 && wantsDefend(pi, t) && !bootsFirst(pi, t)) {
         p.bonus--; A.bonusDefend++; return;
       }
+      if (canShield(pi, t) && wantsShield(pi, t)) { spend(p); return; } // R18 shield (owner, 22 Oct)
       if (s.lifeSpend && t.cat === "P" && typeOf(pi) === "thoughtful" && p.life >= 2 && (p.spent ?? 0) < s.lifeSpendMax
           && prog(p.pos) < s.lifeSpendUntil && swing(pi, t) <= -s.bigLoss) {
         p.life--; p.spent = (p.spent ?? 0) + 1; A.lifeSpent++; return;
@@ -313,7 +337,10 @@ export function simulate(board, rules, games, seed) {
         if (p.skip > 0) { p.skip--; p.lost++; }
         else if (p.pos === OFF || p.trapped) { // R1 / R6: only a 6 lets you in / out; that 6 gives the extra throw
           const off = p.pos === OFF, limit = off ? s.enterAfter : s.trapAfter;
-          if (!s.stairs && p.tries >= limit) { // option: released after too many failed tries -> a normal turn
+          if (s.keepLast && !off && typeOf(pi) === "normal" && p.life >= 2) { // R17: spend a spare lantern, leave at once
+            spend(p); p.tries = 0; p.trapped = false;
+            let n = p.slow ? 1 : throwSequence(0); p.slow = false; if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n);
+          } else if (!s.stairs && p.tries >= limit) { // option: released after too many failed tries -> a normal turn
             p.tries = 0; if (off) { p.pos = 0; p.enterRound = round; } else p.trapped = false;
             let n = p.slow ? 1 : throwSequence(0); p.slow = false; if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n);
           } else {
@@ -327,7 +354,7 @@ export function simulate(board, rules, games, seed) {
               else { // L1: on the 3rd throw (stairs) the 6 is a normal moving 6; otherwise the out-6 does not move (R6)
                 let n = throwSequence(1); if (p.dbl) { n *= 2; p.dbl = false; } moveBy(pi, n); // owner 15 Oct: the 6 only enters, also on the 3rd throw
               }
-            } else if (s.stairs && p.tries >= 2) { // L1: 3rd throw without a 6 -> move anyway, walking the 2 stair steps
+            } else if (s.stairs && p.tries >= 2 && !(s.keepLast && p.life <= 1)) { // L1: 3rd throw without a 6 -> move anyway, walking the 2 stair steps
               p.tries = 0;
               if (s.lifelines) { p.lostWait++; p.lastLoss = off ? "start" : "trap"; }
               if (!(s.lifelines && loseLife(pi))) {
@@ -369,7 +396,7 @@ export function simulate(board, rules, games, seed) {
     }
     if (winner < 0) { A.capped++; continue; }
     A.wins[winner]++; A.rounds.push(round);
-    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap, gainTriple: q.gainTriple, gainEscape: q.gainEscape, lostStart: q.lostStart, minLife: q.minLife, outRound: q.outRound ?? null, lifeAt: q.lifeAt, enterRound: q.enterRound ?? 0, lastLoss: q.lastLoss, capRounds: q.capRounds ?? [] })) });
+    if (s.perGame) (A.records ??= []).push({ rounds: round, players: P.map((q) => ({ spent: q.spent, maxDry: q.maxDry, six1: q.six1, six2: q.six2, six3: q.six3, throwTurns: q.throwTurns, captured: q.captured, life: q.life, out: q.out, gainSix: q.gainSix, lostWait: q.lostWait, lostCap: q.lostCap, gainTriple: q.gainTriple, gainEscape: q.gainEscape, lostStart: q.lostStart, minLife: q.minLife, outRound: q.outRound ?? null, lifeAt: q.lifeAt, enterRound: q.enterRound ?? 0, lastLoss: q.lastLoss, capRounds: q.capRounds ?? [] })) });
     A.jackpots += gJack; A.falls += gFall; if (gJack) A.gamesJack++; if (gFall) A.gamesFall++;
     A.lateOvertakes += gLate; if (gLate) A.gamesLate++; if (gCap) A.gamesCapture++;
     if (lateFirst >= 0) { A.lateFirstN++; if (lateFirst === winner) A.lateFirstWin++; }
