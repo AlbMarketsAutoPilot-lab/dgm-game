@@ -11,7 +11,7 @@
   <Identity
     Name="ConnectAL.DontGetMad"
     Publisher="CN=AE297A84-18EC-4CF1-AB1B-504A7558154F"
-    Version="1.0.0.0" />
+    Version="1.1.0.0" />
 
   <Properties>
     <DisplayName>Don't Get Mad</DisplayName>
