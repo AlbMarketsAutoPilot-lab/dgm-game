@@ -23,7 +23,7 @@ export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setu
         <header class="s-head"><h1>Don't Get Mad!</h1><p class="sub">A hand-drawn journey to the Festival of Lights</p></header>
         ${saved ? `<button class="continue primary">Continue game<small>${esc(BOARDS[saved.board].story.title)} · ${saved.players} players · round ${saved.round}</small></button>` : ""}
         <section class="s-journey"><h2>Which journey?</h2>
-          <div class="row">${(["short", "long"] as BoardId[]).map((id) => `<button class="pick" data-board="${id}" aria-pressed="${board === id}">${esc(BOARDS[id].story.title)}<small>${id === "short" ? "100 squares, about 30 rounds" : "202 squares, about 50 rounds"}</small></button>`).join("")}</div>
+          <div class="row">${(["short", "long"] as BoardId[]).map((id) => `<button class="pick" data-board="${id}" aria-pressed="${board === id}">${esc(BOARDS[id].story.title)}<small>${id === "short" ? "100 squares" : "202 squares"}</small></button>`).join("")}</div>
         </section>
         <section class="s-players"><h2>Players</h2>
           <div class="row">${[2, 3, 4].map((n) => `<button class="pick num" data-players="${n}" aria-pressed="${players === n}">${n}</button>`).join("")}</div>

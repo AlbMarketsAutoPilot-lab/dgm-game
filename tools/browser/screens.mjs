@@ -81,7 +81,7 @@ const CHECK = () => {
 const SETUP_GAME = async (kind) => {
   const { GameScreen } = await import("/src/ui/app.ts");
   const { BOARDS } = await import("/src/engine/index.ts");
-  const { SQUARE_TALES } = await import("/src/ui/tales.ts");
+  const { SQUARE_TALES, MOMENTS } = await import("/src/ui/tales.ts");
   const root = document.querySelector("#app") ?? document.body.appendChild(Object.assign(document.createElement("main"), { id: "app" }));
   // the gallery page's own style fixes the squares at 180 px: not part of the game (the stage sizes them itself)
   for (const st of document.head.querySelectorAll("style")) st.textContent = st.textContent.replace(/\.card \{ --card: 180px;[^}]*\}/, "");
@@ -90,17 +90,20 @@ const SETUP_GAME = async (kind) => {
   await new Promise((r) => setTimeout(r, 50));
   s.pops.clear();
   const p = s.game.players[0];
-  Object.assign(p, { pos: 120, bonus: 2, jailPass: 1, snakeLeader: true, skip: 2, double: true, lanterns: 0 });
+  Object.assign(p, { pos: 120, bonus: 2, jailPass: 1, snakeLeader: true, skip: 2, double: true, lanterns: 1 });
   s.places[0] = { pos: 120, stair: 0 };
   s.render();
   const B = BOARDS.long, longest = Object.entries(B.tiles).sort(([, a], [, b]) => (SQUARE_TALES[b.icon]?.text.length ?? 0) - (SQUARE_TALES[a.icon]?.text.length ?? 0))[0];
   const tile = longest[1], sq = Number(longest[0]);
   const act = (n) => s.setAct([{ label: "Use the card: dodge it!", value: "a", primary: true }, { label: "Keep the card", value: "b" }, { label: "Don't ask me again this game", value: "c" }].slice(0, n));
+  // the bad-square popup with both the card and a lantern (owner, 22 Oct 2026): its longest buttons
+  const both = () => s.setAct([{ label: "Use the card: dodge it!", value: "card", primary: true }, { label: "Use a lantern (12 left)", value: "lantern" }, { label: "Take it", value: "take" }]);
   switch (kind) {
     case "turn": Object.assign(p, { pos: -1, skip: 0, double: false }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Pass the die to Yellow ▶", value: "roll" }]); s.dice.ready(true); break;
-    case "intro": s.pops.show({ kind: "info", art: "", kicker: "Red starts", title: "You need a 6 to enter", text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: you set off anyway, but a lantern goes out. In a hurry? Spend a lantern to set off at once. Careful: <b>lanterns are your lives</b>. With none left, the next one you lose puts you out of the game.", buttons: [{ label: "Let's go!", value: "ok", primary: true }] }); break;
+    case "intro": s.pops.show({ kind: "info", art: "", kicker: "Red starts", title: "You need a 6 to enter", text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: a spare lantern goes out and you set off anyway. In a hurry? Spend a spare lantern to set off at once.", buttons: [{ label: "Let's go!", value: "ok", primary: true }] }); break;
     case "story": s.story(0, { ...SQUARE_TALES[tile.icon] }, "Back to square 2. Then miss 3 turns.", "bad"); s.setAct([{ label: "Pass the die to Red ▶", value: "ok" }]); break;
-    case "defend": s.choose({ kind: "punishment", player: 0, square: sq, tile, card: true, shield: false, lanterns: 3 }); break;
+    case "defend": s.choose({ kind: "punishment", player: 0, square: sq, tile, card: true, shield: true, lanterns: 12 }); break;
+    case "last": s.pops.show({ kind: "info", tone: "bad", art: "", kicker: "Yellow", title: MOMENTS.lastLantern.title, text: MOMENTS.lastLantern.text, buttons: [{ label: "OK", value: "ok", primary: true }] }); break;
     case "spoil": s.choose({ kind: "bonusAttack", player: 1, target: 0, square: sq, tile: { ...tile, cat: "R" } }); break;
     case "player": s.playerInfo(0); break;
     case "card": s.cardInfo("bonus"); break;
@@ -117,10 +120,10 @@ const SETUP_GAME = async (kind) => {
     case "boots": void s.choose({ kind: "bogBoots", player: 0, square: 30 }); break;
     case "welcome": s.pops.show({ kind: "info", art: "", kicker: "Saved game", title: "Welcome back!", text: "The journey goes on where you left it: round 23, <b>Yellow</b> plays next.", buttons: [{ label: "Let's go on!", value: "ok", primary: true }] }); break;
   }
-  if (kind === "defend") act(2); if (kind === "spoil") act(3);
+  if (kind === "defend") both(); if (kind === "spoil") act(3);
 };
 const GUIDE_PAGES = 8;
-export const SCREENS = ["setup", "album", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "note", "ahead", "intro", "story", "defend", "spoil", "player", "card", "square", "leave", "win", "welcome", "sound", "home", "boots"];
+export const SCREENS = ["setup", "album", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "note", "ahead", "intro", "story", "defend", "last", "spoil", "player", "card", "square", "leave", "win", "welcome", "sound", "home", "boots"];
 
 /** Checks every screen at every size; returns the problems found. */
 export async function checkScreens(browser, url, sizes = SIZES) {

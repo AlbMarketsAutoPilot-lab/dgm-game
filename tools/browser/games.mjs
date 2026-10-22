@@ -22,9 +22,11 @@ const STATE = () => ({
 
 // The players' answers: roll, use the Bonus card on their own bad luck, wear the Bog boots, let others' luck go (the
 // computer players' answers too, so the engine can replay a mixed table with its own computer player). With `spend`,
-// people spend a lantern whenever they wait at Home or in the Bog with one left (owner, 15 Oct).
-const pick = (list, spend = false) => (spend ? list.find((t) => t.startsWith("Spend a lantern")) : undefined)
+// people spend a spare lantern whenever they wait at Home or in the Bog, and use it as a shield when they hold no Bonus
+// card (owner, 22 Oct 2026); they never try the last one (its popup is checked at every screen size).
+const pick = (list, spend = false) => (spend ? list.find((t) => t.startsWith("Spend a lantern") && !t.includes("(1 left)")) : undefined)
   ?? list.find((t) => /^Roll the die|^Roll for a 6|^Roll to move|^OK, skip|^Roll again|^Throw \d/.test(t)) ?? list.find((t) => t === "Use the card: dodge it!")
+  ?? (spend ? list.find((t) => t.startsWith("Use a lantern")) : undefined) ?? list.find((t) => t === "Take it")
   ?? list.find((t) => t.startsWith("Wear the boots")) ?? list.find((t) => t === "Let it go") ?? list.find((t) => /^Pass the die|^Let's go/.test(t)) ?? list[0];
 
 /** Plays one game; `brk` = { kind: "reload" | "leave", at: n } interrupts it at the n-th turn and continues it. */
@@ -78,7 +80,7 @@ export async function playGame(browser, url, { board, players, people, brk, spen
   const check = await page.evaluate(async ({ board, players, people, save, turns, end, spend, level }) => {
     const { BOARDS, Game, OFF, runTurn, simplePlayer: easy, normalPlayer } = await import("/src/engine/index.ts");
     const simplePlayer = (d, g) => (!people.includes(d.player) ? (level === "normal" ? normalPlayer : easy)(d, g)
-      : d.kind === "spendLantern" ? spend : easy(d, g));
+      : d.kind === "spendLantern" ? spend : d.kind === "punishment" && spend && !d.card && d.shield ? "lantern" : easy(d, g));
     const NAMES = ["Blue", "Red", "Green", "Yellow"], g = new Game(BOARDS[board], { players, seed: save.seed, first: save.first });
     const where = (p) => p === OFF ? "at Home" : p === 0 ? "on Start" : p === g.board.endTile ? "at the festival" : `on square ${p}`;
     const label = () => `The whole board. ${g.players.map((p, i) => `${NAMES[i]} ${where(p.pos)}`).join(", ")}.`;

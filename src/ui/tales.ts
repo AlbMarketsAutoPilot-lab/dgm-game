@@ -64,8 +64,7 @@ export const MOMENTS = {
   start: { title: "Start", text: "Where the journey begins, and where bumped players come back." },
   end: { title: "The Festival of Lights", text: "Lanterns, music and everyone you love. The journey ends here." },
   win: { title: "{p} made it!", text: "{p} walks into the Festival of Lights. Well done!" },
-  winLast: { title: "{p} wins!", text: "Everyone else's lanterns went out. The festival is {p}'s." },
-  nobody: { title: "Nobody made it", text: "All the lanterns went out. Maybe next time." },
+  nobody: { title: "Nobody made it", text: "The road was too long this time. Maybe next game." },
   porch: { title: "Still on the Porch", text: "No 6 yet. Still on the porch." },
   stones: { title: "Still Stuck", text: "No 6. The mud holds on." },
   leaveHome: { title: "Off You Go!", text: "A 6! Off you go. Throw again to move." },
@@ -73,10 +72,10 @@ export const MOMENTS = {
   paidHome: { title: "A Lantern for the Road", text: "{p} spends a lantern to set off at once. Now throw to move." },
   paidBog: { title: "A Lantern for a Way Out", text: "{p} spends a lantern to get out of the Bog. Now throw to move." },
   thirdThrow: { title: "Third Time Lucky", text: "No 6 in three throws: you set off anyway with this throw." },
-  lanternLost: { title: "A Lantern Goes Out", text: "Three throws without a 6: one of {p}'s lanterns goes out." },
-  lanternNone: { title: "Last Light", text: "{p} has no lanterns left. One more slip and the journey is over." },
+  lanternLost: { title: "A Lantern Goes Out", text: "Three throws without a 6: one of {p}'s spare lanterns goes out." },
+  shield: { title: "Lantern Shield!", text: "{p} spends a spare lantern. The bad luck is cancelled." },
+  lastLantern: { title: "Your Last Lantern", text: "You can't spend your last lantern: you need it to light at the festival. Keep rolling till you get a 6." },
   lanternWon: { title: "Lantern Relit!", text: "Three 6s in a row light one of {p}'s lanterns again." },
-  out: { title: "Lights Out", text: "{p}'s last lantern goes out." },
   tree: { title: "Fallen Tree", text: "A fallen tree blocks the road. Back you go." },
   bogged: { title: "Stuck in the Bog", text: "The mud closes round your ankles." },
   boots: { title: "Bog Boots!", text: "Your Bog boots carry you straight through." },
@@ -101,7 +100,7 @@ export function outcome(board: Board, t: Tile): string {
   switch (t.type) {
     case "skip": return t.turns === 1 ? "Miss your next turn." : `Miss ${t.turns} turns.`;
     case "hospital": return `Miss ${t.turns} turns.`;
-    case "prison": return "Stuck in the Bog: a 6 gets you out, or spend a lantern.";
+    case "prison": return "Stuck in the Bog: roll a 6 to get out, or spend a spare lantern.";
     case "slowNext": return "Next turn you move exactly 1 square, whatever you roll.";
     case "card": return t.card === "jailPass" ? "You get Bog boots: walk straight through the Bog, once." : "You get a Bonus card: cancel your own bad luck, or another player's good luck, once.";
     case "doubleOthers": return "Every other player doubles their next throw.";
@@ -112,7 +111,7 @@ export function outcome(board: Board, t: Tile): string {
     case "jump": {
       const where = t.to === trap ? "the Bog" : place(t.to!);
       let s = t.requires === "snakeLeader" ? `Only the Snake Leader: back to ${where}. Everyone else is safe here.` : `${t.cat === "R" ? "Jump ahead" : "Back"} to ${where}.`;
-      if (t.then === "prison") s += " Stuck there: a 6 gets you out, or spend a lantern.";
+      if (t.then === "prison") s += " Stuck there: roll a 6 to get out, or spend a spare lantern.";
       if (t.then === "hospital") s += " Then miss 3 turns.";
       if (t.then === "skip2") s += " Then miss 2 turns.";
       if (t.grant === "snakeLeader") s += " You become the Snake Leader.";

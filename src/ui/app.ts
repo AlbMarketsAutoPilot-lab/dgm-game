@@ -204,7 +204,7 @@ export class GameScreen {
       const first = this.name(this.game.first);
       await this.pops.show({
         kind: "info", art: artFor("house", "Home"), kicker: `${first} starts`, title: "You need a 6 to enter",
-        text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: you set off anyway, but a lantern goes out. In a hurry? Spend a lantern to set off at once. Careful: <b>lanterns are your lives</b>. With none left, the next one you lose puts you out of the game.",
+        text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: a spare lantern goes out and you set off anyway. In a hurry? Spend a spare lantern to set off at once.",
         buttons: [{ label: "Let's go!", value: "ok", primary: true }],
       });
     }
@@ -329,14 +329,23 @@ export class GameScreen {
       if (comp) await this.wait(1400); else await this.ask([{ label: "OK, skip this turn", value: "ok" }]);
     } else if (comp) {
       await this.wait(800);
-    } else if ((p.pos === OFF || p.trapped) && p.lanterns >= 2) {
-      // R17: at Home or in the Bog, roll for a 6, or spend a spare lantern to go at once (then throw to move)
+    } else if ((p.pos === OFF || p.trapped) && p.lanterns >= 1) {
+      // R17: at Home or in the Bog, roll for a 6, or spend a spare lantern to go at once (then throw to move). The last
+      // lantern can't be spent: its button explains why (owner, 22 Oct 2026), then the choice is offered again.
       this.dice.ready(true);
-      const v = await Promise.race([
-        this.ask([{ label: "Roll for a 6", value: "roll", primary: true }, { label: `Spend a lantern (${p.lanterns} left)`, value: "spend" }]),
-        this.dice.tapped().then(() => "roll"),
-      ]);
-      this.spendNow = v === "spend";
+      for (;;) {
+        const v = await Promise.race([
+          this.ask([{ label: "Roll for a 6", value: "roll", primary: true }, { label: `Spend a lantern (${p.lanterns} left)`, value: "spend" }]),
+          this.dice.tapped().then(() => "roll"),
+        ]);
+        if (v === "spend" && p.lanterns < 2) {
+          await this.pops.show({ kind: "info", tone: "bad", art: artFor("lantern", "Lantern"), kicker: this.name(seat), title: MOMENTS.lastLantern.title, text: MOMENTS.lastLantern.text, buttons: [{ label: "OK", value: "ok", primary: true }] });
+          if (this.gone) return;
+          continue;
+        }
+        this.spendNow = v === "spend";
+        break;
+      }
       this.dice.ready(false);
     } else {
       const ahead = this.ahead(seat);
@@ -408,7 +417,7 @@ export class GameScreen {
     const v = await this.choose(d);
     this.pops.clear();
     if (d.kind === "bonusAttack") return this.spoil.answer(d.player, v);
-    if (d.kind === "punishment") return v === "yes" ? "card" : "take";
+    if (d.kind === "punishment") return v === "card" || v === "lantern" ? v : "take";
     return v === "yes";
   }
 
@@ -417,7 +426,7 @@ export class GameScreen {
     sound.play("six");
     this.stage.celebrate("good");
     this.stage.stamp("good", "A six!");
-    await this.story(seat, { title: "A 6!", text: "One more throw: the throws add up, then you move. Three 6s in a row light a lantern.", art: artFor("lanterns", "A six") }, "Roll again!", "good");
+    await this.story(seat, { title: "A 6!", text: "Roll again: the rolls add up, then you move. Three 6s in a row win you a lantern.", art: artFor("lanterns", "A six") }, "Roll again!", "good");
   }
 
   /** Waits for a person to throw the next die of this turn. */
@@ -435,15 +444,29 @@ export class GameScreen {
     await this.readFirst(); // the square's own story first
     switch (d.kind) {
       case "road": return Promise.resolve("main"); // never asked: the boards have no Shortcut (owner, 15 Oct; C2)
-      case "punishment": {
-        if (!d.card) return "take"; // the lantern shield's button comes with the approved texts (step H.4)
-        const tl = this.taleAt(d.square, d.tile);
+      case "punishment": { // R14 / R18: the Bonus card, a spare lantern (owner, 22 Oct 2026), or both
+        const tl = this.taleAt(d.square, d.tile), what = outcome(this.board, d.tile);
+        const lantern = { label: `Use a lantern (${d.lanterns} left)`, value: "lantern" }, take = { label: "Take it", value: "take" };
+        if (!d.shield) {
+          void this.pops.show({
+            kind: "choice", tone: "bad", art: cardFace("bonus", "Bonus card"), kicker: `${who} · ${tl.title}`,
+            title: "Use your Bonus card?", text: `The card makes this bad luck slide right off. You only have it once.`,
+            outcome: `Without the card: ${what}`,
+          });
+          return this.ask([{ label: "Use the card: dodge it!", value: "card", primary: true }, { label: "Keep the card", value: "take" }]);
+        }
+        if (!d.card) {
+          void this.pops.show({
+            kind: "choice", tone: "bad", art: artFor("lantern", "Lantern"), kicker: `${who} · ${tl.title}`,
+            title: "Use a lantern?", text: "A spare lantern can cancel this bad luck.", outcome: `Without it: ${what}`,
+          });
+          return this.ask([{ ...lantern, primary: true }, take]);
+        }
         void this.pops.show({
           kind: "choice", tone: "bad", art: cardFace("bonus", "Bonus card"), kicker: `${who} · ${tl.title}`,
-          title: "Use your Bonus card?", text: `The card makes this bad luck slide right off. You only have it once.`,
-          outcome: `Without the card: ${outcome(this.board, d.tile)}`,
+          title: "Cancel the bad luck?", text: "Your Bonus card or a spare lantern can cancel it.", outcome: `Without it: ${what}`,
         });
-        return this.ask([{ label: "Use the card: dodge it!", value: "yes", primary: true }, { label: "Keep the card", value: "no" }]);
+        return this.ask([{ label: "Use the card: dodge it!", value: "card", primary: true }, lantern, take]);
       }
       case "bonusAttack": {
         const tl = this.taleAt(d.square, d.tile), them = this.name(d.target);
@@ -458,7 +481,7 @@ export class GameScreen {
         void this.pops.show({
           kind: "choice", tone: "bad", art: cardFace("jailPass", "Bog boots"), kicker: `${who} · The Bog`,
           title: "Wear your Bog boots?", text: "The Bog is about to catch you. Your boots carry you straight through, once. Or keep them for a worse moment.",
-          outcome: "Without the boots: stuck until a 6, or until you spend a lantern.",
+          outcome: "Without the boots: stuck until you roll a 6, or spend a spare lantern.",
         });
         return this.ask([{ label: "Wear the boots: walk through!", value: "yes", primary: true }, { label: "Keep the boots", value: "no" }]);
       }
@@ -477,10 +500,14 @@ export class GameScreen {
       case "roadblockRemoved": this.overview.setRoadblock(null); break;
       case "roll": sound.play("dice"); await this.dice.roll(e.value); break;
       case "skipTurn": await this.wait(500); break;
-      case "noSix":
-        await this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") }, `Throw ${e.tries} of 3 without a 6.`, "", e.where === "start" ? "" : `▼ The Bog: no 6, try ${e.tries} of 3`);
+      case "noSix": { // owner, 22 Oct 2026: with only the last lantern nothing is lost, so no "of 3"
+        const last = this.game.players[e.player].lanterns < 2;
+        await this.story(e.player, { ...(e.where === "start" ? M.porch : M.stones), art: artFor(e.where === "start" ? "steps" : "boot-in-mud", "No 6") },
+          last ? "No 6. Keep rolling until you roll a 6." : `Throw ${e.tries} of 3 without a 6.`, "",
+          e.where === "start" ? "" : last ? "▼ The Bog: no 6, keep rolling" : `▼ The Bog: no 6, try ${e.tries} of 3`);
         await this.wait(900);
         break;
+      }
       case "released": {
         // The lantern's own event follows at once and carries the count (owner, 16 Oct: the engine had already taken
         // the lantern, so "lanterns - 1" took it twice: "0 lanterns left" with one still shown on the player)
@@ -543,7 +570,7 @@ export class GameScreen {
         break;
       case "roadblockHit": st.celebrate("bad"); await this.story(e.player, { ...M.tree, art: artFor("fallen-tree", "Fallen tree") }, "Back 10 squares.", "bad", "▼ Fallen tree: back 10 squares"); await this.wait(1300); break;
       case "trapped": sound.play("bog"); if (this.told[0]?.outcome?.includes("Stuck")) break; // the square already said so
-        await this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "A 6 gets you out, or spend a lantern.", "bad", "▼ The Bog: stuck until a 6"); await this.wait(1100); break;
+        await this.story(e.player, { ...M.bogged, art: artFor("boot-in-mud", "The Bog") }, "Roll a 6 to get out, or spend a spare lantern.", "bad", "▼ The Bog: stuck until a 6"); await this.wait(1100); break;
       case "bogBoots": sound.play("card"); st.celebrate("good"); st.stamp("good", "Not today, Bog!");
         await this.story(e.player, { ...M.boots, art: cardFace("jailPass", "Bog boots") }, "The boots are worn out now.", "good", "▲ Bog boots: walks straight through the Bog"); this.render(); await this.wait(1300); break;
       case "card": sound.play("card"); this.render(); await this.wait(300); break;
@@ -569,15 +596,24 @@ export class GameScreen {
         await this.wait(900);
         break;
       }
-      case "lanternLost":
-        sound.play("lantern-out");
-        this.lit[e.player] = e.left;
-        if (this.paid === e.player) { this.render(); await this.wait(600); break; } // spent by choice: already told
-        st.celebrate("bad");
-        st.stamp("bad", e.left > 0 ? "Lights dim…" : "Last light!");
+      case "shield": { // R18 (owner, 22 Oct 2026): a spare lantern cancels the player's own punishment; its count follows
+        const left = next?.type === "lanternLost" && next.player === e.player ? next.left : this.game.players[e.player].lanterns;
+        this.lit[e.player] = left;
+        sound.play("lantern-out"); st.celebrate("good"); st.stamp("good", "Shielded!");
         this.render();
-        await this.story(e.player, { ...(e.left > 0 ? M.lanternLost : M.lanternNone), text: fill((e.left > 0 ? M.lanternLost : M.lanternNone).text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad",
-          e.left > 0 ? `▼ A lantern goes out: ${e.left} left` : "▼ Last lantern gone: one more slip and out");
+        await this.story(e.player, { ...M.shield, text: fill(M.shield.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${left} lantern${left === 1 ? "" : "s"} left.`, "good", `▲ A lantern cancels it: ${left} left`);
+        await this.wait(1300);
+        break;
+      }
+      case "lanternLost":
+        if (e.why !== "shield") sound.play("lantern-out");
+        this.lit[e.player] = e.left;
+        if (e.why !== "wait") { this.render(); await this.wait(600); break; } // spent by choice: already told
+        st.celebrate("bad");
+        st.stamp("bad", "Lights dim…");
+        this.render();
+        await this.story(e.player, { ...M.lanternLost, text: fill(M.lanternLost.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.left} lantern${e.left === 1 ? "" : "s"} left.`, "bad",
+          `▼ A lantern goes out: ${e.left} left`);
         this.render();
         await this.wait(1600);
         break;
@@ -686,7 +722,7 @@ export class GameScreen {
     const x = taleOf(B, pos);
     let c: PopupContent;
     if (x) c = { title: x.tale.title, text: x.tale.text, art: this.pic(x.icon, x.tale.title), outcome: outcome(B, x.tile), tone: x.tile.cat === "R" ? "good" : "bad" };
-    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to set off, or spend a lantern. No 6 in three throws: a lantern goes out, and you set off anyway." };
+    else if (pos === 0) c = { ...MOMENTS.home, title: "Home & Start", art: artFor("house", "Home"), outcome: "Roll a 6 to set off, or spend a spare lantern. No 6 in three throws: a spare lantern goes out and you set off anyway." };
     else if (pos === B.endTile) c = { ...MOMENTS.end, art: artFor("lanterns", "Festival"), outcome: "You need the exact number to get in. Too much, and you stay where you are. A 6 never lands here: it throws again." };
     else {
       const lm = B.story.landmarks[pos], region = B.story.regions.find((r) => pos >= r.from && pos <= r.to)?.name ?? "";
@@ -718,11 +754,11 @@ export class GameScreen {
   private playerInfo(seat: number): void {
     const p = this.game.players[seat], B = this.board, lines: string[] = [], lanterns = this.lanterns(seat);
     const pos = this.places[seat];
-    const or = lanterns >= 1 ? ", or a lantern spent" : "";
+    const or = lanterns >= 2 ? ", or a spare lantern spent" : "";
     const where = pos === OFF ? `At Home: needs a 6 to set off${or}.` : p.trapped ? `Stuck in the Bog: needs a 6${or}.` : pos === 0 ? "On Start."
       : `On square ${pos}: ${B.endTile - pos} squares to the festival.`;
     lines.push(where);
-    lines.push(`${lanternSvg.replace("<svg", '<svg class="inl"')} ${lanterns} lantern${lanterns === 1 ? "" : "s"}${lanterns === 0 ? ": one more slip and it's over" : ""}.`);
+    lines.push(`${lanternSvg.replace("<svg", '<svg class="inl"')} ${lanterns} lantern${lanterns === 1 ? ": the last one always stays" : "s"}.`);
     if (p.bonus) lines.push(`<b>Bonus card${p.bonus > 1 ? ` ×${p.bonus}` : ""}</b>: cancel a punishment for yourself, or cancel a reward for another player. Once.`);
     if (p.jailPass) lines.push(`<b>Bog boots</b>: walk through the Bog once.`);
     if (p.snakeLeader) lines.push(`<b>Snake Leader</b>: beware the very last square.`);
@@ -739,7 +775,7 @@ export class GameScreen {
   /** A recommendation: what the next throw can bring. */
   private tip(seat: number): string {
     const p = this.game.players[seat], pos = this.places[seat], B = this.board;
-    if (pos === OFF || p.trapped) return p.lanterns >= 1 ? "Tip: roll for a 6, or spend a lantern to go now. Three misses cost a lantern anyway." : "Tip: only a 6 will do. Three misses cost your last light.";
+    if (pos === OFF || p.trapped) return p.lanterns >= 2 ? "Tip: roll for a 6, or spend a spare lantern to go now. Three misses cost a spare lantern anyway." : "Tip: only a 6 will do. Your last lantern stays with you, so keep rolling.";
     const toEnd = B.endTile - pos;
     if (p.slow) return toEnd === 1 ? "Tip: next turn moves exactly 1 square: straight into the festival." : "Tip: next turn moves exactly 1 square, whatever the die shows.";
     const fin = this.finish(p, toEnd);
@@ -781,9 +817,12 @@ export class GameScreen {
   private guide(seat: number): string {
     const p = this.game.players[seat], pos = this.places[seat], d = this.board.endTile - pos;
     if (p.skip > 0) return `Waits this turn${this.waitCause[seat] ? ` (${this.waitCause[seat]})` : ""}.`;
-    const pay = p.lanterns >= 1 ? ", or spend a lantern" : "";
-    if (pos === OFF) return `At Home: roll a 6 to enter the board (throw ${p.tries + 1} of 3)${pay}.`;
-    if (p.trapped) return `Stuck in the Bog: a 6 gets you out (throw ${p.tries + 1} of 3)${pay}.`;
+    if (p.lanterns < 2) { // owner, 22 Oct 2026: only the last lantern, nothing to lose: no throw counter
+      if (pos === OFF) return "At Home: roll a 6 to enter the board.";
+      if (p.trapped) return "Stuck in the Bog: roll a 6 to get out.";
+    }
+    if (pos === OFF) return `At Home: roll a 6 to enter the board (throw ${p.tries + 1} of 3), or spend a spare lantern.`;
+    if (p.trapped) return `Stuck in the Bog: a 6 gets you out (throw ${p.tries + 1} of 3), or spend a spare lantern.`;
     if (p.slow) return "Puddle: this turn you move exactly 1 square, whatever you roll.";
     const extra = p.double ? " Your throw counts double this turn." : "";
     if (p.double) { // a doubled throw needs half the squares (audit: "needs exactly 3" with a double meant 6 squares)
