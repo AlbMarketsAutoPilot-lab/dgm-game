@@ -10,8 +10,8 @@ android {
         applicationId = "com.dontgetmad.game" // D1: permanent after the first upload
         minSdk = 24 // Android 7.0, as KAJ
         targetSdk = 36 // Google Play requires 36 since 31 Aug 2026 (D3, checked 16 Oct 2026)
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
     // R8 shrinks the Java part, as KAJ; the game itself is the web page in assets, which R8 does not touch.
