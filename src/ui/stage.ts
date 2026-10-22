@@ -1,7 +1,7 @@
 // The stage: one big square at a time, with its illustration and story. Moving slides a row of squares under the
 // token: a throw walks square by square (the token hops over each one), an event jump glides along the row
 // (ladders, snakes, "go back to 6"), passing the squares in between quickly.
-import { BoardIndex, OFF, OUT, type Board, type Pos } from "../engine";
+import { BoardIndex, OFF, type Board, type Pos } from "../engine";
 import { artCss, artFor } from "../render/art";
 import { esc } from "../render/html";
 import { cardFace } from "../render/art-modern";
@@ -26,7 +26,7 @@ const chevron = (cat: "R" | "P") =>
 /** What the stage says about a place: the card's look, and a caption for when a token stands there. */
 export function describe(board: Board, pos: Pos): { html: string; cls: string; style: string; caption: string } {
   const story = board.story as unknown as Story;
-  if (pos === OFF || pos === OUT) {
+  if (pos === OFF) {
     return { cls: "home", style: "", caption: story.start?.story ?? "Home", html: `<div class="cart">${artFor("house", "Home")}</div><span class="cname">${esc(story.start?.name ?? "Home")}</span>` };
   }
   if (pos === board.endTile) {

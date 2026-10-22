@@ -100,7 +100,7 @@ const SETUP_GAME = async (kind) => {
     case "turn": Object.assign(p, { pos: -1, skip: 0, double: false }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Pass the die to Yellow ▶", value: "roll" }]); s.dice.ready(true); break;
     case "intro": s.pops.show({ kind: "info", art: "", kicker: "Red starts", title: "You need a 6 to enter", text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: you set off anyway, but a lantern goes out. In a hurry? Spend a lantern to set off at once. Careful: <b>lanterns are your lives</b>. With none left, the next one you lose puts you out of the game.", buttons: [{ label: "Let's go!", value: "ok", primary: true }] }); break;
     case "story": s.story(0, { ...SQUARE_TALES[tile.icon] }, "Back to square 2. Then miss 3 turns.", "bad"); s.setAct([{ label: "Pass the die to Red ▶", value: "ok" }]); break;
-    case "defend": s.choose({ kind: "bonusDefend", player: 0, square: sq, tile }); break;
+    case "defend": s.choose({ kind: "punishment", player: 0, square: sq, tile, card: true, shield: false, lanterns: 3 }); break;
     case "spoil": s.choose({ kind: "bonusAttack", player: 1, target: 0, square: sq, tile: { ...tile, cat: "R" } }); break;
     case "player": s.playerInfo(0); break;
     case "card": s.cardInfo("bonus"); break;

@@ -1,7 +1,7 @@
 // One test per rule (docs/GCD.md R1–R21) and per tile type, with scripted dice.
 // Most mirror tools/sim/test/rules.test.mjs, now under the frozen rule set.
 import { describe, expect, it } from "vitest";
-import { OUT, simplePlayer } from "../src/engine";
+import { normalPlayer, simplePlayer } from "../src/engine";
 import type { Decider, Fork, GameEvent } from "../src/engine";
 import { OFF, play, tile } from "./helpers";
 
@@ -10,7 +10,7 @@ const types = (ev: GameEvent[]) => ev.map((e) => e.type);
 const human = (answers: Partial<Record<Decider extends (d: infer D, g: never) => unknown ? D extends { kind: infer K } ? K & string : never : never, string | boolean>>): Decider =>
   (d, g) => (answers[d.kind] ?? simplePlayer(d, g)) as never;
 
-describe("owner 15 Oct: spend a lantern to leave Home or the Bog at once", () => {
+describe("R17: spend a spare lantern to leave Home or the Bog at once", () => {
   const spend = human({ spendLantern: true });
   it("at Home: a lantern goes, the player is on Start and throws to move (4 -> square 4), no 6 needed", () => {
     const { P, events } = play({ dice: [4], turns: 1, players: 1, decide: spend });
@@ -22,10 +22,13 @@ describe("owner 15 Oct: spend a lantern to leave Home or the Bog at once", () =>
     const { P } = play({ tiles: trap, dice: [5], setup: [{ pos: 30, trapped: true, tries: 2 }], turns: 1, players: 1, decide: spend });
     expect([P[0].pos, P[0].trapped, P[0].lanterns, P[0].tries]).toEqual([35, false, 2, 0]);
   });
-  it("never offered with no lantern left", () => {
-    const asked: string[] = [];
-    play({ dice: [3], setup: [{ lanterns: 0 }], turns: 1, players: 1, decide: (d, g) => { asked.push(d.kind); return simplePlayer(d, g); } });
-    expect(asked).not.toContain("spendLantern");
+  it("owner 22 Oct: never offered with only the last lantern", () => {
+    expect(play({ dice: [3], setup: [{ lanterns: 1 }], turns: 1, players: 1, decide: spend }).decisions).toEqual([]);
+  });
+  it("offered with 2 lanterns: spending leaves the last one", () => {
+    const { P, events } = play({ dice: [4], setup: [{ lanterns: 2 }], turns: 1, players: 1, decide: spend });
+    expect([P[0].pos, P[0].lanterns]).toEqual([4, 1]);
+    expect(events).toContainEqual({ type: "lanternLost", player: 0, left: 1, why: "leave" });
   });
   it("not spending: the usual throw for a 6", () => expect(play({ dice: [3], turns: 1, players: 1, decide: human({ spendLantern: false }) }).P[0].pos).toBe(OFF));
 });
@@ -128,7 +131,7 @@ describe("R8 END", () => {
   it("exact: win, and the game is over", () => {
     const { P, game, events } = play({ dice: [3], setup: [{ pos: 200 }], turns: 1, players: 2 });
     expect([P[0].pos, game.winner, game.over]).toEqual([203, 0, true]);
-    expect(events.at(-1)).toEqual({ type: "win", player: 0, lastStanding: false });
+    expect(events.at(-1)).toEqual({ type: "win", player: 0 });
     expect(() => game.turn().next()).toThrow();
   });
 });
@@ -227,11 +230,11 @@ describe("R14 bonus card", () => {
   it("computer player: avoids its own punishment", () => {
     const { P, decisions } = play({ tiles: fall, dice: [2], setup: [{ pos: 10, bonus: 1 }], turns: 1, players: 1 });
     expect([P[0].pos, P[0].bonus]).toEqual([12, 0]);
-    expect(decisions.map((d) => d.kind)).toEqual(["bonusDefend"]);
+    expect(decisions).toEqual([{ kind: "punishment", player: 0, square: 12, tile: fall[12], card: true, shield: true, lanterns: 3 }]);
   });
   it("a player may keep the card and take the punishment", () => {
-    const { P } = play({ tiles: fall, dice: [2], setup: [{ pos: 10, bonus: 1 }], turns: 1, players: 1, decide: human({ bonusDefend: false }) });
-    expect([P[0].pos, P[0].bonus]).toEqual([0, 1]);
+    const { P } = play({ tiles: fall, dice: [2], setup: [{ pos: 10, bonus: 1 }], turns: 1, players: 1, decide: human({ punishment: "take" }) });
+    expect([P[0].pos, P[0].bonus, P[0].lanterns]).toEqual([0, 1, 3]);
   });
   it("a player may cancel another player's reward", () => {
     const { P, events } = play({ tiles: prize, dice: [2], setup: [{ pos: 110 }, { pos: 20, bonus: 1 }], turns: 1, decide: human({ bonusAttack: true }) });
@@ -242,8 +245,8 @@ describe("R14 bonus card", () => {
     const { P } = play({ tiles: prize, dice: [2], setup: [{ pos: 110 }, { pos: 20, bonus: 1 }], turns: 1 });
     expect([P[0].pos, P[1].bonus]).toEqual([150, 1]);
   });
-  it("not asked without a card", () =>
-    expect(play({ tiles: fall, dice: [2], setup: [{ pos: 10 }], turns: 1, players: 1 }).decisions).toEqual([]));
+  it("not asked without a card and without a spare lantern", () =>
+    expect(play({ tiles: fall, dice: [2], setup: [{ pos: 10, lanterns: 1 }], turns: 1, players: 1 }).decisions).toEqual([]));
 });
 
 describe("R17 as changed by the owner (15 Oct): a 6 only lets you in; no stair steps", () => {
@@ -253,7 +256,7 @@ describe("R17 as changed by the owner (15 Oct): a 6 only lets you in; no stair s
   it("in the Bog: 6, 4 -> 34, whatever was missed before", () => {
     for (const misses of [[], [3], [3, 2]]) expect(play({ tiles: trap, dice: [...misses, 6, 4], setup: [{ pos: 30, trapped: true }], turns: misses.length + 1, players: 1 }).P[0].pos).toBe(34);
   });
-  it("3rd throw without a 6: you move by that throw (Home 2, 3, 5 -> 5; Bog 3, 2, 5 -> 35)", () => {
+  it("3rd throw without a 6, with a spare lantern: you move by that throw (Home 2, 3, 5 -> 5; Bog 3, 2, 5 -> 35)", () => {
     expect(play({ dice: [2, 3, 5], turns: 3, players: 1 }).P[0].pos).toBe(5);
     expect(play({ tiles: trap, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true }], turns: 3, players: 1 }).P[0].pos).toBe(35);
   });
@@ -267,28 +270,114 @@ describe("R17 as changed by the owner (15 Oct): a 6 only lets you in; no stair s
   });
 });
 
-describe("R18 lanterns (lifelines)", () => {
-  it("3 throws without a 6 cost one, and the player still moves", () => {
+describe("R18 lanterns (owner, 22 Oct 2026: the last one is kept, nobody is out)", () => {
+  it("3 throws without a 6 cost a spare one, and the player still moves", () => {
     const { P, events } = play({ dice: [2, 3, 5], turns: 3, players: 1 });
     expect([P[0].lanterns, P[0].pos]).toEqual([2, 5]);
-    expect(events).toContainEqual({ type: "lanternLost", player: 0, left: 2 });
+    expect(events).toContainEqual({ type: "lanternLost", player: 0, left: 2, why: "wait" });
   });
   it("a 6 within 3 throws costs nothing", () => expect(play({ dice: [2, 6, 4], turns: 2, players: 1 }).P[0].lanterns).toBe(3));
   it("three 6s in a row win one", () => expect(play({ dice: [6, 6, 6], setup: [{ pos: 10 }], turns: 1, players: 1 }).P[0].lanterns).toBe(4));
+  it("no upper limit", () => expect(play({ dice: [6, 6, 6], setup: [{ pos: 10, lanterns: 9 }], turns: 1, players: 1 }).P[0].lanterns).toBe(10));
   it("two 6s in a row win nothing", () => expect(play({ dice: [6, 6, 2], setup: [{ pos: 10 }], turns: 1, players: 1 }).P[0].lanterns).toBe(3));
   it("the entering 6 + two 6s = three in a row", () => expect(play({ dice: [6, 6, 6], turns: 1, players: 1 }).P[0].lanterns).toBe(4));
   it("a capture costs none", () => expect(play({ dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1 }).P[1].lanterns).toBe(3));
-  it("losing the 3rd -> 0 left, still playing", () => {
-    const { P } = play({ tiles: trap, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, lanterns: 1 }], turns: 3, players: 1 });
-    expect([P[0].lanterns, P[0].out, P[0].pos]).toEqual([0, false, 35]);
+  it("at Home with only the last lantern: nothing is lost, the player keeps throwing until a 6", () => {
+    const { P, events } = play({ dice: [2, 3, 5, 4, 1, 6, 2], setup: [{ lanterns: 1 }], turns: 6, players: 1 });
+    expect([P[0].lanterns, P[0].pos, P[0].tries]).toEqual([1, 2, 0]);
+    expect(types(events)).not.toContain("lanternLost");
+    expect(events.filter((e) => e.type === "noSix").map((e) => e.type === "noSix" && e.tries)).toEqual([1, 2, 3, 4, 5]);
   });
-  it("the 4th loss -> out; with 3 players the game goes on", () => {
-    const { P, game } = play({ tiles: trap, dice: [3, 2, 5], setup: [{ pos: 30, trapped: true, lanterns: 0 }, { skip: 9 }, { skip: 9 }], turns: 9, players: 3 });
-    expect([P[0].out, P[0].pos, game.over]).toEqual([true, OUT, false]);
+  it("in the Bog with only the last lantern: stuck until a 6", () => {
+    const { P } = play({ tiles: trap, dice: [3, 2, 5, 1], setup: [{ pos: 30, trapped: true, lanterns: 1 }], turns: 4, players: 1 });
+    expect([P[0].lanterns, P[0].pos, P[0].trapped]).toEqual([1, 30, true]);
   });
-  it("2 players, one is out -> the other wins as the last player left", () => {
-    const { game } = play({ dice: [2, 3, 5], setup: [{ lanterns: 0 }, { skip: 9 }], turns: 9 });
-    expect([game.winner, game.lastStanding]).toEqual([1, true]);
+  it("nobody is ever out: whole games never go below one lantern", async () => {
+    const { BOARDS, Game, runTurn } = await import("../src/engine");
+    for (const seed of [1, 2, 3]) {
+      const game = new Game(BOARDS.short, { players: 4, seed });
+      while (!game.over) { runTurn(game, simplePlayer); expect(game.players.every((p) => p.lanterns >= 1)).toBe(true); }
+      expect(game.winner).not.toBeNull();
+    }
+  });
+});
+
+describe("R18 the lantern shield (owner, 22 Oct 2026)", () => {
+  const fall = { 12: tile({ cat: "P", type: "jump", to: 0 }) };
+  const shield = human({ punishment: "lantern" });
+  it("a spare lantern cancels your own punishment", () => {
+    const { P, events } = play({ tiles: fall, dice: [2], setup: [{ pos: 10 }], turns: 1, players: 1, decide: shield });
+    expect([P[0].pos, P[0].lanterns]).toEqual([12, 2]);
+    expect(events).toContainEqual({ type: "shield", player: 0, square: 12 });
+    expect(events).toContainEqual({ type: "lanternLost", player: 0, left: 2, why: "shield" });
+  });
+  it("also the Bog", () => {
+    const { P } = play({ tiles: trap, dice: [2], setup: [{ pos: 28 }], turns: 1, players: 1, decide: shield });
+    expect([P[0].pos, P[0].trapped, P[0].lanterns]).toEqual([30, false, 2]);
+  });
+  it("offered next to the card when the player holds both", () => {
+    const { decisions } = play({ tiles: fall, dice: [2], setup: [{ pos: 10, bonus: 1 }], turns: 1, players: 1, decide: shield });
+    expect(decisions[0]).toMatchObject({ kind: "punishment", card: true, shield: true });
+  });
+  it("never the last lantern", () => {
+    const { decisions } = play({ tiles: fall, dice: [2], setup: [{ pos: 10, lanterns: 1, bonus: 1 }], turns: 1, players: 1, decide: shield });
+    expect(decisions[0]).toMatchObject({ kind: "punishment", card: true, shield: false });
+  });
+  it("a refused answer changes nothing: no shield possible, the punishment happens", () => {
+    const { P } = play({ tiles: fall, dice: [2], setup: [{ pos: 10, lanterns: 1, bonus: 1 }], turns: 1, players: 1, decide: shield });
+    expect([P[0].pos, P[0].lanterns, P[0].bonus]).toEqual([0, 1, 1]);
+  });
+  it("not on \"the others double\": that would cancel their reward", () => {
+    const dbl = { 12: tile({ cat: "P", type: "doubleOthers" }) };
+    expect(play({ tiles: dbl, dice: [2], setup: [{ pos: 10 }], turns: 1, decide: shield }).decisions).toEqual([]);
+  });
+  it("not against a bump", () => {
+    const { P, decisions } = play({ dice: [3], setup: [{ pos: 10 }, { pos: 13 }], turns: 1, decide: shield });
+    expect([P[1].pos, decisions]).toEqual([0, []]);
+  });
+  it("not against the fallen tree", () => {
+    const { P, decisions } = play({ dice: [3], setup: [{ pos: 12 }], turns: 1, players: 1, roadblock: 15, decide: shield });
+    expect([P[0].pos, decisions]).toEqual([5, []]);
+  });
+  it("never offered on a reward", () => {
+    const prize = { 12: tile({ cat: "R", type: "jump", to: 40 }) };
+    expect(play({ tiles: prize, dice: [2], setup: [{ pos: 10 }], turns: 1, players: 1 }).decisions).toEqual([]);
+  });
+});
+
+describe("R21 the Normal computer player (owner, 22 Oct 2026)", () => {
+  const N = { decide: normalPlayer, players: 1, turns: 1 } as const;
+  it("shields a punishment worth 10 squares or more", () => {
+    const { P } = play({ ...N, tiles: { 12: tile({ cat: "P", type: "jump", to: 2 }) }, dice: [2], setup: [{ pos: 10 }] });
+    expect([P[0].pos, P[0].lanterns]).toEqual([12, 2]);
+  });
+  it("takes a smaller one", () => {
+    const { P } = play({ ...N, tiles: { 12: tile({ cat: "P", type: "jump", to: 3 }) }, dice: [2], setup: [{ pos: 10 }] });
+    expect([P[0].pos, P[0].lanterns]).toEqual([3, 3]);
+  });
+  it("takes a one-turn wait, shields the 3-turn fog", () => {
+    expect(play({ ...N, tiles: { 12: tile({ cat: "P", type: "skip", turns: 1 }) }, dice: [2], setup: [{ pos: 10 }] }).P[0].lanterns).toBe(3);
+    expect(play({ ...N, tiles: { 12: tile({ cat: "P", type: "hospital", turns: 3 }) }, dice: [2], setup: [{ pos: 10 }] }).P[0].lanterns).toBe(2);
+  });
+  it("uses the Bonus card first", () => {
+    const { P } = play({ ...N, tiles: { 12: tile({ cat: "P", type: "jump", to: 0 }) }, dice: [2], setup: [{ pos: 10, bonus: 1 }] });
+    expect([P[0].pos, P[0].bonus, P[0].lanterns]).toEqual([12, 0, 3]);
+  });
+  it("on the Bog: the boots, not the card or a lantern", () => {
+    const { P } = play({ ...N, tiles: trap, dice: [2], setup: [{ pos: 28, bonus: 1, jailPass: 1 }] });
+    expect([P[0].pos, P[0].trapped, P[0].bonus, P[0].jailPass, P[0].lanterns]).toEqual([30, false, 1, 0, 3]);
+  });
+  it("shields the Bog without boots", () => {
+    const { P } = play({ ...N, tiles: trap, dice: [2], setup: [{ pos: 28 }] });
+    expect([P[0].trapped, P[0].lanterns]).toEqual([false, 2]);
+  });
+  it("spends a spare lantern to leave the Bog at once, but rolls for a 6 at Home", () => {
+    expect(play({ ...N, tiles: trap, dice: [4], setup: [{ pos: 30, trapped: true }] }).P[0].pos).toBe(34);
+    expect(play({ ...N, dice: [4] }).P[0].pos).toBe(OFF);
+  });
+  it("never tries the last lantern", () => {
+    const { P } = play({ ...N, tiles: trap, dice: [4], setup: [{ pos: 30, trapped: true, lanterns: 1 }] });
+    expect([P[0].pos, P[0].lanterns]).toEqual([30, 1]);
   });
 });
 
@@ -353,12 +442,12 @@ describe("R20 two roads", () => {
 });
 
 describe("R21 the only choices", () => {
-  it("a whole game of computer players asks only for roads, the cards and spending a lantern", async () => {
+  it("a whole game of computer players asks only for roads, the cards, the Bog boots and spare lanterns", async () => {
     const { BOARDS, Game, runTurn } = await import("../src/engine");
     const kinds = new Set<string>();
     const game = new Game(BOARDS.long, { players: 4, seed: 7 });
     while (!game.over) runTurn(game, (d, g) => { kinds.add(d.kind); return simplePlayer(d, g); });
-    expect([...kinds].every((k) => ["road", "bonusDefend", "bonusAttack", "bogBoots", "spendLantern"].includes(k))).toBe(true);
+    expect([...kinds].every((k) => ["road", "punishment", "bonusAttack", "bogBoots", "spendLantern"].includes(k))).toBe(true);
     expect(game.winner).not.toBeNull();
   });
 });

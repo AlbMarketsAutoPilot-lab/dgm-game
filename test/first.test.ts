@@ -18,11 +18,6 @@ describe("first player", () => {
     expect(order(new Game(BOARDS.short, { players: 4, seed: 5, first: 2 }), 6)).toEqual([[2, 1], [3, 1], [0, 1], [1, 1], [2, 2], [3, 2]]);
   });
 
-  it("a round still starts at the first seat when that player is out", () => {
-    const g = new Game(BOARDS.short, { players: 3, seed: 5, first: 1, setup: [{}, { out: true }] });
-    expect(order(g, 4)).toEqual([[2, 1], [0, 1], [2, 2], [0, 2]]);
-  });
-
   it("refuses a seat that does not exist", () => {
     expect(() => new Game(BOARDS.short, { players: 2, first: 2 })).toThrow();
   });

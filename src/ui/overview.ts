@@ -3,7 +3,7 @@
 // numbers, no colours, no lines: good squares have a green frame (and ▲), bad squares a red frame (and ▼). Tap any
 // square to see what happens there; where squares are small (the long board), the first tap zooms in.
 // The squares the current player can reach with one throw of 1–5 show a small die face.
-import { OFF, OUT, type Board, type Pos } from "../engine";
+import { OFF, type Board, type Pos } from "../engine";
 import { type BoardLayout, type Point, designFor, layoutFor, pointOf } from "../render/layout";
 import { INK, PAPER, PUNISH, REWARD } from "../render/palette";
 
@@ -243,7 +243,7 @@ export class Overview {
     this.reachFrom = pos;
     this.reachDouble = double;
     let s = "";
-    if (pos !== null && pos !== OFF && pos !== OUT) {
+    if (pos !== null && pos !== OFF) {
       for (const { face, steps } of reachSteps(double)) {
         const n = this.ahead(pos, steps);
         if (n === null) break;
@@ -270,14 +270,13 @@ export class Overview {
   private layoutTokens(): void {
     const key = (pos: Pos) => (pos === OFF || pos === 0 ? "pad" : String(pos));
     const groups = new Map<string, number[]>();
-    this.places.forEach((pos, i) => { if (pos !== OUT) groups.set(key(pos), [...(groups.get(key(pos)) ?? []), i]); });
+    this.places.forEach((pos, i) => { groups.set(key(pos), [...(groups.get(key(pos)) ?? []), i]); });
     // board units → pixels of the token layer, as the drawing is fitted ("meet") into the same box
     const W = this.tokenLayer.clientWidth, H = this.tokenLayer.clientHeight, b = this.box, zoom = Math.min(W / b.w, H / b.h) || 0;
     const ox = (W - b.w * zoom) / 2 - b.x * zoom, oy = (H - b.h * zoom) / 2 - b.y * zoom, size = Math.round(120 * zoom);
     if (size !== this.tokenSize) { this.tokenSize = size; this.tokens.forEach((t) => { t.style.width = t.style.height = `${size}px`; }); }
     this.places.forEach((pos, i) => {
       const t = this.tokens[i];
-      if (pos === OUT) { t.style.opacity = "0"; return; }
       const same = groups.get(key(pos))!, k = same.indexOf(i), n = same.length, pad = key(pos) === "pad";
       const c = this.px(pointOf(this.layout, pos));
       let dx = 0, dy = 0, scale = "";
@@ -288,7 +287,7 @@ export class Overview {
       const x = ox + (c.x + dx) * zoom - size / 2, y = oy + (c.y + dy) * zoom - size / 2;
       t.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)${scale}`;
     });
-    const where = (pos: Pos) => pos === OFF ? "at Home" : pos === OUT ? "out" : pos === 0 ? "on Start" : pos === this.end ? "at the festival" : `on square ${pos}`;
+    const where = (pos: Pos) => pos === OFF ? "at Home" : pos === 0 ? "on Start" : pos === this.end ? "at the festival" : `on square ${pos}`;
     this.svg.setAttribute("aria-label", `The whole board. ${this.places.map((pos, i) => `${PLAYERS[i].name} ${where(pos)}`).join(", ")}.`);
   }
 

@@ -4,7 +4,7 @@
 // 16 Oct): a computer player's events (no popups for them), and before a person rolls, the first square ahead. The players sit in a row on top (portrait) or a column on the
 // right (landscape); tap one to see everything about them. All rules come from the engine (src/engine); this file
 // only shows its events, in order, and answers its decisions.
-import { BOARDS, Game, OFF, OUT, START, randomSeed, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
+import { BOARDS, Game, OFF, START, randomSeed, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
 import { artFor } from "../render/art";
 import { esc } from "../render/html";
 import { cardFace } from "../render/art-modern";
@@ -176,9 +176,7 @@ export class GameScreen {
 
   private nextSeat(from = this.game.currentSeat): number {
     const P = this.game.players;
-    let s = from;
-    do s = (s + 1) % P.length; while (P[s].out);
-    return s;
+    return (from + 1) % P.length;
   }
 
   private async run(): Promise<void> {
@@ -211,7 +209,7 @@ export class GameScreen {
     clearGame();
     const w = this.game.winner;
     this.overview.setReach(null);
-    const m = w === null ? MOMENTS.nobody : this.game.lastStanding ? MOMENTS.winLast : MOMENTS.win;
+    const m = w === null ? MOMENTS.nobody : MOMENTS.win;
     sound.music(null);
     sound.play(w === null ? "out" : "win");
     if (w !== null) { this.overview.setCurrent(w); this.stage.celebrate("win"); this.stage.stamp("good", "Champion!"); }
@@ -326,8 +324,8 @@ export class GameScreen {
       if (comp) await this.wait(1400); else await this.ask([{ label: "OK, skip this turn", value: "ok" }]);
     } else if (comp) {
       await this.wait(800);
-    } else if ((p.pos === OFF || p.trapped) && p.lanterns >= 1) {
-      // Owner, 15 Oct: at Home or in the Bog, roll for a 6, or spend a lantern to go at once (then throw to move)
+    } else if ((p.pos === OFF || p.trapped) && p.lanterns >= 2) {
+      // R17: at Home or in the Bog, roll for a 6, or spend a spare lantern to go at once (then throw to move)
       this.dice.ready(true);
       const v = await Promise.race([
         this.ask([{ label: "Roll for a 6", value: "roll", primary: true }, { label: `Spend a lantern (${p.lanterns} left)`, value: "spend" }]),
@@ -405,6 +403,7 @@ export class GameScreen {
     const v = await this.choose(d);
     this.pops.clear();
     if (d.kind === "bonusAttack") return this.spoil.answer(d.player, v);
+    if (d.kind === "punishment") return v === "yes" ? "card" : "take";
     return v === "yes";
   }
 
@@ -431,7 +430,8 @@ export class GameScreen {
     await this.readFirst(); // the square's own story first
     switch (d.kind) {
       case "road": return Promise.resolve("main"); // never asked: the boards have no Shortcut (owner, 15 Oct; C2)
-      case "bonusDefend": {
+      case "punishment": {
+        if (!d.card) return "take"; // the lantern shield's button comes with the approved texts (step H.4)
         const tl = this.taleAt(d.square, d.tile);
         void this.pops.show({
           kind: "choice", tone: "bad", art: cardFace("bonus", "Bonus card"), kicker: `${who} · ${tl.title}`,
@@ -580,14 +580,6 @@ export class GameScreen {
         this.lit[e.player] = e.total;
         this.render();
         await this.story(e.player, { ...M.lanternWon, text: fill(M.lanternWon.text, { p: this.name(e.player) }), art: artFor("lantern", "Lantern") }, `${e.total} lanterns now.`, "good", `▲ Three 6s: a lantern lit again (${e.total} now)`); this.render(); await this.wait(1400); break;
-      case "out":
-        sound.play("out");
-        this.places[e.player] = OUT;
-        this.overview.setPlace(e.player, OUT);
-        await this.story(e.player, { ...M.out, text: fill(M.out.text, { p: this.name(e.player) }), art: artFor("lantern", "Lights out") }, "Out of the game.", "bad", "✕ out of the game");
-        this.render();
-        await this.wait(1800);
-        break;
       case "win": await this.wait(600); break;
       default: break;
     }
@@ -654,7 +646,7 @@ export class GameScreen {
    */
   private ahead(seat: number): { text: string; tone: "good" | "bad" } | null {
     const p = this.game.players[seat], pos = this.places[seat], B = this.board;
-    if (p.out || p.skip > 0 || p.trapped || p.slow || pos === OFF || pos === OUT) return null;
+    if (p.skip > 0 || p.trapped || p.slow || pos === OFF) return null;
     for (const { face, steps } of reachSteps(p.double)) {
       const sq = pos + steps, t = B.tiles[sq];
       if (sq >= B.endTile) return null;
@@ -701,7 +693,7 @@ export class GameScreen {
 
   /** Squares from `from` to `to` along the road, or null if `to` is behind. */
   private stepsTo(from: Pos, to: Pos): number | null {
-    if (from === OFF || from === OUT) return null;
+    if (from === OFF) return null;
     return to > from ? to - from : null;
   }
 
@@ -722,7 +714,7 @@ export class GameScreen {
     const p = this.game.players[seat], B = this.board, lines: string[] = [], lanterns = this.lanterns(seat);
     const pos = this.places[seat];
     const or = lanterns >= 1 ? ", or a lantern spent" : "";
-    const where = p.out ? "Out of the game." : pos === OFF ? `At Home: needs a 6 to set off${or}.` : p.trapped ? `Stuck in the Bog: needs a 6${or}.` : pos === 0 ? "On Start."
+    const where = pos === OFF ? `At Home: needs a 6 to set off${or}.` : p.trapped ? `Stuck in the Bog: needs a 6${or}.` : pos === 0 ? "On Start."
       : `On square ${pos}: ${B.endTile - pos} squares to the festival.`;
     lines.push(where);
     lines.push(`${lanternSvg.replace("<svg", '<svg class="inl"')} ${lanterns} lantern${lanterns === 1 ? "" : "s"}${lanterns === 0 ? ": one more slip and it's over" : ""}.`);
@@ -742,7 +734,6 @@ export class GameScreen {
   /** A recommendation: what the next throw can bring. */
   private tip(seat: number): string {
     const p = this.game.players[seat], pos = this.places[seat], B = this.board;
-    if (p.out) return "";
     if (pos === OFF || p.trapped) return p.lanterns >= 1 ? "Tip: roll for a 6, or spend a lantern to go now. Three misses cost a lantern anyway." : "Tip: only a 6 will do. Three misses cost your last light.";
     const toEnd = B.endTile - pos;
     if (p.slow) return toEnd === 1 ? "Tip: next turn moves exactly 1 square: straight into the festival." : "Tip: next turn moves exactly 1 square, whatever the die shows.";
@@ -778,13 +769,12 @@ export class GameScreen {
   /** Squares to the festival when they need an exact throw of 1–5 (shown to everyone on the avatar), else 0. */
   private need(seat: number): number {
     const p = this.game.players[seat], pos = this.places[seat], d = this.board.endTile - pos;
-    return p.out || pos < 1 || p.trapped ? 0 : d >= 1 && d <= 5 ? d : 0;
+    return pos < 1 || p.trapped ? 0 : d >= 1 && d <= 5 ? d : 0;
   }
 
   /** One line under "Blue's turn" that says what this turn is about, in plain words. */
   private guide(seat: number): string {
     const p = this.game.players[seat], pos = this.places[seat], d = this.board.endTile - pos;
-    if (p.out) return "Out of the game.";
     if (p.skip > 0) return `Waits this turn${this.waitCause[seat] ? ` (${this.waitCause[seat]})` : ""}.`;
     const pay = p.lanterns >= 1 ? ", or spend a lantern" : "";
     if (pos === OFF) return `At Home: roll a 6 to enter the board (throw ${p.tries + 1} of 3)${pay}.`;
@@ -816,8 +806,8 @@ export class GameScreen {
 
   private render(): void {
     const P = this.game.players, cur = this.seat;
-    const bar = `<div class="avs">` + P.map((p, i) => `<button class="avatar${i === cur ? " now" : ""}${p.out ? " gone" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${this.lanterns(i)} lanterns${p.bonus ? `, ${p.bonus} Bonus card` : ""}. Tap for details">`
-      + `${tokenSvg(i, "tok", true)}<span class="badge l">${lanternSvg}${p.out ? "✕" : this.lanterns(i)}</span>`
+    const bar = `<div class="avs">` + P.map((p, i) => `<button class="avatar${i === cur ? " now" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${this.lanterns(i)} lanterns${p.bonus ? `, ${p.bonus} Bonus card` : ""}. Tap for details">`
+      + `${tokenSvg(i, "tok", true)}<span class="badge l">${lanternSvg}${this.lanterns(i)}</span>`
       + (p.bonus || p.jailPass ? `<span class="badge c">${artFor(p.bonus ? "card" : "boots", "")}${p.bonus + p.jailPass}</span>` : "")
       + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">${robotSvg}</span>` : "")
       + (this.need(i) ? `<span class="need" aria-hidden="true">needs ${this.need(i)}</span>` : "") + `</button>`).join("")

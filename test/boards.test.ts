@@ -4,7 +4,7 @@ import { BOARDS, Game, parseBoard, runTurn } from "../src/engine";
 import type { Answer, Decision } from "../src/engine";
 
 const scripted = (dice: number[]) => () => { if (!dice.length) throw new Error("dice ran out"); return dice.shift()!; };
-const shortcut = (d: Decision): Answer => (d.kind === "road" ? "main" : d.kind === "bonusDefend");
+const shortcut = (d: Decision): Answer => (d.kind === "road" ? "main" : d.kind === "punishment" ? (d.card ? "card" : "take") : false);
 
 describe("board files", () => {
   it.each(["long", "short"] as const)("%s: every event square has a story and an icon", (id) => {

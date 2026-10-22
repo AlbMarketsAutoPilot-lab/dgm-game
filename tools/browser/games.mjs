@@ -75,12 +75,12 @@ export async function playGame(browser, url, { board, players, people, brk, spen
   }
   // The same game in the engine, in the page (the development server serves the engine's source)
   const check = await page.evaluate(async ({ board, players, people, save, turns, end, spend }) => {
-    const { BOARDS, Game, OFF, OUT, runTurn, simplePlayer: computer } = await import("/src/engine/index.ts");
+    const { BOARDS, Game, OFF, runTurn, simplePlayer: computer } = await import("/src/engine/index.ts");
     const simplePlayer = (d, g) => (d.kind === "spendLantern" ? spend && people.includes(d.player) : computer(d, g));
     const NAMES = ["Blue", "Red", "Green", "Yellow"], g = new Game(BOARDS[board], { players, seed: save.seed, first: save.first });
-    const where = (p) => p === OFF ? "at Home" : p === OUT ? "out" : p === 0 ? "on Start" : p === g.board.endTile ? "at the festival" : `on square ${p}`;
+    const where = (p) => p === OFF ? "at Home" : p === 0 ? "on Start" : p === g.board.endTile ? "at the festival" : `on square ${p}`;
     const label = () => `The whole board. ${g.players.map((p, i) => `${NAMES[i]} ${where(p.pos)}`).join(", ")}.`;
-    const next = () => { let s = g.currentSeat; do s = (s + 1) % players; while (g.players[s].out); return s; };
+    const next = () => (g.currentSeat + 1) % players;
     const diffs = [], allPeople = people.length === players;
     let i = 0;
     while (!g.over) {
@@ -94,7 +94,7 @@ export async function playGame(browser, url, { board, players, people, brk, spen
     // the board at each turn's start = the engine just before that turn
     const h = new Game(BOARDS[board], { players, seed: save.seed, first: save.first });
     if (allPeople) for (const [k, t] of turns.entries()) {
-      const want = (() => { const p = h.players; return `The whole board. ${p.map((q, j) => `${NAMES[j]} ${q.pos === OFF ? "at Home" : q.pos === OUT ? "out" : q.pos === 0 ? "on Start" : q.pos === h.board.endTile ? "at the festival" : `on square ${q.pos}`}`).join(", ")}.`; })();
+      const want = (() => { const p = h.players; return `The whole board. ${p.map((q, j) => `${NAMES[j]} ${q.pos === OFF ? "at Home" : q.pos === 0 ? "on Start" : q.pos === h.board.endTile ? "at the festival" : `on square ${q.pos}`}`).join(", ")}.`; })();
       if (t.board !== want) { diffs.push(`turn ${k + 1}: screen "${t.board}", engine "${want}"`); break; }
       runTurn(h, simplePlayer);
     }
