@@ -10,7 +10,7 @@ android {
         applicationId = "com.dontgetmad.game" // D1: permanent after the first upload
         minSdk = 24 // Android 7.0, as KAJ
         targetSdk = 36 // Google Play requires 36 since 31 Aug 2026 (D3, checked 16 Oct 2026)
-        versionCode = 2
+        versionCode = 3 // 2 (1.0.1) was uploaded to Google Play from the owner's PC on 22 Oct 2026
         versionName = "1.1.0"
     }
 
