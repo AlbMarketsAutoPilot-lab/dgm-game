@@ -211,6 +211,11 @@ These change the points above where they differ (GCD R16, R20 updated).
   effect and does not count as entering; a player swapped off 97 loses the Dragon Boat deal; square 54 keeps → 67
   until phase B; the simulator's simple player uses its card at the first chance and picks the Swap Market partner at
   random; robot ties go to the next player in turn order.
+- **Agreed after A2 (owner, 25 Nov 2026):** a roll into a new area whose square's event takes you out of it gives no
+  effect from either area and uses neither up; a bumped player loses pending missed turns, a pending Forest backward
+  move and being stuck at the tree, but keeps a pending "exactly 1" or double (as v2); square 7's "exactly 1" uses no
+  roll, so a pending double or backward move waits; the Dragon Boat roll uses up (loses) a pending double; square 61's
+  rolls and the Countryside's extra roll are not doubled (as 61 in v2).
 - **Built side by side (phase A):** the v3 rules live next to v2 (src/engine/v3/, tools/sim/, data/lantern-festival.json),
   so the app keeps working; v2 code, the 202 board and their tests are deleted in phase C.
 
