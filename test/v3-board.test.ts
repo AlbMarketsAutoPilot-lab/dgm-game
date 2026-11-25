@@ -11,7 +11,7 @@ describe("Lantern Festival (v3)", () => {
     const short = Object.fromEntries(Object.entries(LF.tiles).map(([k, t]) => [k, t.to ?? t.type]));
     expect(short).toEqual({
       7: "slowNext", 10: 16, 17: 33, 20: 36, 27: "tree", 30: "card", 32: "nearest", 37: "swapLeader", 40: 56, 45: "card",
-      49: 31, 54: 67, 61: "rollSum", 66: 55, 69: 97, 72: "doubleOthers", 74: 57, 79: "swapMarket", 85: "card", 91: 71,
+      49: 31, 54: 65, 61: "rollSum", 66: 55, 69: 97, 72: "doubleOthers", 74: 57, 79: "swapMarket", 85: "card", 91: 71,
       94: 78, 96: 92, 99: 92, 100: 82,
     });
     expect(LF.tiles[69].need).toBe(4);

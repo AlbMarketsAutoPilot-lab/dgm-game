@@ -31,7 +31,7 @@
     "40": { "cat": "R", "type": "jump", "to": 56, "name": "Cable car" },
     "45": { "cat": "R", "type": "card", "name": "Bonus card" },
     "49": { "cat": "P", "type": "jump", "to": 31, "name": "The Rockslide" },
-    "54": { "cat": "R", "type": "jump", "to": 67, "name": "weekend off (destination: phase B)" },
+    "54": { "cat": "R", "type": "jump", "to": 65, "name": "weekend off (story: phase B)" },
     "61": { "cat": "R", "type": "rollSum", "dice": 3, "name": "throw 3 times" },
     "66": { "cat": "P", "type": "jump", "to": 55, "name": "booking" },
     "69": { "cat": "R", "type": "dragonBoat", "to": 97, "need": 4, "name": "The Dragon Boat" },
