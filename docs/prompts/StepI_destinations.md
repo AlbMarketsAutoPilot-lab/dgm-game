@@ -200,7 +200,7 @@ S = 1 session, M = 2–3, L = 4+.
 | Phase | What | Cost | Risk |
 |---|---|---|---|
 | A0 | Rewrite GCD rules R1–R21 with all of the above (text only) | S | Low |
-| A | Engine + simulator + tests on board 100 with every agreed rule and square; measurement report (seats, game length, waiting at Home and the tree, lead changes, close finishes, card use, robot vs simple player). Decision to take: the game's engine becomes the only simulator (the old one archived) | L | High: waiting and the harsh end may need fixes |
+| A | Engine + simulator + tests on board 100 with every agreed rule and square; measurement report (seats, game length, waiting at Home and the tree, lead changes, close finishes, card use, robot vs simple player). Decided (owner, 25 Nov 2026): keep both engines (src/engine and tools/sim/engine.mjs), change both the same way, and keep test/equivalence.test.ts comparing them game by game. Phase A starts in a new session | L | High: waiting and the harsh end may need fixes |
 | B | Board redesign + full narrative (voice, squares, guide and notification texts, square 54, new pictures: tree, Dragon Boat, Swap Market, area signs); measure again | M–L | Medium |
 | C | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level | M | Medium |
 | E | Leaderboard | S–M | Low |
