@@ -193,6 +193,27 @@ ages, family rating, "spiritual" = wonder, light, journey and gratitude, not rel
 - The save version goes up: unfinished games are dropped, collected postcards are kept.
 - Not in Step I: telling players about screen-reader support only after the owner tests a game with TalkBack.
 
+### Owner decisions on the phase A plan (25 Nov 2026)
+
+These change the points above where they differ (GCD R16, R20 updated).
+
+- **Entering an area through an event gives no area effect.** An area effect happens only when your own plain roll takes
+  you into the area, the first time you enter it that way. A green or red square's move (e.g. 17, 20, 49, 54, 61, 74,
+  91) or another area's effect (the Countryside's gifted 6) that takes you into a new area gives nothing then, but the
+  area is not used up: your first later entry by a plain roll still gives it. Reason (owner): an event never lands on
+  another event. Square 32 stays the exception (it lands on a reward square).
+  Example (owner): the Dragon Boat beats Big City, arriving at 97 by the boat gives no Big City effect.
+- **Robots keep the three-throw rule:** at Home and at the fallen tree a robot rolls for a 6; after three throws without
+  a 6, on its 3rd throw it must use its Bonus card, if it has one, and moves by that same throw in the same turn (as the
+  v2 third throw works today). Not for people: they are never forced.
+- **Defaults agreed with the plan:** two doubles do not stack (×2); a double also doubles a backward Forest move; the
+  Forest backward move gives no area effect, and reaching Home that way needs no 6; a swap into an area gives no
+  effect and does not count as entering; a player swapped off 97 loses the Dragon Boat deal; square 54 keeps → 67
+  until phase B; the simulator's simple player uses its card at the first chance and picks the Swap Market partner at
+  random; robot ties go to the next player in turn order.
+- **Built side by side (phase A):** the v3 rules live next to v2 (src/engine/v3/, tools/sim/, data/lantern-festival.json),
+  so the app keeps working; v2 code, the 202 board and their tests are deleted in phase C.
+
 ## Phased plan (approved)
 
 S = 1 session, M = 2–3, L = 4+.

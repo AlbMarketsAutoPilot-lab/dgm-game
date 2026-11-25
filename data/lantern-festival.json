@@ -1,0 +1,48 @@
+{
+  "id": "lantern-festival",
+  "description": "Step I phase A (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Rules and squares only: the story, pictures and square 54's new destination come in phase B. 'name' is a working label, never shown to players. Not used by the app until phase C.",
+  "lastTile": 100,
+  "endTile": 101,
+  "rules": {
+    "version": 3,
+    "startCards": 1,
+    "capture": true,
+    "endRule": "exact",
+    "maxEventJump": 20,
+    "robotForceAfter": 3
+  },
+  "areas": [
+    { "name": "Home Town", "from": 0, "to": 9, "effect": null },
+    { "name": "Countryside", "from": 10, "to": 22, "effect": { "type": "gifted6" } },
+    { "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" } },
+    { "name": "Mountains", "from": 39, "to": 56, "effect": { "type": "double" } },
+    { "name": "Seaside", "from": 57, "to": 76, "effect": { "type": "swapAhead", "range": 20, "otherwise": "card" } },
+    { "name": "Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" } }
+  ],
+  "tiles": {
+    "7": { "cat": "P", "type": "slowNext", "name": "The Candle Walk" },
+    "10": { "cat": "R", "type": "jump", "to": 16, "name": "lift" },
+    "17": { "cat": "R", "type": "jump", "to": 33, "name": "hay cart" },
+    "20": { "cat": "R", "type": "jump", "to": 36, "name": "The Village Bus" },
+    "27": { "cat": "P", "type": "tree", "name": "The fallen tree" },
+    "30": { "cat": "R", "type": "card", "name": "Bonus card" },
+    "32": { "cat": "R", "type": "nearest", "target": "R", "name": "next good square" },
+    "37": { "cat": "R", "type": "swapLeader", "name": "Plot Twist" },
+    "40": { "cat": "R", "type": "jump", "to": 56, "name": "Cable car" },
+    "45": { "cat": "R", "type": "card", "name": "Bonus card" },
+    "49": { "cat": "P", "type": "jump", "to": 31, "name": "The Rockslide" },
+    "54": { "cat": "R", "type": "jump", "to": 67, "name": "weekend off (destination: phase B)" },
+    "61": { "cat": "R", "type": "rollSum", "dice": 3, "name": "throw 3 times" },
+    "66": { "cat": "P", "type": "jump", "to": 55, "name": "booking" },
+    "69": { "cat": "R", "type": "dragonBoat", "to": 97, "need": 4, "name": "The Dragon Boat" },
+    "72": { "cat": "P", "type": "doubleOthers", "name": "others double" },
+    "74": { "cat": "P", "type": "jump", "to": 57, "name": "The Storm" },
+    "79": { "cat": "S", "type": "swapMarket", "name": "The Swap Market" },
+    "85": { "cat": "R", "type": "card", "name": "Bonus card" },
+    "91": { "cat": "P", "type": "jump", "to": 71, "name": "Asleep on the Train" },
+    "94": { "cat": "P", "type": "jump", "to": 78, "name": "train back" },
+    "96": { "cat": "P", "type": "jump", "to": 92, "name": "forgot keys" },
+    "99": { "cat": "P", "type": "jump", "to": 92, "then": "skip2", "name": "keys AGAIN, miss 2 turns" },
+    "100": { "cat": "P", "type": "jump", "to": 82, "name": "back (everyone)" }
+  }
+}
