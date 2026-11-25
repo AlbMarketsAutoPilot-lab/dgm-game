@@ -194,10 +194,10 @@ export function simulate3(board, options, games, seed) {
       else { p.waitTree++; if (++p.treeRun > p.maxTreeRun) p.maxTreeRun = p.treeRun; }
     };
 
-    const boatTurn = (pi) => { // R17: exactly 4 wins; anything else back to the boat's square (a pending double is lost)
+    const boatTurn = (pi) => { // R17: exactly `need` (4) wins; anything else back to the boat's square (a pending double is lost)
       const p = P[pi], r = d6();
       p.dbl = false; p.boat = false;
-      if (r === 4) { p.pos = END; winner = pi; byBoat = true; return; }
+      if (r === T[boatSq].need) { p.pos = END; winner = pi; byBoat = true; return; }
       A.boatBack++;
       jumpTo(pi, boatSq);
     };
