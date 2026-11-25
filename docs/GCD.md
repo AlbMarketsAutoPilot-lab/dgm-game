@@ -1,6 +1,6 @@
-# Don't Get Mad! — Game Concept Document (GCD) v3 — rules decided, to be measured
+# Don't Get Mad! — Game Concept Document (GCD) v3 — rules decided and measured
 
-> **Status: v3, rules decided 25 Nov 2026 (owner, Step I), to be measured in phase A.** Game rules R1–R20 are in §8.2a and the computer player in §8.6. Every Step I decision (areas, squares, guide, leaderboard, postcards, destinations, narrative) is in `docs/prompts/StepI_destinations.md`, Part 2; the story (§9), boards (§10) and replay sections (§12) below still describe v2 and are rewritten in the Step I phases that build them. The v2 rules are archived in `docs/archive/GCD_rules_v2.md`.
+> **Status: v3, rules decided 25 Nov 2026 (owner, Step I), measured in phase A (`docs/analysis/stepI-A_measure.md`, results accepted by the owner).** Game rules R1–R20 are in §8.2a and the computer player in §8.6. Every Step I decision (areas, squares, guide, leaderboard, postcards, destinations, narrative) is in `docs/prompts/StepI_destinations.md`, Part 2; the story (§9), boards (§10) and replay sections (§12) below still describe v2 and are rewritten in the Step I phases that build them. The v2 rules are archived in `docs/archive/GCD_rules_v2.md`.
 > *(v2 status, for the record: FROZEN 14 Oct 2026, owner, step I-7.)*
 > This document is the contract for coding: anything not written here is not built. Any change after the freeze needs the owner's approval and, for a rule or a board, a new measurement.
 > **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
@@ -80,7 +80,7 @@ Throw the die → move forward square by square → if you land on an event squa
 
 ### 8.2a Game rules v3 ✅ (owner, 25 Nov 2026, Step I)
 
-Decided in the Step I planning session (`docs/prompts/StepI_destinations.md`, Part 2); **to be measured in phase A** before any rule code is merged. The v2 rules (R1–R21 of 14–22 Oct 2026) are archived in `docs/archive/GCD_rules_v2.md`. Square numbers are on the 100-square board (END = 101).
+Decided in the Step I planning session (`docs/prompts/StepI_destinations.md`, Part 2); **Measured in phase A** (`docs/analysis/stepI-A_measure.md`): seats fair, every excitement target met except jackpots (4.6 per game, paper 6.7: accepted by the owner), 2.1% of players wait 10+ turns. Simulator `tools/sim/engine3.mjs`; the app engine `src/engine/v3/` plays the same games (`test/v3-equivalence.test.ts`). The v2 rules (R1–R21 of 14–22 Oct 2026) are archived in `docs/archive/GCD_rules_v2.md`. Square numbers are on the 100-square board (END = 101).
 
 | # | Rule |
 |---|---|
@@ -132,7 +132,7 @@ See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Exciteme
 
 ### 8.6 Computer players ✅ (owner, 25 Nov 2026, Step I)
 - Any seat can be a computer player. There is **one level** (the Easy/Normal choice is removed): rule R20 in §8.2a.
-- It is measured in phase A against a simple player that exists only in the simulator, to show how much strategy counts. The v2 robots (Easy, Normal with lanterns) are archived in `docs/archive/GCD_rules_v2.md`.
+- Measured in phase A against a simple player that exists only in the simulator (uses its card at the first chance): the robot wins 25.4% among 3 simple players, the simple player 24.7% among 3 robots (fair 25%). The card choice counts little; accepted by the owner (25 Nov 2026). The v2 robots (Easy, Normal with lanterns) are archived in `docs/archive/GCD_rules_v2.md`.
 
 ## 9. Story: "The Journey" (P4)
 

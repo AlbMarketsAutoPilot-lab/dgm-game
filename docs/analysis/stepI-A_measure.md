@@ -4,6 +4,11 @@ Owner, 25 Nov 2026 (GCD §8.2a R1–R20, `docs/prompts/StepI_destinations.md` Pa
 plan). Board: `data/lantern-festival.json`. Simulator: `tools/sim/engine3.mjs` (rule tests: `test/v3-sim.test.ts`).
 Command: `node tools/sim/stepI.mjs 100000`. 100,000 games per row, seeded and reproducible.
 
+**Status: final (phase A5, 25 Nov 2026).** The app's v3 engine (`src/engine/v3/`) plays exactly the same games as the
+simulator, throw for throw: `test/v3-equivalence.test.ts` compares them game by game (winner, rounds and every player's
+record, 2–4 robots, 400 seeds each and 3,000 games in a row). So the robot rows below hold for the app. The v2 engine and
+the 202 board stay in the app until phase C.
+
 - **Robot** = the app's computer player (R20): rolls for the 6 at Home and at the tree, forced to use its card on the
   3rd throw without a 6 there; otherwise its card on the first punishment; Swap Market: gives to the player furthest
   behind, takes from the leader.
@@ -57,8 +62,8 @@ Command: `node tools/sim/stepI.mjs 100000`. 100,000 games per row, seeded and re
    win".
 3. **The tree:** 1.8% of players wait 10+ turns there. Within the target; keep as is?
 
-**Owner, 25 Nov 2026:** 1 accepted (fewer jackpots); 3 accepted (the tree stays as it is); 2 open (the owner asked
-whether it is about robots).
+**Owner, 25 Nov 2026:** all three accepted: fewer jackpots (1), strategy counting little (2: it is about the card
+choice itself, for people too, measured with robots and simple players), the tree as it is (3).
 
 ## All measures
 
