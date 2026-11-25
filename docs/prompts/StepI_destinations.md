@@ -1,0 +1,211 @@
+# Step I: new rules, the guide, a new narrative and 4 new destinations (owner, 25 Nov 2026)
+
+> **Status: planning approved (25 Nov 2026).** Part 1 is the owner's original prompt, kept as the record of the request.
+> Part 2 is what the owner and Claude agreed, point by point, in the planning session. **Part 2 is what counts:** where
+> it differs from Part 1, Part 2 wins (owner: "only what we agree here counts").
+
+---
+
+## Part 1: the owner's original prompt (as given)
+
+Step I for the game "Don't Get Mad!" (repository AlbMarketsAutoPilot-lab/dgm-game). This is a big change: new rules, a guide figure, a new narrative and 4 new destinations. Work in approved phases only.
+
+HOW TO WORK (the owner's rules; DGM has no CLAUDE.md):
+* One step at a time. When I have to do something (Android Studio, Play Console, Partner Center, GitHub), give exactly ONE step with the exact clicks or Command Prompt line (I am on Windows) and what I should see. Stop. Continue only when I say "done", and check what I paste.
+* No change, commit, push or PR without my approval. First explain the problem, the proposed change, its cost and risk, then ask. Every text a player sees (guide, popups, buttons, narrative) is shown to me for approval before it goes into the code.
+* Never guess. Verify in the code, the docs or what I paste. If unsure what a screen shows, ASK me to paste it.
+* I am on a limited plan: short plain answers, no repeated research, no long logs.
+* Read first: docs/GCD.md (rules R1–R21 and the step H changes), docs/PROJECT_PLAN.md, docs/prompts/StepH_lanterns.md, docs/prompts/Step8_android_app.md, docs/prompts/StepF_google_play.md, src/engine/, data/board-short.json, src/ui/ (app.ts, tales.ts, guide.ts), tools/sim/, test/, tools/browser/.
+* All square numbers below are on the 100-square board (data/board-short.json, END = 101).
+
+FIRST TASK (no code): read the files, then give me
+(1) a few lines on what you found,
+(2) the list of conflicts, unclear points and risks in my list below (some I already know: square 79 says "landing on 97", probably 79; how the win time is measured with pauses, saved games and several humans; what Normal robots do now that lanterns are gone; the guide figure's gender "him/her"; what happens to postcards of removed areas and to saved games of the 202 board; how the "no reward/punishment ever lands on another one" rule fits each square),
+(3) a phased plan with cost and risk per phase. My suggestion: A rules + engine + simulator + tests on the current 100 board, with a measurement report (chances, game length, waiting, lead changes, close finishes, how much strategy counts) before anything else; B board 100 redesign (areas, squares, narrative); C right-side guide popups and the left notifications; D destination choice screen + 4 destinations, one at a time; E leaderboard; F initial guide; G new Android and Windows versions.
+Also save this whole prompt as docs/prompts/StepI_destinations.md, but only after my approval.
+
+MY LIST (owner, 25 Nov 2026):
+- Don't mention numbers anymore in the game. On the notification popups on the left just say "advance 13 squares" or "go back 10 squares", never "go to square 23" (keep square numbers as reference in the right-side panel with the zoomed view, just don't mention them).
+- Remove the Easy/Normal selection. All robots are Normal from now on.
+- A leaderboard with time to finish. Every time a human wins, the time is compared with the records. No server (no D1): keep the top 10 human win times on the device, whoever played. For example "Your win time ranks 1st, beating all previous records" or "Your win time ranks 3rd of all-time records".
+- Lanterns removed completely as a concept.
+- Bog boots removed completely as a concept.
+- Three 6s (winning a lantern, stopping after three 6s) removed completely as a concept.
+- All players start the game with 1 Bonus card, and earn more on the Bonus card squares.
+- Remove completely the "three rolls" concept and any obligation after three rolls without a 6. A player rolls as many times as needed until they roll a 6. Every time a player needs a 6, they choose: use the Bonus card or roll for a 6. Without a Bonus card they just roll until they roll a 6.
+- No stop after three 6s: as long as you roll a 6 you roll once more, however many times.
+- Remove the River & Lake and Festival Road areas and spread the other areas over the board so that Home Town has the fewest squares and Big City the most. The River & Lake icon (the boat) is used from now on for Seaside, replacing Seaside's icon.
+- Location matters: entering an area can give a one-time bonus or punishment (e.g. Forest: you get lost, lose a turn; Big City: traffic; elsewhere: you are gifted a roll of 6, or you bump the player in front of you). Propose 3 bonuses and 3 punishments per area.
+- The Start square is now called "Home". Remove the text "a 6 to enter". You leave your home to start a trip, and you need a 6 for that; then you travel around your home town towards the countryside and so on.
+- The Bonus card can unlock a blocking punishment or cancel a punishment (except Plot Twist and Bump). Cancelling another player's reward is removed completely.
+- Punishments and rewards can never move a player more than 20 squares (except the square-69 jump and Plot Twist) and can never land on a square with another reward or punishment.
+- Replace the Bog with the fallen tree, in the Forest area (if square 15 is not in the Forest, adjust). The fallen tree is no longer the moving roadblock: it is in this single place. You need to roll a 6 to clear it or you stay; only a Bonus card can replace the 6.
+- Replace the fallen tree icon: the current one is ugly and unclear.
+- Square 69 (Snake Leader) is too childish: replace it with something fitting its area. New concept: landing on 69 moves you to 97 (ignore the 20-square rule); on your next turn you must roll exactly 4 to win, otherwise you go back to 69 (a bump applies on 69 if another player is there). One chance to win, or back where you were.
+- Square 32 stays as is and does not follow the "never lands on a reward/punishment" rule, so there are 2 chances for a Plot Twist.
+- Square 100: "back to 82" becomes "back to 80 or less" (20-square rule) and applies to all players, not only the Snake Leader. Narrative fitting the area.
+- Square 7 ("Not a Puddle: next turn you move exactly 1 square… one shoe is soaked") is bad: justify "next turn you move exactly 1 square" with something logical, fitting the area, not childish.
+- Square 20 breaks the 20-square rule: adjust. And a balloon? Find something credible for the area.
+- Square 40 breaks the 20-square rule: adjust.
+- Square 45 becomes a Bonus card square like 30 (different narrative); Bog boots no longer exist.
+- Squares 49 and 67 must change: repetitive, the Bog is gone, and they break the 20-square rule. Narrative fitting the area.
+- Square 79 breaks the distance rule. It becomes a cards-and-strategy square: you must give one of your Bonus cards to another player (with more than 2 players you choose who). If you have none, you take one from another player (with more than 2 players you choose from whom). If nobody has a card to spare, nothing happens. Narrative fitting the area.
+- Square 91 "Asleep on the Train": go back to 71 or less (20-square rule).
+- The button on the right side is only for rolling the die. Every other button that shows next to "Roll die" (e.g. "Use Bonus card") becomes a popup that covers the right-side area (and the Roll die button), e.g. "Hey, you look in trouble! Would you like to use your Bonus card?" YES / NO. Same for the fallen tree: "You have a Bonus card! Use it, or wait to roll a 6?" Only after YES or NO does the popup close and "Roll die" becomes free (if the card was not used).
+- Narrative in the right-side popups comes from a guide figure, like a wise man guiding you (all ages; like the mayors or advisers in city-building games). These popups show on the right side, blocking the die, and look different from today's left notification popups. Many can replace the left notifications, or co-exist without repeating information. Introduce the guide at the start ("I will be your guide on this trip to the Lantern Festival", "Don't just follow my advice, listen carefully"). The guide gives the areas importance: "Now you are entering the Forest! Ahead you will face falling trees, but you might also win a Bonus card… brace for changes". Guide popups appear only after the pieces have moved, so the travel and the "Don't get mad!" exclamations on the right are never covered. Decisions in guide popups are simple: yes or no.
+- Remove the 202-square board completely. Keep only the 100-square board.
+- Instead, 4 more destinations (you decide what to call them: maps, destinations, trips), each 100 squares. Before (or after, you decide) choosing the players, players choose a destination (e.g. a slideshow with images and a short summary of each trip). We always keep the Lantern Festival and add 4. Each destination has its own narrative, rewards and punishments, areas, guide and design (not all spirals: one might be a serpent or zig-zag). The rules stay the same, so players don't learn a new game: only the situations change.
+- Update the initial game guide to the new rules. The guide figure can also give game tips during the game, e.g. "Did you know you need to roll a 6 to leave your home?"
+- ATTENTION: revise the whole narrative. With popups split in two (left notifications, right guide), the narrative must fit each, be realistic, based on the areas (Home Town, Mountains, …) and on the purpose: the trip to the Lantern Festival. Make it more spiritual, dramatic and festive (all ages) so the guide can carry the tale. Test users find the current narrative very bad.
+
+Start with the FIRST TASK only and wait for my answer.
+
+---
+
+## Part 2: the agreed decisions (owner, 25 Nov 2026)
+
+All square numbers are on the 100-square board. Every text a player sees is still shown to the owner for approval
+before it goes into the code.
+
+### Rules
+
+1. **No square numbers** anywhere in the game except on the zoomed square (the "→ 24" destination label stays there).
+   This includes the box that opens when a square on the board is tapped. Texts say distances ("Go back 18 squares").
+   Die numbers stay ("roll a 6", "needs exactly 4"). The hidden screen-reader labels keep the square numbers.
+2. **One robot level** (Normal); the Easy/Normal choice is removed from the start screen. The robot: always rolls for a
+   6 at Home and at the fallen tree (never the card there); uses its card on the first punishment it meets (area
+   effects included); at the Swap Market gives to the player furthest behind and takes from the leader among the
+   players holding a card. Measured in phase A against a simple player that exists only in the simulator.
+3. **Removed completely:** lanterns (as a game item; the Lantern Festival and its lanterns stay as the destination),
+   the Bog boots, the Bog, the moving fallen tree (back 10), the three-6s rule, the third-roll rule, the 202-square
+   board, the Snake Leader.
+4. **Bonus card.** Everyone starts with 1. More from squares 30, 45 and 85, the Seaside effect and the Swap Market.
+   Uses: leave Home without a 6; get free from the fallen tree; cancel one of your own punishments (square 72 "others
+   double", bad area effects and square 100 included). Never against: a bump, Plot Twist, the area swaps, the Swap
+   Market, the Dragon Boat. Cancelling another player's reward is removed (the "Spoil it?" question and its "Don't ask
+   me again" button go).
+5. **Home** (was "Start"; the off-board Home and the Start square are one square on screen, called "Home"; the board
+   label loses "a 6 to enter"). You need a 6 to leave: one roll per turn, no limit, nothing obligatory after any number
+   of rolls. The 6 or the card only frees you; then you roll to move. A bumped player goes Home but needs **no** 6 to
+   leave: a notification says so ("Back Home, but your bags are still packed…", text to approve), and the "needs 6"
+   tag shows only when a 6 is really needed. A "free to go" popup shows after the freeing 6 or the card, at Home and at
+   the fallen tree.
+6. **Sixes:** every 6 rolls again, no limit; the rolls add up into one move. The 6 that frees you from Home or the tree
+   does not move you and does not count toward the sixes postcards.
+7. **Event moves** (fixed jumps): at most 20 squares, and never onto another event square. Exceptions: the Dragon Boat
+   (69), Plot Twist (37) and "next good square" (32). Dice moves (the area effects' rolls, square 61) have no limit and
+   trigger the square they end on, except the Forest's backward move. Swaps never trigger a square. No chaining.
+8. **Areas:** Home Town Home–9 · Countryside 10–22 · Forest 23–38 · Mountains 39–56 · Seaside 57–76 · Big City 77–100.
+   River & Lake and Festival Road are removed. Seaside's picture becomes the sailboat (River & Lake's).
+9. **Area effects:** one fixed effect per area, the same for everyone and known in advance; once per player per area per
+   game (entering again after a fall gives nothing). Triggered by your own move or your own square's jump into the
+   area, never by another player's swap. Home Town has none. The square's own event happens first, then the area
+   effect; it is told in the same "You have entered …" popup. The Bonus card cancels the bad ones (from that popup).
+
+   | Area | Effect |
+   |---|---|
+   | Countryside | **Gifted 6:** you do not move 6 on its own; you roll again right away and move once by the total (6 + the new roll; a 6 keeps rolling, as any run of sixes). Does not count toward the sixes postcards. If the move carries you into the Forest, the Forest effect applies too. |
+   | Forest | **Your next move goes backward.** If you roll a 6 you keep rolling and the whole total goes backward. Never further back than Home. No square event where you land; a bump does happen. A backward run of three or more 6s earns the sixes postcards. **If you are stuck at the fallen tree, the backward move applies right away on your next turn** (the tree blocks you going forward, not backward): you roll and go back, and that frees you from the tree. |
+   | Mountains | **Your next roll counts double** (the whole total of a run of sixes). |
+   | Seaside | **Swap with the player just in front of you** if within 20 squares; otherwise, or if you are leading: **a Bonus card**. |
+   | Big City | **Swap with the player just behind you** if within 10 squares; otherwise, or if you are last: **lose your next turn**. |
+
+10. **Fallen tree:** one fixed square at **27** (Forest), new picture. Landing on it by a roll: you are stuck. Each
+    turn: roll for a 6, or use the Bonus card. A player stuck there can be bumped. (See the Forest effect above.)
+
+### Squares
+
+| Square | Area | New |
+|---|---|---|
+| 7 | Home Town | **The Candle Walk:** by old custom a traveller to the Lantern Festival carries a lit candle to the end of their street; next turn you move exactly 1 square. |
+| 15 | Countryside | The Bog is removed. |
+| 20 | Countryside | **The Village Bus:** forward to 36 (jumps over the tree; the Forest effect applies). |
+| 30 / 45 / 85 | Forest / Mountains / Big City | Bonus card, each with its own story (45 was the Bog boots). |
+| 32 | Forest | Unchanged ("next good square"; exception to the event-square rule). |
+| 40 | Mountains | **Cable car:** forward to 56. The Mountain Lodge landmark moves to 56. |
+| 49 | Mountains | **The Rockslide:** back to 31. |
+| 54 | Mountains | Needs a new destination (its old one, 67, is no longer the Lodge): phase B. |
+| 69 | Seaside | **The Dragon Boat:** forward to 97 (see below). |
+| 74 | Seaside | **The Storm:** back to 57. |
+| 79 | Big City | **The Swap Market** (new blue ◆ colour and icon): give one card if you hold one, otherwise take one; with 3–4 players you choose the player (only those who can receive / have a card are offered); with 2 players it is automatic; nothing happens if no card can move. The Bonus card cannot cancel it. |
+| 91 | Big City | **Asleep on the Train:** back to 71 (exactly 20). |
+| 100 | Big City | Back to 82, for **everyone**; new story for the Big City. |
+
+Unchanged until the phase-B redesign: 10, 17, 37, 54 (destination), 61, 66, 72, 94, 96, 99.
+
+**The Dragon Boat (69).** A festival dragon boat takes you to the festival pier (97). On your next **played** turn
+(a missed turn waits) the die must show **exactly 4**: you win. Anything else (a 6 included, with no extra roll)
+takes you back to 69, where a player standing there is bumped; 69's event does not happen again. A pending doubled roll
+is ignored; the Bonus card cannot replace the 4 or cancel the return. If another player lands on 97 while you wait,
+you are bumped Home and the deal ends; a player who swaps onto 97 (Plot Twist, area swaps) does not inherit the deal.
+
+### Screens and the guide
+
+- **The action area holds only "Roll die".** Every choice is a guide popup on the right that covers the die: the card
+  at Home and at the fallen tree (**every turn** while a person holds a card; no card, no popup); the card on a
+  punishment or a bad area effect; the Swap Market choice. "Skip this turn" and "Pass the die to …" become one-button
+  popups. Robots get no popups.
+- **Button labels (owner, 25 Nov):** plain YES / NO is **not** decided: when the question is "use the card or roll for a
+  6?", YES or NO is unclear. Each button names its action (e.g. "Use my Bonus card" / "Roll for a 6"; "Use my Bonus
+  card" / "Keep it"). The exact labels are approved with the texts.
+- **Guide popups** (right) appear only after the pieces stop moving, so travel and the "Don't get mad!" moments are
+  never covered. **Left notifications** keep only short facts and never repeat the guide.
+- **The guide figure:** an adviser who travels with you (like the mayor or adviser of a city-building game); for the
+  Lantern Festival an Asian wise man, respectful, no stereotypes; design approved later. He introduces himself at the
+  start, announces every area and what lies ahead, and gives game tips once per device, to people only, never when his
+  popup already says it; "How to play" resets the tips.
+- **Opening guide:** 8 slides, rules only, no story words ("the last square", never "festival"); new screenshots.
+  Slides: welcome · roll a 6 to leave Home or use the card · sixes add up, no limit · green ▲ / red ▼ / blue ◆, tap a
+  square · the Bonus card · areas · bump (no 6 needed after) · the exact number to finish.
+- **Player badge:** a Bonus card with the number held (a faded 0 when none) replaces the lantern badge. The card area
+  under "…'s turn" keeps only the Bonus card slot.
+
+### Leaderboard
+
+One top 10 on the device, whoever played. Each person has a clock from leaving Home to the finish; it keeps running
+after a bump, pauses while the game is not on screen, and is kept in a saved game. Only wins by people count (robots may
+play). Columns: rank · player colour · time · date · number of players · destination. Messages for a top-10 time and for
+a time outside the top 10: texts to approve.
+
+### Postcards
+
+New: Fallen Tree; Sixes (3, 4, 5 and 6 in a row); The Dragon Boat; Straight Off the Boat (winning with the 4).
+Removed from the album: Bog Boots, Three Sixes, The Bog, Snake Leader, River & Lake, Festival Road. One set per
+destination; the album is sorted by destination.
+
+### Destinations
+
+The 202-square board is removed (saved games of it are dropped; its files and tests go; check that the store texts do
+not mention 202 squares). Called **Destinations**: the Lantern Festival plus 4 new ones, 100 squares each, chosen
+**first** (a slideshow with pictures and a short summary), then the players. Option (b): the same kinds of squares and
+the same rules, but each destination places them its own way, with its own areas (starting from Home), area effects,
+guide, board shape (not only spirals: e.g. a snake or zig-zag), narrative, pictures and postcards. Each is measured on
+its own, one at a time.
+
+### Narrative (phase B)
+
+Voice first: 4–5 moments written in 2–3 styles (e.g. calm and wise / warm and festive / dramatic), the owner chooses.
+Then area by area, each approved before the next. The guide carries the story; notifications carry the facts. All
+ages, family rating, "spiritual" = wonder, light, journey and gratitude, not religion. No square numbers.
+
+### Other
+
+- The save version goes up: unfinished games are dropped, collected postcards are kept.
+- Not in Step I: telling players about screen-reader support only after the owner tests a game with TalkBack.
+
+## Phased plan (approved)
+
+S = 1 session, M = 2–3, L = 4+.
+
+| Phase | What | Cost | Risk |
+|---|---|---|---|
+| A0 | Rewrite GCD rules R1–R21 with all of the above (text only) | S | Low |
+| A | Engine + simulator + tests on board 100 with every agreed rule and square; measurement report (seats, game length, waiting at Home and the tree, lead changes, close finishes, card use, robot vs simple player). Decision to take: the game's engine becomes the only simulator (the old one archived) | L | High: waiting and the harsh end may need fixes |
+| B | Board redesign + full narrative (voice, squares, guide and notification texts, square 54, new pictures: tree, Dragon Boat, Swap Market, area signs); measure again | M–L | Medium |
+| C | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level | M | Medium |
+| E | Leaderboard | S–M | Low |
+| F | Opening guide + in-game tips | S | Low |
+| G | New Android (versionCode 4, 2.0.0) and Windows (2.0.0.0) versions, step by step on the owner's PC | M | Low–medium |
+| D | Destination screen + new board shapes, then destinations 1–4 one at a time, each measured, each a later app update | L per destination | High cost, low rule risk |
+
+Order: A0 → A → B → C → E → F → G (the improved Lantern Festival is released first), then D.
