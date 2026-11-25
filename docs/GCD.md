@@ -1,6 +1,7 @@
-# Don't Get Mad! — Game Concept Document (GCD) v2 — FROZEN
+# Don't Get Mad! — Game Concept Document (GCD) v3 — rules decided, to be measured
 
-> **Status: FROZEN (v2, 14 Oct 2026, owner, step I-7).** Game rules R1–R21 (§8.2a, §8.2b), the story (§9), both boards (§10) and the computer players (§8.6) are final.
+> **Status: v3, rules decided 25 Nov 2026 (owner, Step I), to be measured in phase A.** Game rules R1–R20 are in §8.2a and the computer player in §8.6. Every Step I decision (areas, squares, guide, leaderboard, postcards, destinations, narrative) is in `docs/prompts/StepI_destinations.md`, Part 2; the story (§9), boards (§10) and replay sections (§12) below still describe v2 and are rewritten in the Step I phases that build them. The v2 rules are archived in `docs/archive/GCD_rules_v2.md`.
+> *(v2 status, for the record: FROZEN 14 Oct 2026, owner, step I-7.)*
 > This document is the contract for coding: anything not written here is not built. Any change after the freeze needs the owner's approval and, for a rule or a board, a new measurement.
 > **Legend:** ✅ = decided by the owner · 📊 = measured in code (file named) · 💡 = proposal, waiting for the owner's decision.
 > **References:** the paper board transcription is in `docs/archive/GCD_v0-v1_paper_transcription.md`. The paper-board measurements with the real rules are in `docs/analysis/MEASURE_REPORT_v0.md` and `docs/analysis/measure-v0-paper.md` (the older `SIM_REPORT_v0.md` and `sim-v0-paper-engine-results.md` are marked INVALID). The market research is in `docs/analysis/MARKET_REPORT.md`.
@@ -77,54 +78,34 @@ Every rule, tile and screen must serve these. If something fails a pillar, it is
 Throw the die → move forward square by square → if you land on an event square, the event happens → next player. The first to reach **END** wins.
 **No chaining** ✅ (owner, Q4): arriving on a square because of an event does not trigger that square's event, unless the event says so.
 
-### 8.2a Core rules of the original game ✅ (owner answers, 14 Oct 2026)
+### 8.2a Game rules v3 ✅ (owner, 25 Nov 2026, Step I)
 
-These are the paper game's real rules. Any change to them must be small, measured, and approved by the owner.
-
-| # | Rule |
-|---|---|
-| R1 | **Entering:** players begin off the board. A **6** puts the token on the **Start square** (no number). Because it is a 6, the player throws again and advances from Start. |
-| R2 | **Sixes** (changed by the owner, 15 Oct 2026, after the real-life test): **every 6 gives exactly one more throw.** The throws add up and the token moves **once** by the total (6, 2 → 8; 6, 6, 1 → 13, then the turn ends). **Maximum three 6s:** on the third 6 the player moves 6 × 3 = 18 and the turn ends. (Before: "6, 6, 1, 5 → 18", two 6s earned two extra throws.) |
-| R3 | **Passing over:** squares passed during a move have no effect and capture nobody. Only the final square counts. |
-| R4 | **Capture (universal):** a player who lands on a square occupied by another player, **by a throw or by any jump** (ladder, snake, "go to X", swap), sends that player back to the **Start square**. No safe squares; only Start can hold several players. |
-| R5 | **Back on Start:** a player sent to Start (by capture or by square 10) moves normally from their next turn and does **not** need another 6. |
-| R6 | **Trap square (paper: Prison 30), and the "danger road" squares that send you there:** landing on it by a normal throw also traps you. Only a 6 gets you out; that 6 does not move you. Because it is a 6, you throw again and move normally. The out-6 counts as the first of the maximum three (6 out, 6, 6 → move 12, end). |
-| R7 | **Hospital 50:** miss 3 turns. |
-| R8 | **END:** needs an exact throw; if the total is too big, you stay where you are. |
-| R9 | **15:** next turn you move exactly 1, whatever the die shows. **45:** throw twice, one move with the total. **123:** throw 3 times, one move with the total; the square you land on applies. **143:** the other players double their next throw only. |
-| R10 | **75:** change place with the player closest to the END (the leader). |
-| R11 | **65 / 128:** the nearest reward / punishment **forward only**. **178:** back to **167**. |
-| R12 | 2–4 players, one token each. |
-| R13 | **Content:** the trap mechanic stays. Only its name and story change (e.g. "prison" → a neutral journey trap) to protect the family rating. |
-
-| R14 | **Bonus card** (photos 5 and 21 are the same card): received on the "skip a punishment" square. Used **once, whenever you like**: either avoid one of your own punishments, or cancel a reward of another player of your choice. **Owner, 22 Oct 2026:** a spare lantern can also cancel your own punishment (R18). Only the Bonus card can cancel another player's reward. |
-| R15 | The 6 used to enter or to leave the trap counts as a 6 (first of the three) but gives no points. |
-
-| R16 | ~~Enter with a 6, or automatically after 3 failed tries; trap: out with a 6, or automatically after 3 failed tries.~~ **Replaced by R17** (owner, step I-6). |
-
-Bonus card square confirmed: **60**. Bonus card use: **avoid your own next punishment** (the paper's "defend" use; this is how it is measured).
-
-### 8.2b Rules added in step I-6 ✅ (owner, 14 Oct 2026)
+Decided in the Step I planning session (`docs/prompts/StepI_destinations.md`, Part 2); **to be measured in phase A** before any rule code is merged. The v2 rules (R1–R21 of 14–22 Oct 2026) are archived in `docs/archive/GCD_rules_v2.md`. Square numbers are on the 100-square board (END = 101).
 
 | # | Rule |
 |---|---|
-| R17 | **Third throw** (changed by the owner, 22 Oct 2026): at Home or in the Bog, a 6 lets you in (or out) and **moves nobody** (R15); you throw again and move by that throw: 6, 2 → square 2, always. **On the 3rd throw without a 6:** if you have a spare lantern, one is used automatically and you move by that 3rd throw. If you have only your last lantern, you lose nothing and keep throwing on your next turns until you throw a 6, with no limit. **Spend a lantern:** with a spare lantern you may spend it before throwing to leave at once, then throw and move as on any turn (a 6 throws again). There are no stair steps, so two players never share a square: square 1 is a square like any other (R4). *(Before 22 Oct: the 3rd throw without a 6 always cost a lantern, and a lantern could be spent with only 1 left.)* |
-| R18 | **Lanterns** (the lifelines; changed by the owner, 22 Oct 2026). Every player starts with **3**. **Your last lantern is never lost or spent:** you keep it to light on the last square, so **nobody is ever out of the game**. Lanterns above the last one are *spare*. A spare lantern goes: (a) automatically after 3 throws without a 6 (R17); (b) by choice, to leave Home or the Bog at once (R17); (c) by choice, as a **shield**: when you land on a red ▼ square (any punishment, including the Bog and the squares that send you there), spend one to cancel it. A shield never works against a bump (R4) or the fallen tree (R19), it protects only you, and it never works on the square where the other players double their next throw (long 143, short 72): that would cancel their reward (owner, 22 Oct 2026). You **win 1** by throwing three 6s in a row in one turn (the 6 that lets you in or out counts as the first); no upper limit. Trying to use the last lantern only shows a message. Bumps never touch lanterns. *(Before 22 Oct: the 4th loss put the player out; with 3–4 players the last player left won.)* |
-| R19 | **Roadblock** (a game event, nobody decides). At the start of each round, if no roadblock is on the board, the game puts one on a random free plain square 1–10 squares in front of the leader (not an event square, not occupied, not a crossroads). The first player to land on it, by a throw or any jump, goes **back 10 squares** (no chaining; capture applies). It is then removed and placed again at the start of the next round (if the leader is on a wild road, it waits until the leader is back on the main road). Passing over it does nothing (R3). |
-| R20 | ~~Two roads (Main Road and the Shortcut).~~ **Removed by the owner, 15 Oct 2026:** there are no crossroads and no Shortcut on either board; a throw is always counted in full. |
-| R21 | **Who decides what** (changed by the owner, 22 Oct 2026). A player chooses: when to use the **Bonus card** (R14); whether to **spend a spare lantern** to leave Home or the Bog (R17); whether to use the **lantern shield** (R18); whether to wear the **Bog boots**. Computer players have **two levels**, chosen on the start screen: **Easy** is the simple player measured since I-7 (unchanged: never spends a lantern, the Bonus card on its own next punishment, always the Bog boots); **Normal** uses spare lanterns (strategy in §8.6). Measured: `docs/analysis/stepH-lanterns.md`. |
+| R1 | **Home.** Every player starts **at Home** with **1 Bonus card**. To leave Home you need a **6**: one roll per turn, no limit. Instead of the 6 you may use a Bonus card. The 6 or the card only frees you; then you roll again and move by that roll. |
+| R2 | **Sixes.** Every 6 gives one more roll, **with no limit**. The rolls add up and the token moves **once** by the total (6, 6, 2 → 14). The 6 that frees you from Home or the fallen tree does not move you and does not count in a run of sixes. |
+| R3 | **Passing over.** Squares passed have no effect; only the square where you stop counts. |
+| R4 | **Bump.** Landing on a square where another player stands, by a roll or a jump, sends that player **Home**. Home and the finish can hold several players. Swaps exchange places and bump nobody. |
+| R5 | **Back Home.** A bumped player leaves Home on their next turn **without** needing a 6. |
+| R6 | **Fallen tree** (square 27, Forest). Landing on it by a roll: you are stuck. Each turn, roll for a 6 or use a Bonus card; the 6 or the card frees you, then you roll again to move. A stuck player can be bumped. If your Forest backward move is pending, it happens on your next turn and frees you. |
+| R7 | **Finish.** You need the **exact** number; a total that is too big leaves you where you are. A 6 can never finish (it always rolls again). |
+| R8 | **Event moves.** A fixed jump moves **at most 20 squares** and never onto another event square. Exceptions: the Dragon Boat (69), Plot Twist (37) and "next good square" (32). Moves made with dice have no limit and trigger the square they end on, except the Forest's backward move. Swaps never trigger a square. **No chaining:** a square reached by an event does not act, unless its rule says so (32). |
+| R9 | **Special squares.** Move exactly 1 square next turn (7) · roll 3 times and move by the total (61) · every other player's next roll counts double (72) · miss 2 turns (99, after its jump). |
+| R10 | **Plot Twist** (37). Swap places with the leader. If nobody is ahead, nothing happens. |
+| R11 | **Next good square** (32). Move forward to the next reward square, and it applies to you. |
+| R12 | **Players.** 2–4 players; any seat can be a person or a robot. |
+| R13 | **Content.** All ages, family rating: no violence, crime, alcohol or gambling. |
+| R14 | **Bonus card.** Uses: (a) leave Home without a 6; (b) get free from the fallen tree; (c) cancel one of your own punishments (red squares, square 72, the bad area effects). It **never** works against a bump, Plot Twist, the area swaps, the Swap Market or the Dragon Boat, and it cannot cancel another player's reward. More cards: squares 30, 45 and 85, the Seaside effect, the Swap Market. |
+| R15 | **Areas.** Home Town Home–9 · Countryside 10–22 · Forest 23–38 · Mountains 39–56 · Seaside 57–76 · Big City 77–100. |
+| R16 | **Area effects.** The **first time** each player enters an area, by their own move or their own square's jump (never by someone else's swap), its effect happens, after the square's own event. Home Town has none. **Countryside:** a gifted 6: roll again at once and move by 6 + the roll (a 6 keeps rolling). **Forest:** your next move goes **backward** by your roll (6s keep rolling, everything goes back, never past Home); no square event where you land, but a bump happens. **Mountains:** your next roll counts double (the whole total). **Seaside:** swap with the player just in front if within 20 squares; otherwise, or if you are leading, a Bonus card. **Big City:** swap with the player just behind if within 10 squares; otherwise, or if you are last, lose your next turn. |
+| R17 | **The Dragon Boat** (69). Forward to 97. On your next **played** turn the die must show **exactly 4**: you win. Anything else (a 6 too, with no extra roll) takes you back to 69, bumping anyone there. A doubled roll is ignored; the Bonus card cannot help. If you are bumped on 97 the deal ends; a player who swaps onto 97 does not take over the deal. |
+| R18 | **The Swap Market** (79, blue ◆). If you hold a Bonus card, you give one to another player; if you hold none, you take one from a player who has one. With 3–4 players you choose; with 2 it is automatic. If no card can move, nothing happens. |
+| R19 | **Who decides what.** A person chooses: using the card at Home and at the tree (asked every turn while they hold one), on a punishment, and the partner at the Swap Market. Everything else is the dice. |
+| R20 | **The robot** (one level). Always rolls for the 6 at Home and at the tree; uses its card on the first punishment it meets; at the Swap Market gives to the player furthest behind and takes from the leader among the players holding a card. |
 
-**Owner, 22 Oct 2026 (step H):** R14, R17, R18 and R21 changed as written above: nobody is out any more, a spare lantern is a shield against your own punishments, and computer players are Easy or Normal. Report: `docs/analysis/stepH-lanterns.md`.
-
-**Owner, 15 Oct 2026: a second Bonus card square** (long 155, short 85; same card as R14), chosen from the five calculations in `docs/analysis/audit-2026-10-15.md` §4: fewer falls, more close finishes, shorter games, still fair (seats 24.7–25.6%). The order of good and bad squares stays (spreading them evenly measured worse).
-
-**Owner, 15 Oct 2026 (real-life test):** R2, R17 and R20 changed as written above; the computer players are unchanged (they never had a choice left but the Bonus card). Measured, 40,000 games per board: every seat wins 24.7–25.2% (±0.42); long 52.1 rounds, short 30.1. Report: `docs/analysis/audit-2026-10-15.md`.
-
-**Status (14 Oct 2026): rules R1–R21 are FROZEN (owner).** Boards: the long board `data/board-long.json` (the paper squares; its `rules` are identical to `data/board-v0-paper.json`) and the short board `data/board-short.json` (§10.1). **Square numbers in R6–R11 and R20 are long-board squares;** the short board's own squares (trap 15, crossroads 41 and 80, …) are in §10.1 and in its file. Measurements of the frozen game: `docs/analysis/measure-frozen.md`, `docs/analysis/lifelines-final.md`, `docs/analysis/lifelines-compare.md` (version A = R18), `docs/analysis/sixes-and-captures.md`.
-
-**Logic Layer result (honest):** the thinking target (a thoughtful player wins 27–32% against 3 simple players) is **not met**. With the bonus card and the road choice, a thoughtful player wins **25.2–25.5%** (`docs/analysis/I-6_measurements.md`). Ideas that met it (spending lifelines) were rejected because lifelines are too scarce to risk (owner rule: no logic choice may put a lifeline at risk, and luck squares and lifelines are never mixed). The game is a chance game with two small choices. History of every proposal and decision: `docs/analysis/I-6_owner_decisions.md`.
-
-**All measurements made before 14 Oct evening ignored R1–R6 and are invalid** (`docs/analysis/*` v0 reports, the old ablations). They were redone with the corrected engine: `measure-v0-paper.md`, `measure-frozen.md`, `measure-long.md`, `measure-short.md`, `ablation-long.md`.
+**Removed (owner, 25 Nov 2026):** lanterns (v2 R18), the third throw (v2 R15–R17), the maximum of three 6s, the moving fallen tree (v2 R19), the Bog and the Bog boots (v2 R6), Hospital (v2 R7, long board only), the Snake Leader, cancelling another player's reward, the two robot levels, the 202-square board, crossroads (v2 R20, removed 15 Oct 2026).
 
 ### 8.3 Event families
 All events belong to a few families. The exact squares, sizes and amounts were decided with the simulator (steps I-3 to I-6 for the long board, I-5 for the short board) and are in the board files.
@@ -149,17 +130,13 @@ All events belong to a few families. The exact squares, sizes and amounts were d
 ### 8.5 Measurements of the paper game with the real rules (before I-6)
 See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Excitement is high (captures, late overtakes). Boredom fails the target (21% of players wait 10+ turns, mostly waiting to enter and in the trap). Small options are measured there and wait for the owner's decision.
 
-### 8.6 Computer players ✅ (owner, step I-7; levels: owner, 22 Oct 2026)
-- Any seat can be a computer player. The Easy level plays as the **simple player** the simulator measured (`types: "simple"` in `tools/sim/engine.mjs`), so every fairness and excitement number in this document holds for it:
-  - (there are no crossroads any more: R20 was removed, owner 15 Oct 2026);
-  - it uses its **Bonus card** on its own next punishment (R14, the "defend" use);
-  - Bog boots: always worn (a person is asked, owner 15 Oct). Never spends a lantern to leave Home or the Bog.
-- It has no other choice to make: everything else is the dice (R21).
-- **Two levels** (owner, 22 Oct 2026), chosen on the start screen ("Computer players: Easy / Normal", the same for every computer seat; Normal unless chosen otherwise):
-  - **Easy** = the simple player above, unchanged.
-  - **Normal** = spends a spare lantern to leave the Bog at once (at Home it rolls for a 6); uses the Bonus card like Easy, except on the Bog itself when it holds the Bog boots: then it wears the boots; otherwise shields a punishment worth 10 squares or more (a square back = 1, a missed turn = 4, the Bog = 10 without boots); never tries the last lantern. Measured: wins 30.4% (long) / 31.9% (short) against 3 Easy (`docs/analysis/stepH-lanterns.md`).
+### 8.6 Computer players ✅ (owner, 25 Nov 2026, Step I)
+- Any seat can be a computer player. There is **one level** (the Easy/Normal choice is removed): rule R20 in §8.2a.
+- It is measured in phase A against a simple player that exists only in the simulator, to show how much strategy counts. The v2 robots (Easy, Normal with lanterns) are archived in `docs/archive/GCD_rules_v2.md`.
 
 ## 9. Story: "The Journey" (P4)
+
+> **Step I (owner, 25 Nov 2026):** the whole narrative is rewritten in phase B (voice first, then area by area; a guide figure on the right, short facts on the left). Areas from now on: §8.2a R15. See `docs/prompts/StepI_destinations.md`.
 
 ### 9.1 Principle ✅
 The board is **one continuous neutral journey**. Each square is the next moment of the same trip, not a collection of unrelated events. Every event is a travel moment: transport, weather, forgetting things, friendly help, shortcuts, getting lost.
@@ -173,6 +150,8 @@ The board is **one continuous neutral journey**. Each square is the next moment 
 - **The texts**, square by square, are in `data/board-long.json` (`story` and `icon` per square, and the `story` block for the rule elements). The paper's own words stay in `text`. Every rule field is identical to `data/board-v0-paper.json`, and the measurement is unchanged (`docs/analysis/measure-long.md` = `docs/analysis/measure-frozen.md`). Working log with every version and decision: `docs/analysis/I-4_story_log.md`.
 
 ## 10. Boards ✅
+
+> **Step I (owner, 25 Nov 2026):** the long 202-square board is removed; only the 100-square board stays, redesigned in phase B, and 4 more 100-square **Destinations** follow in phase D. See `docs/prompts/StepI_destinations.md`.
 
 | Board | Size | Role |
 |---|---|---|
@@ -214,6 +193,8 @@ For every event square, the simulator reports:
 | C | Fewer than 5% of players with 10+ turns without moving (paper with the real rules: 21%) |
 
 ## 12. "One more game" — replay pull (P5) ✅ (owner, I-1 §16 item 6: all)
+
+> **Step I (owner, 25 Nov 2026):** a device-only leaderboard of human win times and new postcards (one set per destination) are added; see `docs/prompts/StepI_destinations.md`.
 
 No accounts and no data leave the device (C1). Everything below lives on the device only.
 
