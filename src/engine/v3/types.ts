@@ -24,8 +24,15 @@ export interface Tile3 {
   target?: "R" | "P";
   dice?: number;
   need?: number;
-  /** Working label, never shown to players (the story comes in phase B). */
+  /** Working label, never shown to players. */
   name: string;
+  /** Phase B texts (owner-approved, shown to people only): the square's title and Mr. Lin's story. */
+  title?: string;
+  guide?: string;
+  /** Picture name (src/render). */
+  icon?: string;
+  /** Own notification, only where the shared pattern (`Board3.notes`) does not fit. */
+  note?: string;
 }
 
 export type AreaEffect =
@@ -40,6 +47,28 @@ export interface Area {
   from: number;
   to: number;
   effect: AreaEffect | null;
+  /** Phase B texts: the area sign's picture, the guide's announcement and the effect text. */
+  icon?: string;
+  announce?: string;
+  effectText?: string;
+}
+
+/** A named plain square (no event). */
+export interface Landmark {
+  name: string;
+  icon?: string;
+}
+
+/** The story moments tied to places (owner, 25 Nov 2026: phase B writes them; buttons and tips come in C/E/F). */
+export const MOMENT_KEYS = [
+  "home", "backHome", "freeToGo", "treeStuck", "boatWait", "boatMiss", "boatWin", "swapMarket", "finish",
+] as const;
+export type MomentKey = (typeof MOMENT_KEYS)[number];
+
+export interface Moment {
+  title?: string;
+  guide?: string;
+  note?: string;
 }
 
 export interface Rules3 {
@@ -60,4 +89,11 @@ export interface Board3 {
   rules: Rules3;
   areas: Area[];
   tiles: Record<string, Tile3>;
+  /** Phase B: the destination's name and picture, and the guide. */
+  destination?: { name: string; icon?: string };
+  guide?: { name: string };
+  /** Notification patterns, one per kind of square; {p} = the player, {n} = a distance in squares. */
+  notes?: Record<string, string>;
+  landmarks?: Record<string, Landmark>;
+  moments?: Partial<Record<MomentKey, Moment>>;
 }
