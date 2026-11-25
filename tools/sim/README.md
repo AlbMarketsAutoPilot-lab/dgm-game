@@ -5,6 +5,8 @@ The engine implements the owner's core rules (docs/GCD.md §8.2a).
 
 | Command | What it does |
 |---|---|
+| `tools/sim/engine3.mjs` | **Step I (v3 rules, GCD R1–R20):** the simulator for the v3 destination files (`data/lantern-festival.json`); robot and simple player. Rule tests: `test/v3-sim.test.ts` (run by `npm test`) |
+| `node tools/sim/stepI.mjs [games] [out.md]` | Step I phase A3: the v3 rules on the Lantern Festival, robots and simple players (`docs/analysis/stepI-A_measure.md`; the app engine `src/engine/v3/` plays the same games: `test/v3-equivalence.test.ts`) |
 | `node tools/sim/test/rules.test.mjs` | **Run first.** Scripted-dice tests: one per owner rule (entering, sixes, capture, trap, END, events, bonus card, Snake Leader) |
 | `node tools/sim/run.mjs <board.json> [games] [out.md]` | All measures (fairness, length, excitement, boredom, every event square) for the board's rules and rule variants |
 | `node tools/sim/ablate.mjs <board.json> [games] [out.md]` | With vs without: removes one event square at a time, with a noise row |
