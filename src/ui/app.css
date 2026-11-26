@@ -566,3 +566,5 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   background: rgba(255, 253, 246, .96); border: .125rem solid var(--ink); border-left: .5rem solid var(--who, var(--ink)); box-shadow: 0 .25rem .75rem rgba(43, 18, 72, .25); font-size: 1.05rem; line-height: 1.2; }
 .notes .note .tok { width: 1.5rem; height: 1.5rem; flex: 0 0 auto; }
 .notes .note.good { background: #eef6e8; } .notes .note.bad { background: #fbece6; }
+/* The album shows one set per destination, under its name (Step I phase C6) */
+.album-dest { max-width: 62.5rem; margin: .875rem auto 0; font-weight: normal; font-size: 1.35rem; color: var(--ink); }

@@ -21,7 +21,7 @@ import { Popups, type PopupContent } from "./popup";
 import { sound } from "./sound";
 import { switchIcon } from "./sound-switch";
 import { Stage } from "./stage";
-import { showAlbum } from "./postcards";
+import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 import { clearGame, newGame, replay, saveGame, type DestinationId, type SavedGame } from "./save";
 
 export interface Setup {
@@ -101,6 +101,9 @@ export class GameScreen {
   private readonly act: HTMLElement;
   private round = 0;
   private seat = 0;
+  /** Postcards collected on this device, and the new ones from this game (GCD §12). */
+  private readonly album = loadAlbum();
+  private readonly newCards: Postcard[] = [];
   /** Where each token is shown, and each player's cards as shown (both follow the events, behind the engine). */
   private readonly places: number[];
   private readonly cards: number[];
@@ -129,6 +132,7 @@ export class GameScreen {
       this.game = again;
       this.answers.push(...resume.answers);
       this.turns = resume.turns;
+      this.newCards.push(...POSTCARDS.filter((c) => resume.cards.includes(c.id)));
     } else {
       this.seed = randomSeed();
       this.game = newGame(DEST, players, computer, this.seed, Math.floor(Math.random() * players));
@@ -233,11 +237,12 @@ export class GameScreen {
     this.setAct([]);
     const finish = this.board.moments?.finish?.guide;
     const dest = this.board.destination?.name ?? "";
+    const cards = this.newCards.length ? `<p class="pop-sub">New postcard${this.newCards.length > 1 ? "s" : ""}: <b>${this.newCards.map((c) => esc(c.title)).join(", ")}</b></p>` : "";
     let again: string;
     for (;;) {
       again = await this.pops.show({
         kind: "win", tone: "good", art: artFor(this.board.destination?.icon ?? "lanterns", dest), kicker: esc(dest),
-        title: w === null ? esc(dest) : this.fill(T.win.title, w), text: w !== null && this.person(w) && finish ? this.fill(esc(finish), w) : undefined,
+        title: w === null ? esc(dest) : this.fill(T.win.title, w), text: w !== null && this.person(w) && finish ? this.fill(esc(finish), w) : undefined, more: cards || undefined,
         buttons: [{ label: T.win.newGame, value: "new", primary: true }, { label: T.win.album, value: "album" }],
       });
       if (again !== "album") break;
@@ -308,7 +313,7 @@ export class GameScreen {
     if (this.game.over) return clearGame();
     saveGame({
       destination: DEST, players: this.setup.players, computer: this.setup.computer, seed: this.seed, first: this.game.first,
-      answers: this.answers, turns: this.turns, cards: [], round: this.roundOf(this.game.next),
+      answers: this.answers, turns: this.turns, cards: this.newCards.map((c) => c.id), round: this.roundOf(this.game.next),
     });
   }
 
@@ -346,6 +351,7 @@ export class GameScreen {
         }
         if (e.type === "free" || e.type === "move") last = 0;
         await this.play(e, fresh.slice(i + 1), r.done ? null : r.value);
+        this.collect(e);
       }
       if (r.done) break;
       const a = await this.decide(r.value);
@@ -362,6 +368,18 @@ export class GameScreen {
     const next = this.game.next;
     if (!me || next === seat || !this.person(next)) await this.wait(me ? 2200 : 1300);
     else await this.ask([{ label: T.pass(PLAYERS[next].name), value: "ok", primary: true }]); // A9: a label is plain text
+  }
+
+  /** Journey postcards (GCD §12): a person earns one the first time on this device; a stamp on the square says so. */
+  private collect(e: Event3): void {
+    for (const c of postcardsFor(this.board, e, (seat) => this.person(seat))) {
+      if (this.album.has(c.id)) continue;
+      this.album.add(c.id);
+      this.newCards.push(c);
+      saveAlbum(this.album);
+      this.stage.stamp("good", "New postcard!"); // waits for the square's own stamp
+      sound.play("postcard");
+    }
   }
 
   /** A person's turn before the engine plays it: a missed turn, and Mr. Lin's word at Home, at the tree, on the boat. */
