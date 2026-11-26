@@ -22,6 +22,8 @@ import { sound } from "./sound";
 import { switchIcon } from "./sound-switch";
 import { Stage } from "./stage";
 import { WinClock } from "./clock";
+import { addRecord, recordOf } from "./records";
+import { RT, rankingLine, showRecords } from "./records-page";
 import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 import { clearGame, newGame, replay, saveGame, type DestinationId, type SavedGame } from "./save";
 
@@ -246,17 +248,27 @@ export class GameScreen {
     const finish = this.board.moments?.finish?.guide;
     const dest = this.board.destination?.name ?? "";
     const cards = this.newCards.length ? `<p class="pop-sub">New postcard${this.newCards.length > 1 ? "s" : ""}: <b>${this.newCards.map((c) => esc(c.title)).join(", ")}</b></p>` : "";
+    const ranking = this.recordLine(w);
     let again: string;
     for (;;) {
       again = await this.pops.show({
         kind: "win", tone: "good", art: artFor(this.board.destination?.icon ?? "lanterns", dest), kicker: esc(dest),
-        title: w === null ? esc(dest) : this.fill(T.win.title, w), text: w !== null && this.person(w) && finish ? this.fill(esc(finish), w) : undefined, more: cards || undefined,
-        buttons: [{ label: T.win.newGame, value: "new", primary: true }, { label: T.win.album, value: "album" }],
+        title: w === null ? esc(dest) : this.fill(T.win.title, w), text: w !== null && this.person(w) && finish ? this.fill(esc(finish), w) : undefined, more: ranking + cards || undefined,
+        buttons: [{ label: T.win.newGame, value: "new", primary: true }, { label: T.win.album, value: "album" }, { label: RT.button, value: "records" }],
       });
-      if (again !== "album") break;
-      await showAlbum();
+      if (again === "album") await showAlbum();
+      else if (again === "records") await showRecords();
+      else break;
     }
     this.onExit(false);
+  }
+
+  /** Phase E: a person's win goes to the Records when its time counts (R8–R12); otherwise R13. A robot's win: nothing. */
+  private recordLine(w: number | null): string {
+    if (w === null || !this.person(w)) return "";
+    if (this.winTime === null) return `<p class="pop-sub rec-line">${esc(rankingLine(null, 0))}</p>`;
+    const rec = recordOf(this.winTime, w, this.setup.players, DEST);
+    return `<p class="pop-sub rec-line">${esc(rankingLine(addRecord(rec), rec.s))}</p>`;
   }
 
   /** U3: the first player is drawn at random. The avatars take turns lighting up, and stop on the one who starts. */

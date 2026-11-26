@@ -135,6 +135,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .pop.good .pop-outcome { border-color: var(--good); color: var(--good); background: #e5f0dc; }
 .pop.bad .pop-outcome { border-color: var(--bad); color: #9c2b20; background: #f6e0d8; }
 .pop-sub { margin: .5rem 0 0; font-size: .95rem; opacity: .8; }
+.pop-sub.rec-line { font-size: 1.05rem; opacity: 1; }
 .pop-earlier { margin: .125rem 0 0; padding-left: 1.125rem; font-size: 1rem; line-height: 1.25; }
 .pop-earlier .good { color: var(--good); } .pop-earlier .bad { color: #9c2b20; }
 /* The popup's own buttons stay in view when its text has to scroll (owner: no cut buttons) */
@@ -489,6 +490,39 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup .s-more { display: flex; gap: .5rem; justify-content: center; flex: 1 1 100%; }
 .setup .s-more button { flex: 0 1 auto; font-size: 1.05rem; padding-inline: .75rem; white-space: nowrap; }
 @media (max-width: 360px) { .setup .s-more button { font-size: .95rem; padding-inline: .5rem; } }
+
+/* ---- The Records (Step I phase E): the album's page with a table ---- */
+.setup .s-more { flex-wrap: wrap; }
+.records .r-head { display: flex; align-items: center; gap: .875rem; max-width: 50rem; margin: .875rem auto 0; }
+.records .r-art { flex: 0 0 auto; width: clamp(4rem, 14vw, 6.5rem); } .records .r-art svg { width: 100%; height: auto; display: block; }
+.records .r-head p { margin: 0; } .records .r-intro { font-size: 1.25rem; } .records .r-rule { margin-top: .25rem !important; font-size: 1rem; opacity: .8; }
+.records .r-empty { max-width: 50rem; margin: 1.5rem auto 0; font-size: 1.2rem; text-align: center; }
+.records .r-table { width: 100%; max-width: 50rem; margin: 1rem auto 0; border-collapse: collapse; font-size: 1.15rem; }
+.records .r-table th { font-weight: normal; font-size: .95rem; opacity: .8; text-align: left; padding: .375rem .5rem; border-bottom: .125rem solid rgba(75, 35, 119, .35); }
+.records .r-table td { padding: .5rem; border-bottom: .0625rem dashed rgba(75, 35, 119, .3); vertical-align: middle; }
+.records .r-table tbody tr:first-child td { font-size: 1.3rem; }
+.records .r-rank, .records .r-time, .records .r-players { white-space: nowrap; } .records .r-time { font-variant-numeric: tabular-nums; }
+.records .r-players { text-align: center !important; }
+.records .r-player { white-space: nowrap; } .records .r-player svg { width: 1.5rem; height: 1.5rem; vertical-align: middle; margin-right: .375rem; }
+.records .r-date { white-space: nowrap; }
+@media (max-width: 560px) {
+  .records .r-table { font-size: 1rem; } .records .r-table tbody tr:first-child td { font-size: 1.1rem; }
+  .records .r-table th, .records .r-table td { padding: .375rem .25rem; } .records .r-table th { font-size: .8rem; }
+  .records .r-date { white-space: normal; }
+}
+.records .r-lbl { display: none; }
+/* Phones under 390 px (owner, 26 Nov 2026): each record on two lines, "1st ● Red 8:32" then "26 Nov 2026 · Players: 3 · The Lantern Festival" */
+@media (max-width: 389px) {
+  .records .r-table, .records .r-table tbody { display: block; }
+  .records .r-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .records .r-table tr { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .5rem; row-gap: .125rem; padding: .5rem .25rem; border-bottom: .0625rem dashed rgba(75, 35, 119, .3); }
+  .records .r-table td { padding: 0; border: 0; font-size: .95rem; }
+  .records .r-table tbody tr td.r-rank, .records .r-table tbody tr td.r-player, .records .r-table tbody tr td.r-time { font-size: 1.2rem; }
+  .records .r-rank { flex: 0 0 2.75rem; } .records .r-player { flex: 1 0 55%; } .records .r-time { margin-left: auto; }
+  .records .r-players, .records .r-dest { white-space: nowrap; }
+  .records .r-date::after, .records .r-players::after { content: " ·"; }
+  .records .r-lbl { display: inline; }
+}
 
 /* ---- Sound switches (U7) ---- */
 .setup .s-go .snd { min-width: 2.75rem; width: 2.75rem; padding: 0; display: grid; place-items: center; }
