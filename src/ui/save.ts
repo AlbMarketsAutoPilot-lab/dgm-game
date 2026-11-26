@@ -2,40 +2,37 @@
 // and the answers given to the engine's questions, so those are saved after every turn and the game is played again
 // up to the same turn when it is continued. Saved only in this browser (C1: nothing leaves the device). Reloading in
 // the middle of a turn brings back the start of that turn, with the same throws: no luck to be won by reloading.
-import { BOARDS, Game, type Answer, type Board, type BoardId } from "../engine";
-import type { Level } from "./app";
+// Step I phase C4 (owner, 25 Nov 2026): the v3 rules; saved games of the old version are dropped (VERSION 4).
+import { DESTINATIONS, Game3, type Answer3, type Board3 } from "../engine/v3";
 
 /** Bump when a rule change in the engine would play a saved game differently (old saves are then dropped). */
-const VERSION = 3; // 2 (owner, 15 Oct): the Bog boots and spending a lantern are answers too; 3 (owner, 22 Oct 2026): nobody
-// is out, the lantern shield ("card" / "lantern" / "take"). Older saves would replay wrong
+const VERSION = 4; // 4 (owner, 25 Nov 2026, Step I): the v3 rules and the Lantern Festival; 3 and older are dropped
 const KEY = "dgm.game.v1";
+
+export type DestinationId = keyof typeof DESTINATIONS;
 
 export interface SavedGame {
   v: number;
-  board: BoardId;
-  /** The board's contents when saved: a changed board file cannot replay an old game. */
+  destination: DestinationId;
+  /** The destination's contents when saved: a changed file cannot replay an old game. */
   boardHash: string;
   players: number;
   computer: boolean[];
-  /** The computer players' level (owner, 22 Oct 2026). */
-  level: Level;
   seed: number;
   first: number;
-  /** Every answer given to the engine, in order (roads, Bonus cards; people and computer players). */
-  answers: Answer[];
+  /** Every answer given to the engine, in order (people and robots). */
+  answers: Answer3[];
   /** Whole turns played. */
   turns: number;
-  /** Seats that said "Don't ask me again this game" to the spoil question. */
-  quiet: number[];
   /** Postcards earned in this game (for the end of the game). */
   cards: string[];
   /** For the start screen: the round of the next turn. */
   round: number;
 }
 
-/** A short fingerprint of a board's rules and squares. */
-export function boardHash(b: Board): string {
-  const s = JSON.stringify([b.lastTile, b.tiles, b.rules]);
+/** A short fingerprint of a destination's rules, squares and areas. */
+export function boardHash(b: Board3): string {
+  const s = JSON.stringify([b.lastTile, b.tiles, b.rules, b.areas.map((a) => [a.from, a.to, a.effect])]);
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
   return (h >>> 0).toString(36);
@@ -47,13 +44,11 @@ const isInt = (x: unknown, lo: number, hi: number): x is number => Number.isInte
 export function parseSave(x: unknown): SavedGame | null {
   const s = x as SavedGame;
   if (!s || typeof s !== "object" || s.v !== VERSION) return null;
-  if (!Object.prototype.hasOwnProperty.call(BOARDS, s.board) || s.boardHash !== boardHash(BOARDS[s.board])) return null;
+  if (!Object.prototype.hasOwnProperty.call(DESTINATIONS, s.destination) || s.boardHash !== boardHash(DESTINATIONS[s.destination])) return null;
   if (!isInt(s.players, 1, 4) || !isInt(s.seed, 0, 2 ** 32) || !isInt(s.first, 0, s.players - 1)) return null;
   if (!Array.isArray(s.computer) || s.computer.length !== s.players || !s.computer.every((c) => typeof c === "boolean")) return null;
-  if (s.level !== "easy" && s.level !== "normal") return null;
-  if (!Array.isArray(s.answers) || !s.answers.every((a) => a === true || a === false || a === "main" || a === "shortcut" || a === "card" || a === "lantern" || a === "take")) return null;
+  if (!Array.isArray(s.answers) || !s.answers.every((a) => typeof a === "boolean" || isInt(a, 0, s.players - 1))) return null;
   if (!isInt(s.turns, 0, 1e6) || !isInt(s.round, 0, 1e6)) return null;
-  if (!Array.isArray(s.quiet) || !s.quiet.every((q) => isInt(q, 0, s.players - 1))) return null;
   if (!Array.isArray(s.cards) || !s.cards.every((c) => typeof c === "string")) return null;
   return s;
 }
@@ -70,7 +65,7 @@ export function loadGame(): SavedGame | null {
 
 export function saveGame(s: Omit<SavedGame, "v" | "boardHash">): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ v: VERSION, boardHash: boardHash(BOARDS[s.board]), ...s }));
+    localStorage.setItem(KEY, JSON.stringify({ v: VERSION, boardHash: boardHash(DESTINATIONS[s.destination]), ...s }));
   } catch {
     // storage blocked or full: the game goes on, it just can't be continued later
   }
@@ -84,11 +79,15 @@ export function clearGame(): void {
   }
 }
 
-/** Plays the saved game again up to where it was saved. Null if the answers do not fit (the save is then useless). */
-export function replay(s: SavedGame): Game | null {
-  const game = new Game(BOARDS[s.board], { players: s.players, seed: s.seed, first: s.first });
-  let next = 0;
+/** A new game, or the saved one played again up to where it was saved (null if the answers do not fit). */
+export function newGame(destination: DestinationId, players: number, computer: boolean[], seed: number, first: number): Game3 {
+  return new Game3(DESTINATIONS[destination], { players, seed, first, robots: computer.slice(0, players) });
+}
+
+export function replay(s: SavedGame): Game3 | null {
+  let next = 0, game: Game3;
   try {
+    game = newGame(s.destination, s.players, s.computer, s.seed, s.first);
     for (let i = 0; i < s.turns; i++) {
       if (game.over) return null;
       const t = game.turn();

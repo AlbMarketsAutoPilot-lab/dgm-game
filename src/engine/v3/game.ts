@@ -116,6 +116,8 @@ export interface GameOptions3 {
   setup?: Partial<Player3>[];
   /** The game stops (no winner) instead of starting this round + 1. Default 3000, as in the simulator. */
   maxRounds?: number;
+  /** The seat that plays first (the app draws it at random, U3). Default 0, as in the simulator. */
+  first?: number;
 }
 
 type Turn = Generator<Decision3, void, Answer3>;
@@ -132,6 +134,8 @@ export class Game3 implements GameView3 {
   readonly events: Event3[] = [];
 
   private seat: number;
+  /** The seat that played first; a round starts with its turn. */
+  readonly first: number;
   private readonly die: () => number;
   private readonly maxRounds: number;
   private readonly robots: boolean[];
@@ -161,7 +165,14 @@ export class Game3 implements GameView3 {
       got: { square: 0, seaside: 0, market: 0 }, used: { home: 0, tree: 0, forced: 0, square: 0, area: 0 },
     }));
     opts.setup?.forEach((s, i) => Object.assign(this.players[i], s));
-    this.seat = opts.players - 1;
+    this.first = opts.first ?? 0;
+    if (!Number.isInteger(this.first) || this.first < 0 || this.first >= opts.players) throw new Error("first must be a seat");
+    this.seat = (this.first + opts.players - 1) % opts.players;
+  }
+
+  /** The seat whose turn it is (or was last). */
+  get current(): number {
+    return this.seat;
   }
 
   get over(): boolean {
@@ -177,7 +188,7 @@ export class Game3 implements GameView3 {
   *turn(): Turn {
     if (this.over) throw new Error("the game is over");
     this.seat = this.next;
-    if (this.seat === 0) {
+    if (this.seat === this.first) {
       if (this.round >= this.maxRounds) { this.capped = true; return; }
       this.round++;
     }

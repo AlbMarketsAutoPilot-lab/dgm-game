@@ -60,6 +60,13 @@ export class Dice {
     this.show();
   }
 
+  /** Step I (owner, 25 Nov 2026): the last throw was the 6 that freed the player (Home, the tree): it moves nobody,
+   * so it leaves the list, without words ("a 6 to enter" is gone). */
+  freed(): void {
+    this.throws.pop();
+    this.show();
+  }
+
   /** A move was made: the next throw begins a new list. */
   moved(): void {
     this.stale = true;
