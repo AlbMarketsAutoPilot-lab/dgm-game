@@ -17,7 +17,11 @@
       "name": "Home Town", "from": 0, "to": 9, "effect": null, "icon": "house",
       "announce": "Welcome, traveller. I am Mr. Lin, and I will guide you on the long road to the Lantern Festival."
     },
-    { "name": "Countryside", "from": 10, "to": 22, "effect": { "type": "gifted6" } },
+    {
+      "name": "Countryside", "from": 10, "to": 22, "effect": { "type": "gifted6" }, "icon": "sheep",
+      "announce": "The Countryside. Open fields, quiet lanes, and farmers who are happy to help a traveller.",
+      "effectText": "A gift from the Countryside: the farmers let you cross 6 fields! Roll again, and the free 6 is added to your roll."
+    },
     { "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" } },
     { "name": "Mountains", "from": 39, "to": 56, "effect": { "type": "double" } },
     { "name": "Seaside", "from": 57, "to": 76, "effect": { "type": "swapAhead", "range": 20, "otherwise": "card" } },
@@ -28,9 +32,18 @@
       "cat": "P", "type": "slowNext", "name": "The Candle Walk", "title": "The Candle Walk", "icon": "lantern",
       "guide": "By old custom, a traveller to the Lantern Festival carries a lit candle in a paper lantern to the end of their street. Walk slowly, so the flame stays alight."
     },
-    "10": { "cat": "R", "type": "jump", "to": 16, "name": "lift" },
-    "17": { "cat": "R", "type": "jump", "to": 33, "name": "hay cart" },
-    "20": { "cat": "R", "type": "jump", "to": 36, "name": "The Village Bus" },
+    "10": {
+      "cat": "R", "type": "jump", "to": 16, "name": "lift", "title": "A Farmer's Lift", "icon": "tractor",
+      "guide": "A farmer is driving to market and offers you a seat on the trailer. You accept with thanks."
+    },
+    "17": {
+      "cat": "R", "type": "jump", "to": 33, "name": "hay cart", "title": "The Hay Cart", "icon": "hay-cart",
+      "guide": "A hay cart is heading for the forest, and the driver waves you aboard. The road is bumpy, but the cart never stops."
+    },
+    "20": {
+      "cat": "R", "type": "jump", "to": 36, "name": "The Village Bus", "title": "The Village Bus",
+      "guide": "The village bus is just leaving, and there is one seat left. The driver knows the old road around the fallen tree."
+    },
     "27": { "cat": "P", "type": "tree", "name": "The fallen tree" },
     "30": { "cat": "R", "type": "card", "name": "Bonus card" },
     "32": { "cat": "R", "type": "nearest", "target": "R", "name": "next good square" },
