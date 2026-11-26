@@ -109,13 +109,17 @@ const SETUP_GAME = async (kind) => {
     case "card": s.cardInfo(); break;
     case "square": s.squareInfo(sq); break;
     case "leave": s.gone = false; void s.leave(); break;
-    case "win": s.pops.show({ kind: "win", tone: "good", art: "", kicker: B.destination.name, title: "Yellow made it!", text: B.moments.finish.guide.replace("{p}", "Yellow"), more: `<p class="pop-sub">New postcards: <b>Home Town, Countryside, Forest, Mountains, Straight Off the Boat, Six Sixes</b></p>`, buttons: [{ label: "New game", value: "new", primary: true }, { label: "Postcard album", value: "album" }] }); break;
+    case "win": { // phase E: the longest Records line (R12) and the 3 buttons
+      const { RT, rankingLine } = await import("/src/ui/records-page.ts");
+      s.pops.show({ kind: "win", tone: "good", art: "", kicker: B.destination.name, title: "Yellow made it!", text: B.moments.finish.guide.replace("{p}", "Yellow"), more: `<p class="pop-sub rec-line">${rankingLine({ kind: "blocked" }, 3723)}</p><p class="pop-sub">New postcards: <b>Home Town, Countryside, Forest, Mountains, Straight Off the Boat, Six Sixes</b></p>`, buttons: [{ label: "New game", value: "new", primary: true }, { label: "Postcard album", value: "album" }, { label: RT.button, value: "records" }] });
+      break;
+    }
     case "sound": void s.soundSwitches(); break;
     case "welcome": s.pops.show({ kind: "info", art: "", kicker: "Saved game", title: "Welcome back!", text: "The journey goes on where you left it: round 23, <b>Yellow</b> plays next.", buttons: [{ label: "Let's go on!", value: "ok", primary: true }] }); break;
   }
 };
 const GUIDE_PAGES = 8;
-export const SCREENS = ["setup", "album", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "home", "tree", "punish", "area", "market", "story", "pass", "skip", "welcome-lin", "notes", "player", "card", "square", "leave", "win", "welcome", "sound"];
+export const SCREENS = ["setup", "album", "records", "records-empty", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "home", "tree", "punish", "area", "market", "story", "pass", "skip", "welcome-lin", "notes", "player", "card", "square", "leave", "win", "welcome", "sound"];
 
 /** Checks every screen at every size; returns the problems found. */
 export async function checkScreens(browser, url, sizes = SIZES) {
@@ -124,12 +128,15 @@ export async function checkScreens(browser, url, sizes = SIZES) {
   for (const [w, h, name] of sizes) {
     const { ctx, page, errors } = await newPage(browser, { viewport: { width: w, height: h } });
     for (const scr of SCREENS) {
-      if (scr === "setup" || scr === "album" || scr.startsWith("guide")) {
+      if (scr === "setup" || scr === "album" || scr.startsWith("records") || scr.startsWith("guide")) {
         await page.goto(url + "/");
         await page.evaluate(() => localStorage.setItem("dgm.game.v1", "{}")); // the Continue button's room is kept
+        // phase E: 10 records with the longest cells (the slowest time, the longest colour name), or none
+        await page.evaluate((full) => { if (full) localStorage.setItem("dgm.records.v1", JSON.stringify(Array.from({ length: 10 }, (_, i) => ({ s: 3600 + 3723 * i, seat: 3, date: "2026-11-26", players: 4, destination: "lantern-festival" })))); else localStorage.removeItem("dgm.records.v1"); }, scr === "records");
         await page.waitForSelector(".go");
         await page.click('[data-players="4"]');
         if (scr === "album") { await page.click(".album-open"); await page.waitForSelector(".album"); }
+        if (scr.startsWith("records")) { await page.click(".records-open"); await page.waitForSelector(".records"); }
         if (scr.startsWith("guide")) { await page.click(".how-open"); await page.waitForSelector(".howto"); for (let i = 1; i < Number(scr.slice(6)); i++) await page.click(".g-next"); }
       } else {
         await page.goto(url + "/gallery.html");
