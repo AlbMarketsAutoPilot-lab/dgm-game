@@ -49,7 +49,7 @@ describe("Lantern Festival (v3)", () => {
 // Phase B (owner, 25 Nov 2026): every text a player sees is approved by the owner, area by area, and follows the rules
 // below. An area joins DONE_AREAS once all its texts are approved and in the file.
 const DONE_AREAS: string[] = ["Home Town", "Forest"];
-// Texts in, picture still to draw in B10 (owner, 26 Nov 2026): the Countryside (the Village Bus).
+// Texts in, picture still to draw in B10 (owner, 26 Nov 2026): the Countryside (the Village Bus), the Mountains (the Rockslide).
 const withAny = (patch: object) => ({ ...LF, ...patch });
 
 describe("Lantern Festival (v3): texts and pictures", () => {
@@ -86,8 +86,7 @@ describe("Lantern Festival (v3): texts and pictures", () => {
   it("every approved area has all its texts", () => {
     for (const name of DONE_AREAS) {
       const a = LF.areas.find((x) => x.name === name)!;
-      expect(a.icon && a.announce, name).toBeTruthy();
-      if (a.effect) expect(a.effectText, name).toBeTruthy();
+      expect(a.icon && a.announce, name).toBeTruthy(); // the announcement also tells the effect (owner, 26 Nov 2026)
       for (const [sq, t] of Object.entries(LF.tiles)) {
         if (Number(sq) >= a.from && Number(sq) <= a.to) expect(t.title && t.guide && t.icon, `square ${sq}`).toBeTruthy();
       }

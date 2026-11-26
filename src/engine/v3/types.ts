@@ -47,7 +47,7 @@ export interface Area {
   from: number;
   to: number;
   effect: AreaEffect | null;
-  /** Phase B texts: the area sign's picture, the guide's announcement and the effect text. */
+  /** Phase B texts: the area sign's picture and the guide's announcement (owner, 26 Nov 2026: one text with a saying that also tells the effect). `effectText` is kept for a separate effect text, unused so far. */
   icon?: string;
   announce?: string;
   effectText?: string;

@@ -1,6 +1,6 @@
 {
   "id": "lantern-festival",
-  "description": "Step I (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Phase B fills in the owner-approved texts and pictures area by area: per square title, guide (Mr. Lin's story, people only), icon, note (own notification); per area icon, announce, effectText; notes (notification patterns, {p} = player, {q} = other player, {n} = distance); landmarks; moments. 'name' is a working label, never shown to players. Not used by the app until phase C.",
+  "description": "Step I (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Phase B fills in the owner-approved texts and pictures area by area: per square title, guide (Mr. Lin's story, people only), icon, note (own notification); per area icon, announce (owner, 26 Nov 2026: one text with a saying that also tells the area effect; effectText only if a separate effect text is ever needed); notes (notification patterns, {p} = player, {q} = other player, {n} = distance); landmarks; moments. 'name' is a working label, never shown to players. Not used by the app until phase C.",
   "guide": { "name": "Mr. Lin" },
   "lastTile": 100,
   "endTile": 101,
@@ -19,15 +19,16 @@
     },
     {
       "name": "Countryside", "from": 10, "to": 22, "effect": { "type": "gifted6" }, "icon": "sheep",
-      "announce": "The Countryside. Open fields, quiet lanes, and farmers who are happy to help a traveller.",
-      "effectText": "A gift from the Countryside: the farmers let you cross 6 fields! Roll again, and the free 6 is added to your roll."
+      "announce": "In the Countryside they say, \"Even a sheet of paper is lighter when lifted together.\" The farmers let you cross 6 fields, so roll again and add the free 6 to your roll."
     },
     {
       "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" }, "icon": "compass",
-      "announce": "The Forest. The paths here twist and turn, and it is easy to lose your way.",
-      "effectText": "As the old proverb says, \"Take one step back, and the sea and sky open up.\" Whatever you roll next, you will go backward, and then you will find the right path."
+      "announce": "In the Forest, the paths twist and turn, and as the old proverb says, \"Take one step back, and the sea and sky open up.\" Whatever you roll next, you will go backward, and then you will find the right path."
     },
-    { "name": "Mountains", "from": 39, "to": 56, "effect": { "type": "double" } },
+    {
+      "name": "Mountains", "from": 39, "to": 56, "effect": { "type": "double" }, "icon": "cabin",
+      "announce": "Welcome to the Mountains! As the proverb says, \"No matter how tall the mountain is, it cannot block the sun,\" so your next roll counts double."
+    },
     { "name": "Seaside", "from": 57, "to": 76, "effect": { "type": "swapAhead", "range": 20, "otherwise": "card" } },
     { "name": "Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" } }
   ],
@@ -65,10 +66,22 @@
       "title": "Plot Twist", "icon": "swap-arrows",
       "guide": "The paths cross in the mist. When it clears, you and the leader have changed places."
     },
-    "40": { "cat": "R", "type": "jump", "to": 56, "name": "Cable car" },
-    "45": { "cat": "R", "type": "card", "name": "Bonus card" },
-    "49": { "cat": "P", "type": "jump", "to": 31, "name": "The Rockslide" },
-    "54": { "cat": "R", "type": "jump", "to": 65, "name": "weekend off (story: phase B)" },
+    "40": {
+      "cat": "R", "type": "jump", "to": 56, "name": "Cable car", "title": "The Cable Car", "icon": "cable-car",
+      "guide": "The cable car glides over the pine trees, all the way up to the Mountain Lodge. Far below, the road looks very small."
+    },
+    "45": {
+      "cat": "R", "type": "card", "name": "Bonus card", "title": "The Tea Picker's Gift", "icon": "card",
+      "guide": "On the high tea terraces, a tea picker stops to greet you. She gives you a Bonus card for the journey."
+    },
+    "49": {
+      "cat": "P", "type": "jump", "to": 31, "name": "The Rockslide (picture in B10: the official falling-rocks road sign, owner 26 Nov 2026)", "title": "The Rockslide",
+      "guide": "Stones come tumbling down onto the path, and the way up is closed. The only safe road leads back down to the forest."
+    },
+    "54": {
+      "cat": "R", "type": "jump", "to": 65, "name": "ride to the sea", "title": "A Ride to the Sea", "icon": "suitcase",
+      "guide": "A family on their way to the seaside has room for one more in the car. You squeeze in next to the picnic basket."
+    },
     "61": { "cat": "R", "type": "rollSum", "dice": 3, "name": "throw 3 times" },
     "66": { "cat": "P", "type": "jump", "to": 55, "name": "booking" },
     "69": { "cat": "R", "type": "dragonBoat", "to": 97, "need": 4, "name": "The Dragon Boat" },
@@ -109,7 +122,10 @@
     "areaSwap": "{p} swaps places with {q}.",
     "loseTurn": "{p} loses the next turn."
   },
-  "landmarks": {},
+  "landmarks": {
+    "55": { "name": "Base Camp", "icon": "tent" },
+    "56": { "name": "Mountain Lodge", "icon": "cabin" }
+  },
   "moments": {
     "home": { "title": "Home", "guide": "Your bags are packed and the door is locked. The festival is waiting." },
     "backHome": { "guide": "Back Home, but your bags are still packed. Nothing keeps you here for long.", "note": "{p} is Home: no 6 needed to leave." },
