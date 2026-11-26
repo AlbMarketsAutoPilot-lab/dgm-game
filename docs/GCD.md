@@ -157,6 +157,7 @@ The board is **one continuous neutral journey**. Each square is the next moment 
 - **Squares:** every event square has a title, Mr. Lin's story and a picture. Plot Twist shows no guide text when nobody is ahead (only the notification). The dragon boat is a crew giving a ride, never part of the Lantern Festival itself (dragon-boat racing belongs to another festival).
 - **Story moments:** Home, back Home after a bump, free to go, still at the tree, the Dragon Boat (waiting, missed the 4, won with the 4) and the finish. The Swap Market's partner choice is written with the buttons in phase C.
 - **Landmarks:** Base Camp (55), Mountain Lodge (56), Central Station (92), Festival Pier (97).
+- **On screen (phase C, owner 26 Nov 2026):** Mr. Lin's panel covers the die after the pieces stop and holds every choice; his figure is the owner's picture; the notifications are on the left. Details: `docs/prompts/StepI_destinations.md`, "Owner decisions in phase C".
 - **Pictures:** `src/render/art-lantern.ts` (the fallen tree, the Village Bus, China's falling-rocks warning sign, the Dragon Boat, the Swap Market, the forest, and the shared area sign frame); the rest reuse the approved pictures. Owner, 26 Nov 2026: pictures are approved only after the owner has seen them, at a grown-up level of detail, and without drawn people where people would be the subject.
 
 ## 10. Boards ✅
@@ -204,7 +205,7 @@ For every event square, the simulator reports:
 
 ## 12. "One more game" — replay pull (P5) ✅ (owner, I-1 §16 item 6: all)
 
-> **Step I (owner, 25 Nov 2026):** a device-only leaderboard of human win times and new postcards (one set per destination) are added; see `docs/prompts/StepI_destinations.md`.
+> **Step I (owner, 25 Nov 2026):** a device-only leaderboard of human win times and new postcards (one set per destination) are added; see `docs/prompts/StepI_destinations.md`. **Phase C (26 Nov 2026):** the Lantern Festival's 17 postcards are built (`src/ui/postcards.ts`); the rematch button gave way to "New game" and, in phase E, "Records".
 
 No accounts and no data leave the device (C1). Everything below lives on the device only.
 
