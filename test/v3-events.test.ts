@@ -2,7 +2,7 @@
 // check that the events tell the whole story: replaying them gives every token's square and every player's cards after
 // every turn, every die thrown is in them, and the main moments come out in the right order.
 import { describe, expect, it } from "vitest";
-import { rng, d6 } from "../src/engine";
+import { rng, d6 } from "../src/engine/rng";
 import { DESTINATIONS, Game3, robot, runTurn3, type Event3, type Player3 } from "../src/engine/v3";
 
 const LF = DESTINATIONS["lantern-festival"];

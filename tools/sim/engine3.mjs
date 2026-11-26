@@ -5,7 +5,7 @@
 //
 // Player types: "robot" (GCD R20, the app's computer player) and "simple" (simulator only: uses its Bonus card at the
 // first chance it gets, and picks the Swap Market partner at random).
-import { rng } from "./engine.mjs";
+import { rng } from "./rng.mjs";
 
 export { rng };
 

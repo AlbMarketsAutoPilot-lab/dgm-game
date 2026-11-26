@@ -15,9 +15,7 @@ good.mp3         Kenney, Music Jingles: jingles_PIZZI06              https://ken
 bad.mp3          Kenney, Music Jingles: jingles_PIZZI11              https://kenney.nl/assets/music-jingles
 jump-up.mp3      Kenney, Music Jingles: jingles_PIZZI15              https://kenney.nl/assets/music-jingles
 jump-down.mp3    Kenney, Music Jingles: jingles_PIZZI01              https://kenney.nl/assets/music-jingles
-lantern-on.mp3   Kenney, Music Jingles: jingles_STEEL12              https://kenney.nl/assets/music-jingles
 out.mp3          Kenney, Music Jingles: jingles_PIZZI07              https://kenney.nl/assets/music-jingles
-bog.mp3          rubberduck, 25 CC0 mud sfx: mud_02                  https://opengameart.org/content/25-cc0-mud-sfx
 lantern-out.mp3  pyranostudios, Air Whoosh (a short part)            https://opengameart.org/content/air-whoosh
 win.mp3          mintodog, Cozy Puzzle Clear (Jingle)                https://opengameart.org/content/cozy-puzzle-jingle-result
 menu-intro.mp3   starninjas, Ukulele Forest (beginning)              https://opengameart.org/content/ukulele-forest-beginning-loop-and-end

@@ -2,11 +2,13 @@
 // must agree with the engine. A 6 always throws again (R2), so no face ever marks the square 6 ahead.
 import { describe, expect, it } from "vitest";
 import { reachSteps } from "../src/ui/overview";
-import { play } from "./helpers";
+import { DESTINATIONS, Game3, robot, runTurn3 } from "../src/engine/v3";
 
+/** Squares one turn moves from square 50 (no event or area effect there: every area already used). */
 const moved = (o: { dice: number[]; double?: boolean }) => {
-  const { events } = play({ dice: o.dice, turns: 1, players: 1, setup: [{ pos: 50, double: !!o.double }] });
-  const m = events.find((e) => e.type === "move");
+  const LF = DESTINATIONS["lantern-festival"], dice = [...o.dice];
+  const g = new Game3(LF, { players: 1, dice: () => dice.shift()!, setup: [{ pos: 50, home: false, dbl: !!o.double, done: LF.areas.map(() => true) }] });
+  const m = runTurn3(g, robot).find((e) => e.type === "move");
   return m && m.type === "move" ? m.to - m.from : 0;
 };
 

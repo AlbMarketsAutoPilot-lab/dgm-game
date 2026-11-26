@@ -136,7 +136,7 @@ See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Exciteme
 
 ## 9. Story: "The Journey" (P4)
 
-> **Step I (owner, 25–26 Nov 2026):** the narrative was rewritten in phase B for the Lantern Festival (§9.3). §9.2 is the v2 story, kept as the record until the v2 board is removed in phase C. Areas from now on: §8.2a R15.
+> **Step I (owner, 25–26 Nov 2026):** the narrative was rewritten in phase B for the Lantern Festival (§9.3). §9.2 is the v2 story, kept as the record: the v2 boards and their files were removed in phase C8 (owner, 26 Nov 2026; they are in the git history, the v2 simulator in `tools/sim/archive/v2/`). Areas from now on: §8.2a R15.
 
 ### 9.1 Principle ✅
 The board is **one continuous neutral journey**. Each square is the next moment of the same trip, not a collection of unrelated events. Every event is a travel moment: transport, weather, forgetting things, friendly help, shortcuts, getting lost.
@@ -161,7 +161,7 @@ The board is **one continuous neutral journey**. Each square is the next moment 
 
 ## 10. Boards ✅
 
-> **Step I (owner, 25 Nov 2026):** the long 202-square board is removed; only the 100-square board stays, redesigned in phase B, and 4 more 100-square **Destinations** follow in phase D. See `docs/prompts/StepI_destinations.md`.
+> **Step I (owner, 25 Nov 2026):** the long 202-square board is removed; only the 100-square board stays, redesigned in phase B, and 4 more 100-square **Destinations** follow in phase D. See `docs/prompts/StepI_destinations.md`. The v2 board files (`data/board-long.json`, `data/board-short.json`) were deleted in phase C8 (owner, 26 Nov 2026); the table below is the v2 record.
 
 | Board | Size | Role |
 |---|---|---|

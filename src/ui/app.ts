@@ -154,7 +154,7 @@ export class GameScreen {
     this.notes = new Notes(ov); // under the popups (made after it, they lie on top)
     this.pops = new Popups(ov, root.querySelector(".game")!, root.querySelector(".controls")!);
     this.stage = new Stage(root.querySelector(".stage")!, this.board);
-    this.guide = new GuidePanel(root.querySelector(".stage-panel")!, this.board.guide?.name ?? "");
+    this.guide = new GuidePanel(root.querySelector(".stage-panel")!, this.board.guide?.name ?? "", root.querySelector<HTMLElement>(".game")!);
     this.dice = new Dice(root.querySelector(".dice")!);
     this.bar = root.querySelector(".players")!;
     this.hud = root.querySelector(".hud")!;
@@ -722,8 +722,9 @@ export class GameScreen {
     const P = this.game.players, cur = this.seat;
     const bar = `<div class="avs">` + P.map((_, i) => {
       const n = this.cards[i], need = this.need(i);
-      return `<button class="avatar${i === cur ? " now" : ""}" data-seat="${i}" aria-label="${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}: ${n} Bonus card${n === 1 ? "" : "s"}. Tap for details">`
-        + `${tokenSvg(i, "tok", true)}<span class="badge c${n ? "" : " none"}">${cardFace("bonus", "")}${n}</span>`
+      // the spoken name is hidden text, not a label, so it never differs from what the button shows (accessibility scan)
+      return `<button class="avatar${i === cur ? " now" : ""}" data-seat="${i}"><span class="sr">${this.name(i)}${this.setup.computer[i] ? " (computer)" : ""}${need ? `, ${need}` : ""}: ${n} Bonus card${n === 1 ? "" : "s"}. Tap for details</span>`
+        + `${tokenSvg(i, "tok", true)}<span class="badge c${n ? "" : " none"}" aria-hidden="true">${cardFace("bonus", "")}${n}</span>`
         + (this.setup.computer[i] ? `<span class="cpu" aria-hidden="true">${robotSvg}</span>` : "")
         + (need ? `<span class="need" aria-hidden="true">${need}</span>` : "") + `</button>`;
     }).join("") + `</div><button class="leave" aria-label="Leave game">${leaveSvg}<span>Leave</span></button>`;

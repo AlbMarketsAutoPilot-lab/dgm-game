@@ -31,8 +31,24 @@ export class GuidePanel {
   private el: HTMLElement | null = null;
   private done: ((v: string) => void) | null = null;
 
-  /** `host`: the panel it covers (the zoomed square, the die and the action area). */
-  constructor(private readonly host: HTMLElement, private readonly name: string) {}
+  /**
+   * `host`: the panel it covers (the zoomed square, the die and the action area). `wide`: the whole game screen, for
+   * small screens where his words do not fit in `host` (a folded phone, a small phone, a phone held sideways): then the
+   * panel covers everything, so nothing has to scroll.
+   */
+  constructor(private readonly host: HTMLElement, private readonly name: string, private readonly wide?: HTMLElement) {
+    addEventListener("resize", () => this.fit());
+  }
+
+  /** In its own panel if the words fit there, else over the whole game screen. */
+  private fit(): void {
+    const back = this.el?.parentElement;
+    if (!back || !this.wide) return;
+    const body = back.querySelector<HTMLElement>(".gp-body")!, over = () => body.scrollHeight > body.clientHeight + 2;
+    back.classList.remove("gp-wide");
+    if (back.parentElement !== this.host) this.host.append(back);
+    if (over()) { back.classList.add("gp-wide"); this.wide.append(back); }
+  }
 
   /** Opens the panel (replacing what it showed). Resolves with the button pressed, or "replaced". */
   show(c: GuideContent): Promise<string> {
@@ -57,9 +73,11 @@ export class GuidePanel {
     back.className = "gp-back";
     back.append(el);
     this.host.append(back);
+    this.fit();
     if (!reduced()) el.animate([{ opacity: 0, transform: "translateY(.75rem)" }, { opacity: 1, transform: "none" }], { duration: 240, easing: "ease-out" });
     const p = new Promise<string>((r) => (this.done = r));
     if (c.buttons?.length) void this.buttons(c.buttons);
+    this.fit();
     return p;
   }
 
@@ -80,6 +98,7 @@ export class GuidePanel {
       return btn;
     }));
     row.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+    this.fit();
     return p;
   }
 

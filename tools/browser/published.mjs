@@ -9,7 +9,7 @@ const AXE = fs.readFileSync(createRequire(import.meta.url).resolve("axe-core/axe
 /** Clicks through a game for a while (people at every seat), returns the errors seen. */
 async function someTurns(page, clicks) {
   for (let i = 0; i < clicks; i++) {
-    const b = page.locator(".act button").first();
+    const b = page.locator(".guide-panel .gp-buttons button, .act button").first(); // Mr. Lin's panel holds the choices
     if (await b.count()) await b.click(); else await page.waitForTimeout(40);
   }
 }
@@ -49,7 +49,7 @@ export async function checkPublished(browser, pub, report) {
   const sw = fs.readFileSync(`${ROOT}node_modules/.browsertest/sw.js`, "utf8");
   const CACHE = "dgm-" + (/const CACHE = PREFIX \+ "([^"]+)"/.exec(sw)?.[1] ?? "");
   const FILES = JSON.parse(/const FILES = (\[.*?\]);/.exec(sw)?.[1] ?? "[]");
-  const SOUNDS = ["dice", "step", "six", "good", "bad", "bump", "jump-up", "jump-down", "bog", "card", "lantern-out", "lantern-on", "postcard", "tap", "win", "out", "menu-intro", "menu-loop", "game"];
+  const SOUNDS = ["dice", "step", "six", "good", "bad", "bump", "jump-up", "jump-down", "card", "lantern-out", "postcard", "tap", "win", "out", "menu-intro", "menu-loop", "game"];
   const soundOf = (u) => /\/assets\/([a-z-]+)-[\w-]{8}\.mp3$/.exec(u)?.[1];
   // the sound files as they are in the build folder (not taken from the worker's list, which is what is checked)
   const SOUND_FILES = fs.readdirSync(`${ROOT}node_modules/.browsertest/assets`).filter((f) => f.endsWith(".mp3")).map((f) => `./assets/${f}`);
@@ -85,8 +85,10 @@ export async function checkPublished(browser, pub, report) {
     await page.click('[data-players="2"]');
     await page.click('[data-seat="1"]'); // both people: the test taps every turn
     await page.click(".setup .go");
-    await page.locator(".pop button", { hasText: "Let's go" }).click();
+    await page.locator(".guide-panel button", { hasText: "Let's go" }).click();
     await someTurns(page, 40);
+    // the speaker is under Mr. Lin's panel while it is open: answer it first, as a player would
+    for (let i = 0; i < 40 && await page.locator(".gp-back").count(); i++) await someTurns(page, 1);
     await page.click(".snd-open");
     await page.locator(".pop button", { hasText: "Music: on" }).click();
     const switched = await page.locator(".pop button", { hasText: "Music: off" }).count() === 1;
@@ -115,7 +117,7 @@ export async function checkPublished(browser, pub, report) {
     await page.click('[data-players="3"]');
     for (const i of [1, 2]) await page.click(`[data-seat="${i}"]`);
     await page.click(".setup .go");
-    await page.locator(".pop button", { hasText: "Let's go" }).click();
+    await page.locator(".guide-panel button", { hasText: "Let's go" }).click();
     await someTurns(page, 60);
     await page.waitForFunction(() => navigator.serviceWorker.controller, null, { timeout: 20000 }).catch(() => {});
     await page.waitForTimeout(800);
@@ -147,8 +149,8 @@ export async function checkPublished(browser, pub, report) {
             for (const f of files) { try { await ac.decodeAudioData(await (await fetch(f)).arrayBuffer()); } catch (e) { bad.push(f); } }
             return bad;
           }, SOUND_FILES);
-          await page.click(".setup .go"); starts = await page.locator(".pop button", { hasText: "Let's go" }).waitFor({ timeout: 8000 }).then(() => true, () => false);
-          if (starts) { await page.locator(".pop button", { hasText: "Let's go" }).click(); await someTurns(page, 20); }
+          await page.click(".setup .go"); starts = await page.locator(".guide-panel button", { hasText: "Let's go" }).waitFor({ timeout: 8000 }).then(() => true, () => false);
+          if (starts) { await page.locator(".guide-panel button", { hasText: "Let's go" }).click(); await someTurns(page, 20); }
           for (const [file, title] of [["copyright.html", "Copyright"], ["privacy.html", "Privacy Policy"]]) {
             await page.goto(`${url}/${file}`);
             if ((await page.textContent("h1").catch(() => "")) !== title) legal.push(file);
@@ -218,10 +220,10 @@ export async function checkPublished(browser, pub, report) {
     for (let i = 0; i < 3; i++) await page.keyboard.press("ArrowRight");
     const at = await page.evaluate(() => document.activeElement?.getAttribute("data-pos"));
     await page.keyboard.press("Enter");
-    const info = await page.locator(".pop.info .pop-kicker").textContent().catch(() => "");
+    const info = await page.locator(".pop.info .pop-title").textContent().catch(() => ""); // Step I: no square numbers on screen
     await page.keyboard.press("Escape");
     const closed = !(await page.locator(".pop.info:not([hidden])").count());
-    report.add(G, "keyboard: Tab to the board, arrows, Enter, Escape", onBoard && at === "3" && info === "Square 3" && closed && !errors.length,
+    report.add(G, "keyboard: Tab to the board, arrows, Enter, Escape", onBoard && at === "3" && info === "Home Town" && closed && !errors.length,
       `board ${onBoard}, focus on ${at}, popup "${info}", closed ${closed}${errors.length ? ", " + errors[0] : ""}`);
     await ctx.close();
   }
@@ -239,7 +241,7 @@ export async function checkPublished(browser, pub, report) {
     await page.goto(url + "/"); await page.waitForSelector(".howto"); await scan("the guide");
     await page.keyboard.press("Escape"); await page.waitForSelector(".setup .go"); await scan("the start screen");
     await page.click(".album-open"); await scan("the postcard album"); await page.keyboard.press("Escape");
-    await page.click(".setup .go"); await page.locator(".pop button", { hasText: "Let's go" }).waitFor(); await scan("the game screen with a popup");
+    await page.click(".setup .go"); await page.locator(".guide-panel button", { hasText: "Let's go" }).waitFor(); await scan("the game screen with Mr. Lin's panel");
     await page.goto(url + "/copyright.html"); await scan("the copyright page");
     await page.goto(url + "/privacy.html"); await scan("the privacy page");
     await ctx.close();
