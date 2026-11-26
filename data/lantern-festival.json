@@ -1,6 +1,7 @@
 {
   "id": "lantern-festival",
   "description": "Step I (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Phase B fills in the owner-approved texts and pictures area by area: per square title, guide (Mr. Lin's story, people only), icon, note (own notification); per area icon, announce (owner, 26 Nov 2026: one text with a saying that also tells the area effect; effectText only if a separate effect text is ever needed); notes (notification patterns, {p} = player, {q} = other player, {n} = distance); landmarks; moments. 'name' is a working label, never shown to players. Not used by the app until phase C.",
+  "destination": { "name": "The Lantern Festival", "icon": "lanterns" },
   "guide": { "name": "Mr. Lin" },
   "lastTile": 100,
   "endTile": 101,
@@ -33,7 +34,10 @@
       "name": "Seaside", "from": 57, "to": 76, "effect": { "type": "swapAhead", "range": 20, "otherwise": "card" }, "icon": "sailboat",
       "announce": "At the Seaside they say, \"The waves behind push the waves ahead.\" If the next traveller ahead is within twenty squares, you change places; if not, the sea brings you a Bonus card."
     },
-    { "name": "Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" } }
+    {
+      "name": "Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" }, "icon": "traffic-light",
+      "announce": "In the Big City they say, \"Haste does not bring success.\" If a traveller is within ten squares behind you, you change places; if not, you rest and lose your next turn."
+    }
   ],
   "tiles": {
     "7": {
@@ -105,13 +109,34 @@
       "cat": "P", "type": "jump", "to": 57, "name": "The Storm", "title": "The Storm", "icon": "waves",
       "guide": "Dark clouds roll in from the sea, and the wind blows hard. You run back along the beach to take shelter."
     },
-    "79": { "cat": "S", "type": "swapMarket", "name": "The Swap Market" },
-    "85": { "cat": "R", "type": "card", "name": "Bonus card" },
-    "91": { "cat": "P", "type": "jump", "to": 71, "name": "Asleep on the Train" },
-    "94": { "cat": "P", "type": "jump", "to": 78, "name": "train back" },
-    "96": { "cat": "P", "type": "jump", "to": 92, "name": "forgot keys" },
-    "99": { "cat": "P", "type": "jump", "to": 92, "then": "skip2", "name": "keys AGAIN, miss 2 turns" },
-    "100": { "cat": "P", "type": "jump", "to": 82, "name": "back (everyone)" }
+    "79": {
+      "cat": "S", "type": "swapMarket", "name": "The Swap Market", "title": "The Swap Market",
+      "guide": "At the Swap Market, travellers trade what they carry. If you have a Bonus card, you give one away; if you have none, someone shares theirs."
+    },
+    "85": {
+      "cat": "R", "type": "card", "name": "Bonus card", "title": "The Lantern Maker's Gift", "icon": "card",
+      "guide": "You help a lantern maker hang her lanterns along the street. To thank you, she gives you a Bonus card."
+    },
+    "91": {
+      "cat": "P", "type": "jump", "to": 71, "name": "Asleep on the Train", "title": "Asleep on the Train", "icon": "sleeping-face",
+      "guide": "The train is warm and quiet, and your eyes close for a moment. You wake up back at the seaside."
+    },
+    "94": {
+      "cat": "P", "type": "jump", "to": 78, "name": "train back", "title": "Missed Your Stop", "icon": "train-back",
+      "guide": "You were watching the city lights and missed your stop. The train takes you back to the edge of the city."
+    },
+    "96": {
+      "cat": "P", "type": "jump", "to": 92, "name": "forgot keys", "title": "Forgot Your Keys", "icon": "key",
+      "guide": "Your keys are still on the caf\u00e9 table at Central Station. You go back to fetch them."
+    },
+    "99": {
+      "cat": "P", "type": "jump", "to": 92, "then": "skip2", "name": "keys AGAIN, miss 2 turns", "title": "Forgot Your Keys Again!", "icon": "two-keys",
+      "guide": "You had them a moment ago, and now they are gone again. Back at Central Station, you search every bench."
+    },
+    "100": {
+      "cat": "P", "type": "jump", "to": 82, "name": "back (everyone)", "title": "The Lantern Parade", "icon": "lanterns",
+      "guide": "A lantern parade fills the street, and the crowd carries you back the way you came. Walk with them and enjoy the lights."
+    }
   },
   "notes": {
     "jumpForward": "{p}: forward {n} squares.",
@@ -142,7 +167,9 @@
   },
   "landmarks": {
     "55": { "name": "Base Camp", "icon": "tent" },
-    "56": { "name": "Mountain Lodge", "icon": "cabin" }
+    "56": { "name": "Mountain Lodge", "icon": "cabin" },
+    "92": { "name": "Central Station", "icon": "big-clock" },
+    "97": { "name": "Festival Pier", "icon": "pier" }
   },
   "moments": {
     "home": { "title": "Home", "guide": "Your bags are packed and the door is locked. The festival is waiting." },
@@ -151,6 +178,7 @@
     "treeStuck": { "guide": "The tree is still there. Perhaps today we find a way around." },
     "boatWait": { "guide": "The festival lights are close now. Roll exactly 4 to step ashore; any other number, and the boat takes you back." },
     "boatMiss": { "guide": "The current turns, and the crew must row back. You will reach the shore another day." },
-    "boatWin": { "guide": "You step ashore at the festival pier, right on time. The crew raise their paddles to wish you well." }
+    "boatWin": { "guide": "You step ashore at the festival pier, right on time. The crew raise their paddles to wish you well." },
+    "finish": { "guide": "You have arrived, {p}, and the night is full of lantern light. Thank you for travelling with me." }
   }
 }
