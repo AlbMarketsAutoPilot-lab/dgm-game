@@ -8,6 +8,7 @@ Used by the game screen (`src/ui`).
 | `art.ts`, `art-travel.ts`, `art-places.ts` | Animated storybook illustrations (filled SVG shapes + CSS motion, transform/opacity only), one per `icon` name in the board files (57). Review them all at `/gallery.html` (`npm run dev`). |
 | `art-kit.ts` | Shared palette, ink outlines, the reusable motions (bob, sway, spin, puff, ripple, …) and scenery helpers (water, clouds, sun, wheels, trees, people). |
 | `art-modern.ts` | The grown-up redraw of the pictures (owner-approved, 15 Oct): same ink and colours, grown-up subjects; replaces the first drawings except cable-car, maze and swap-arrows. Also the card faces of the held cards (`cardFace`). |
+| `art-lantern.ts` | Step I: the Lantern Festival's new pictures (fallen tree, Village Bus, falling-rocks sign, Dragon Boat, Swap Market, forest) and `areaSign()`, the shared area sign frame (owner-approved 26 Nov 2026). |
 | `icons.ts` | Small line icons (only a safety net for an unknown name). |
 | `palette.ts` | Ink, paper, the paper's crayon colour per event square, region washes. |
 | `sketch.ts` | Hand-drawn SVG primitives (wobbly boxes and lines, hatching, paper texture). |

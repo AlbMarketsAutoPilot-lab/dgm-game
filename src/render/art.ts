@@ -9,6 +9,7 @@ import { KIT_CSS } from "./art-kit";
 import { PLACES } from "./art-places";
 import { TRAVEL } from "./art-travel";
 import { MODERN } from "./art-modern";
+import { LANTERN_ART } from "./art-lantern";
 import { esc } from "./html";
 import { ICONS } from "./icons";
 
@@ -236,6 +237,8 @@ Object.assign(ART, TRAVEL, PLACES);
 // The grown-up redraws (owner, 15 Oct: "all new icons", except these three, which keep their first drawing).
 const KEEP = new Set(["cable-car", "maze", "swap-arrows"]);
 for (const [name, a] of Object.entries(MODERN)) if (!KEEP.has(name)) ART[name] = a;
+// The Lantern Festival's new pictures (Step I phase B10, owner-approved 26 Nov 2026), under new names.
+for (const [name, a] of Object.entries(LANTERN_ART)) ART[name] = a;
 
 /** Every illustration's CSS (and the shared motions), to inject once. */
 export function artCss(): string {

@@ -1,5 +1,6 @@
 // A v3 destination file: checked against the rules the engine implements (GCD §8.2a R1–R20), refused otherwise.
 import lanternJson from "../../../data/lantern-festival.json";
+import { MOMENT_KEYS } from "./types";
 import type { Area, Board3, Tile3, TileType3 } from "./types";
 
 const TYPES: readonly TileType3[] = [
@@ -12,6 +13,25 @@ function fail(id: string, msg: string): never {
 }
 
 const int = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v);
+
+/** Owner rules for every text a player sees (phase B, 25 Nov 2026). */
+export const TEXT_LIMITS = { noteChars: 50, guideSentences: 2 } as const;
+
+/** Sentences in a text ("Mr." is not a sentence end). */
+export const sentences = (s: string): number => (s.replace(/\bMr\. /g, "Mr ").match(/[.!?]+["”’)]?(\s|$)/g) ?? []).length;
+
+/**
+ * Checks one text: not empty; no square numbers (any number above 6; die numbers 1–6 are allowed); only the
+ * placeholders {p}, {q} and {n}; a notification at most TEXT_LIMITS.noteChars characters; a guide text at most
+ * TEXT_LIMITS.guideSentences sentences.
+ */
+function checkText(id: string, where: string, s: unknown, kind: "name" | "guide" | "note"): void {
+  if (typeof s !== "string" || !s.trim()) fail(id, `${where}: text must not be empty`);
+  for (const m of s.match(/\d+/g) ?? []) if (Number(m) > 6) fail(id, `${where}: no square numbers in texts (found ${m})`);
+  for (const m of s.match(/\{[^}]*\}/g) ?? []) if (m !== "{p}" && m !== "{q}" && m !== "{n}") fail(id, `${where}: unknown placeholder ${m}`);
+  if (kind === "note" && s.length > TEXT_LIMITS.noteChars) fail(id, `${where}: a notification has at most ${TEXT_LIMITS.noteChars} characters (${s.length})`);
+  if (kind === "guide" && sentences(s) > TEXT_LIMITS.guideSentences) fail(id, `${where}: a guide text has at most ${TEXT_LIMITS.guideSentences} sentences`);
+}
 
 /** Checks a v3 destination file and returns it typed. Throws on anything the v3 engine does not implement. */
 export function parseBoard3(json: unknown): Board3 {
@@ -50,6 +70,9 @@ export function parseBoard3(json: unknown): Board3 {
     if (t.cat !== "R" && t.cat !== "P" && t.cat !== "S") fail(id, `${where}: unknown category ${String(t.cat)}`);
     if (!TYPES.includes(t.type)) fail(id, `${where}: unknown type ${String(t.type)}`);
     if (!t.name) fail(id, `${where}: needs a working name`);
+    if (t.title !== undefined) checkText(id, `${where} title`, t.title, "name");
+    if (t.guide !== undefined) checkText(id, `${where} guide`, t.guide, "guide");
+    if (t.note !== undefined) checkText(id, `${where} note`, t.note, "note");
     switch (t.type) {
       case "jump": {
         // R8: a fixed jump moves at most maxEventJump squares and never onto another event square (or Home).
@@ -78,6 +101,30 @@ export function parseBoard3(json: unknown): Board3 {
   }
   if (trees !== 1) fail(id, `exactly one fallen tree (found ${trees})`);
   if (boats > 1) fail(id, "at most one Dragon Boat");
+
+  // Phase B texts (owner, 25 Nov 2026).
+  for (const a of areas) {
+    if (a.announce !== undefined) checkText(id, `area ${a.name} announce`, a.announce, "guide");
+    if (a.effectText !== undefined) {
+      if (a.effect === null) fail(id, `area ${a.name}: effect text without an effect`);
+      checkText(id, `area ${a.name} effectText`, a.effectText, "guide");
+    }
+  }
+  if (b.destination !== undefined) checkText(id, "destination name", b.destination.name, "name");
+  if (b.guide !== undefined) checkText(id, "guide name", b.guide.name, "name");
+  for (const [k, s] of Object.entries(b.notes ?? {})) checkText(id, `notes.${k}`, s, "note");
+  for (const [k, l] of Object.entries(b.landmarks ?? {})) {
+    const sq = Number(k);
+    if (!int(sq) || sq < 1 || sq > b.lastTile) fail(id, `landmark ${k} is not a square`);
+    if (isEvent.has(sq)) fail(id, `landmark ${k} is on an event square`);
+    checkText(id, `landmark ${k} name`, l.name, "name");
+  }
+  for (const [k, m] of Object.entries(b.moments ?? {})) {
+    if (!(MOMENT_KEYS as readonly string[]).includes(k)) fail(id, `unknown moment ${k}`);
+    if (m.title !== undefined) checkText(id, `moment ${k} title`, m.title, "name");
+    if (m.guide !== undefined) checkText(id, `moment ${k} guide`, m.guide, "guide");
+    if (m.note !== undefined) checkText(id, `moment ${k} note`, m.note, "note");
+  }
   return b;
 }
 

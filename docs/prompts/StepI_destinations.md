@@ -219,6 +219,18 @@ These change the points above where they differ (GCD R16, R20 updated).
 - **Built side by side (phase A):** the v3 rules live next to v2 (src/engine/v3/, tools/sim/, data/lantern-festival.json),
   so the app keeps working; v2 code, the 202 board and their tests are deleted in phase C.
 
+### Owner decisions in phase B (25–26 Nov 2026)
+
+- **Square 54 → 65** (+11, measured best); squares 10, 17, 37, 61, 66, 72, 94, 96 and 99 unchanged; 32 and 37 stay linked.
+- **Texts:** phase B also wrote the story moments tied to places; buttons, tips and leaderboard messages stay in C, E and F.
+  Notifications come from shared patterns filled in from the board. The Village Bus promises no Forest effect (event
+  entry gives none). Named plain squares are landmarks. Pictures are reused where possible.
+- **The guide** is Mr. Lin, style A (calm and wise); he tells the story only to people, never for robots.
+- **Each area's announcement is one text with a saying** that also tells its effect (no separate effect text).
+- **Plot Twist when nobody is ahead:** no guide text, only the notification.
+- **Pictures:** the falling-rocks sign follows China's official warning sign; the Dragon Boat and the Swap Market are
+  drawn without people; the Forest's sign is a forest (not a compass).
+
 ## Phased plan (approved)
 
 S = 1 session, M = 2–3, L = 4+.
@@ -227,7 +239,7 @@ S = 1 session, M = 2–3, L = 4+.
 |---|---|---|---|
 | A0 | Rewrite GCD rules R1–R21 with all of the above (text only) | S | Low |
 | A | Engine + simulator + tests on board 100 with every agreed rule and square; measurement report (seats, game length, waiting at Home and the tree, lead changes, close finishes, card use, robot vs simple player). Decided (owner, 25 Nov 2026): keep both engines (src/engine and tools/sim/engine.mjs), change both the same way, and keep test/equivalence.test.ts comparing them game by game. Phase A starts in a new session | L | High: waiting and the harsh end may need fixes |
-| B | Board redesign + full narrative (voice, squares, guide and notification texts, square 54, new pictures: tree, Dragon Boat, Swap Market, area signs); measure again | M–L | Medium |
+| B ✅ | Board redesign + full narrative (voice, squares, guide and notification texts, square 54, new pictures: tree, Dragon Boat, Swap Market, area signs); measure again. **Done 26 Nov 2026** (decisions below; GCD §9.3; `docs/analysis/stepI-A_measure.md`, "Phase B") | M–L | Medium |
 | C | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level | M | Medium |
 | E | Leaderboard | S–M | Low |
 | F | Opening guide + in-game tips | S | Low |
