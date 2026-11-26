@@ -2,6 +2,7 @@
 // (docs/prompts/StepI_destinations.md Part 2) and the checker refuses anything the v3 rules do not allow.
 import { describe, expect, it } from "vitest";
 import { DESTINATIONS, TEXT_LIMITS, areaOf, parseBoard3, sentences } from "../src/engine/v3/board";
+import { MOMENT_KEYS } from "../src/engine/v3/types";
 import { ART } from "../src/render/art";
 
 const LF = DESTINATIONS["lantern-festival"];
@@ -48,8 +49,7 @@ describe("Lantern Festival (v3)", () => {
 
 // Phase B (owner, 25 Nov 2026): every text a player sees is approved by the owner, area by area, and follows the rules
 // below. An area joins DONE_AREAS once all its texts are approved and in the file.
-const DONE_AREAS: string[] = ["Home Town", "Forest"];
-// Texts in, picture still to draw in B10 (owner, 26 Nov 2026): the Countryside (the Village Bus), the Mountains (the Rockslide), the Seaside (the Dragon Boat), the Big City (the Swap Market).
+const DONE_AREAS: string[] = ["Home Town", "Countryside", "Forest", "Mountains", "Seaside", "Big City"];
 const withAny = (patch: object) => ({ ...LF, ...patch });
 
 describe("Lantern Festival (v3): texts and pictures", () => {
@@ -81,6 +81,15 @@ describe("Lantern Festival (v3): texts and pictures", () => {
       ...Object.values(LF.landmarks ?? {}).map((l) => l.icon), LF.destination?.icon,
     ].filter((x): x is string => x !== undefined);
     for (const i of icons) expect(ART, i).toHaveProperty(i);
+  });
+
+  it("the whole destination has its texts: every square, area, landmark, notification pattern and story moment", () => {
+    expect(DONE_AREAS).toEqual(LF.areas.map((a) => a.name));
+    expect(LF.destination?.name && LF.destination.icon && LF.guide?.name).toBeTruthy();
+    for (const [sq, l] of Object.entries(LF.landmarks ?? {})) expect(l.icon, `landmark ${sq}`).toBeTruthy();
+    expect(Object.keys(LF.notes ?? {}).length).toBe(25);
+    // "swapMarket" is kept for the partner choice, written with the buttons in phase C.
+    for (const k of MOMENT_KEYS.filter((m) => m !== "swapMarket")) expect(LF.moments?.[k]?.guide, `moment ${k}`).toBeTruthy();
   });
 
   it("every approved area has all its texts", () => {

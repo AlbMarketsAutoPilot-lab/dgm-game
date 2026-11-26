@@ -23,7 +23,7 @@
       "announce": "In the Countryside they say, \"Even a sheet of paper is lighter when lifted together.\" The farmers let you cross 6 fields, so roll again and add the free 6 to your roll."
     },
     {
-      "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" }, "icon": "compass",
+      "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" }, "icon": "forest",
       "announce": "In the Forest, the paths twist and turn, and as the old proverb says, \"Take one step back, and the sea and sky open up.\" Whatever you roll next, you will go backward, and then you will find the right path."
     },
     {
@@ -53,11 +53,11 @@
       "guide": "A hay cart is heading for the forest, and the driver waves you aboard. The road is bumpy, but the cart never stops."
     },
     "20": {
-      "cat": "R", "type": "jump", "to": 36, "name": "The Village Bus", "title": "The Village Bus",
+      "cat": "R", "type": "jump", "to": 36, "name": "The Village Bus", "title": "The Village Bus", "icon": "village-bus",
       "guide": "The village bus is just leaving, and there is one seat left. The driver knows the old road around the fallen tree."
     },
     "27": {
-      "cat": "P", "type": "tree", "name": "The fallen tree", "title": "The Fallen Tree", "icon": "fallen-tree",
+      "cat": "P", "type": "tree", "name": "The fallen tree", "title": "The Fallen Tree", "icon": "great-tree",
       "guide": "A great tree has fallen across the path. We cannot climb it, so we wait until you roll a 6."
     },
     "30": {
@@ -82,7 +82,7 @@
       "guide": "On the high tea terraces, a tea picker stops to greet you. She gives you a Bonus card for the journey."
     },
     "49": {
-      "cat": "P", "type": "jump", "to": 31, "name": "The Rockslide (picture in B10: the official falling-rocks road sign, owner 26 Nov 2026)", "title": "The Rockslide",
+      "cat": "P", "type": "jump", "to": 31, "name": "The Rockslide", "title": "The Rockslide", "icon": "falling-rocks",
       "guide": "Stones come tumbling down onto the path, and the way up is closed. The only safe road leads back down to the forest."
     },
     "54": {
@@ -98,7 +98,7 @@
       "guide": "Your room at the seaside inn was booked for last week. The nearest free bed is back at Base Camp."
     },
     "69": {
-      "cat": "R", "type": "dragonBoat", "to": 97, "need": 4, "name": "The Dragon Boat", "title": "The Dragon Boat",
+      "cat": "R", "type": "dragonBoat", "to": 97, "need": 4, "name": "The Dragon Boat", "title": "The Dragon Boat", "icon": "dragon-boat",
       "guide": "A dragon boat crew is training on the water, and they have a seat for you. They row you all the way to the festival pier."
     },
     "72": {
@@ -110,7 +110,7 @@
       "guide": "Dark clouds roll in from the sea, and the wind blows hard. You run back along the beach to take shelter."
     },
     "79": {
-      "cat": "S", "type": "swapMarket", "name": "The Swap Market", "title": "The Swap Market",
+      "cat": "S", "type": "swapMarket", "name": "The Swap Market", "title": "The Swap Market", "icon": "swap-market",
       "guide": "At the Swap Market, travellers trade what they carry. If you have a Bonus card, you give one away; if you have none, someone shares theirs."
     },
     "85": {
