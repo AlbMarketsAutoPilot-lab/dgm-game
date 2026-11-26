@@ -5,6 +5,7 @@
 // right (landscape); tap one to see everything about them. All rules come from the engine (src/engine); this file
 // only shows its events, in order, and answers its decisions.
 import { BOARDS, Game, OFF, START, normalPlayer, randomSeed, simplePlayer, type Answer, type Board, type Decision, type GameEvent, type PlayerState, type Pos, type Tile } from "../engine";
+import { DESTINATIONS } from "../engine/v3";
 import { artFor } from "../render/art";
 import { esc } from "../render/html";
 import { cardFace } from "../render/art-modern";
@@ -131,9 +132,11 @@ export class GameScreen {
         </section>
       </div>`;
     const ov = root.querySelector<HTMLElement>(".overview")!;
-    this.overview = new Overview(ov, board, players, (pos) => this.squareInfo(pos));
+    // Step I phase C3: the board is drawn from the Lantern Festival file; the game still plays the v2 rules until C4
+    const drawn = DESTINATIONS["lantern-festival"];
+    this.overview = new Overview(ov, drawn, players, (pos) => this.squareInfo(pos));
     this.pops = new Popups(ov, root.querySelector(".game")!, root.querySelector(".controls")!);
-    this.stage = new Stage(root.querySelector(".stage")!, board);
+    this.stage = new Stage(root.querySelector(".stage")!, drawn);
     // The lane is always there (empty without a note), so the square never grows and shrinks; the square and the token
     // size themselves above it (stage.ts), so a note never covers them
     const lane = root.querySelector(".stage")!.appendChild(Object.assign(document.createElement("div"), { className: "note-lane" }));

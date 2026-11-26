@@ -1,25 +1,26 @@
 // Where everything sits on the whole board, in board units (1 unit = one square).
 // Pure geometry: the board view (src/ui/overview.ts) reads it.
 //
-// Both boards are a labyrinth spiral, like the hand-drawn paper board: the long Start square at the top left (four
+// The board is a labyrinth spiral, like the hand-drawn paper board: the long Home square at the top left (four
 // squares long, it holds all the tokens), then the road runs clockwise round the outside and winds inwards ring by
-// ring to the Festival of Lights in the middle. Squares touch; a thin wall separates the rings, with one opening where
-// the road steps into the next ring. No empty margins: the squares get all the space.
-// The boards have no Shortcut (owner, 15 Oct) and no stair steps; a board with a Shortcut is refused (C2).
-import { BOARDS, OFF } from "../engine";
-import type { Board, Pos } from "../engine";
+// ring to the destination in the middle. Squares touch; a thin wall separates the rings, with one opening where the
+// road steps into the next ring. No empty margins: the squares get all the space.
+// Step I phase C3 (owner, 26 Nov 2026): drawn from a v3 destination file (data/lantern-festival.json); Home is one
+// square (place 0). The paper's ladder and snake drawings are gone (they were never drawn on screen).
+
+/** What the layout needs from a board: its name (for its sizes) and its length. */
+export interface Drawable {
+  id: string;
+  lastTile: number;
+  endTile: number;
+}
+
+/** A place on the board: 0 = Home, 1..lastTile, endTile = the destination. Below 0 also means Home. */
+export type Place = number;
 
 export interface Point {
   x: number;
   y: number;
-}
-
-/** A paper ladder or snake, redrawn for the journey: a cable car (forward) or a river (back). */
-export interface Drawing {
-  kind: "cable" | "river";
-  from: number;
-  to: number;
-  path: Point[];
 }
 
 export interface Pad {
@@ -29,30 +30,29 @@ export interface Pad {
 }
 
 export interface BoardLayout {
-  board: Board;
+  board: Drawable;
   /** Board area in units. */
   bounds: { x: number; y: number; w: number; h: number };
   /** The labyrinth itself (walls are drawn over this rectangle, squares on top). */
   maze: { x: number; y: number; w: number; h: number };
-  /** squares[n] = centre of square n (1..lastTile); squares[0] = the centre of the Start pad. */
+  /** squares[n] = centre of square n (1..lastTile); squares[0] = the centre of the Home pad. */
   squares: Point[];
   /** Length of each square along the road (about 1; the width across is always 1). */
   along: number[];
   /** Unit vector of the direction of travel at each square. */
   heading: Point[];
-  /** Start pad (Start and Home: the tokens wait here), END pad (the festival). */
+  /** Home pad (the tokens wait here), END pad (the destination). */
   start: Pad;
   endPad: Pad;
   end: Point;
   home: Point;
   /** Unused (the legend was removed, owner 15 Oct). */
   legend: { x: number; y: number; w: number; h: number };
-  drawings: Drawing[];
 }
 
 /** Walls between rings. */
 export const WALL_THIN = 0.38; // owner, 15 Oct: a clear purple wall between the rings, as on the first boards
-/** How long the Start square is (it holds up to four tokens side by side). */
+/** How long the Home square is (it holds up to four tokens side by side). */
 export const START_LEN = 4;
 
 /**
@@ -63,10 +63,8 @@ export const START_LEN = 4;
 const DESIGNS: Record<string, [number, number][]> = {
   long: [[16.25, 15.75]],
   short: [[12.25, 11], [11.25, 12]],
+  "lantern-festival": [[12.25, 11], [11.25, 12]],
 };
-
-/** The paper drawings (archived transcription §6.1, §8.1): ladders and snakes, by their long-board squares. */
-const LONG_DRAWINGS: [from: number, to: number][] = [[40, 103], [80, 135], [113, 50], [188, 157], [138, 195], [158, 48], [202, 165]];
 
 const lerp = (a: Point, b: Point, t: number): Point => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
 const dist = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
@@ -94,10 +92,10 @@ function spiral(w: number, h: number, count: number): { pts: Point[]; along: num
   return { pts, along };
 }
 
-const cache = new Map<Board, Map<string, BoardLayout>>();
+const cache = new Map<Drawable, Map<string, BoardLayout>>();
 
 /** The board size that gives the biggest squares in a panel of panelW × panelH pixels (no panel: the default). */
-export function designFor(board: Board, panelW = 0, panelH = 0): [number, number] {
+export function designFor(board: Drawable, panelW = 0, panelH = 0): [number, number] {
   const list = DESIGNS[board.id];
   if (!list) throw new Error(`no layout for board "${board.id}"`);
   if (!(panelW > 0 && panelH > 0)) return list[0];
@@ -105,7 +103,7 @@ export function designFor(board: Board, panelW = 0, panelH = 0): [number, number
   return list.reduce((best, d) => (side(d) > side(best) + 0.01 ? d : best));
 }
 
-export function layoutFor(board: Board, panelW = 0, panelH = 0): BoardLayout {
+export function layoutFor(board: Drawable, panelW = 0, panelH = 0): BoardLayout {
   const [w, h] = designFor(board, panelW, panelH), key = `${w}x${h}`;
   let byBoard = cache.get(board);
   if (!byBoard) cache.set(board, (byBoard = new Map()));
@@ -115,10 +113,9 @@ export function layoutFor(board: Board, panelW = 0, panelH = 0): BoardLayout {
 }
 
 /** The layout on a board of w × h units (tests try other sizes). */
-export function layoutForDesign(board: Board, w: number, h: number): BoardLayout {
+export function layoutForDesign(board: Drawable, w: number, h: number): BoardLayout {
   const last = board.lastTile;
-  if (board.rules.forks.length) throw new Error(`board "${board.id}": the Shortcut (R20) is not drawn by this game (removed, owner 15 Oct)`);
-  // The first START_LEN places are the Start square, then squares 1..last, then one more: END.
+  // The first START_LEN places are the Home square, then squares 1..last, then one more: END.
   const road = spiral(w, h, START_LEN + last + 1);
   const s0 = road.pts[0], s1 = road.pts[START_LEN - 1];
   const start: Pad = { centre: lerp(s0, s1, 0.5), w: dist(s0, s1) + dist(s0, road.pts[1]), h: 1 };
@@ -150,9 +147,8 @@ export function layoutForDesign(board: Board, w: number, h: number): BoardLayout
   }
   const end = { x: (pad.x0 + pad.x1) / 2, y: (pad.y0 + pad.y1) / 2 };
   const endPad: Pad = { centre: end, w: pad.x1 - pad.x0, h: pad.y1 - pad.y0 };
-  const drawings = drawingsFor(board).map(([from, to]): Drawing => ({ kind: to > from ? "cable" : "river", from, to, path: [squares[from], squares[to]] }));
   const layout: BoardLayout = {
-    board, squares, along, heading, drawings, start, endPad, end,
+    board, squares, along, heading, start, endPad, end,
     home: start.centre,
     maze: { x: -0.5 - WALL_THIN, y: -0.5 - WALL_THIN, w: w + 1 + 2 * WALL_THIN, h: h + 1 + 2 * WALL_THIN },
     legend: { x: 0, y: 0, w: 0, h: 0 },
@@ -161,19 +157,9 @@ export function layoutForDesign(board: Board, w: number, h: number): BoardLayout
   return layout;
 }
 
-/** The paper drawings on this board. The short board reuses long-board events (same story = same drawing). */
-function drawingsFor(board: Board): [number, number][] {
-  if (board.id === "long") return LONG_DRAWINGS;
-  const long = BOARDS.long.tiles, out: [number, number][] = [];
-  for (const [k, t] of Object.entries(board.tiles)) {
-    if (t.type === "jump" && t.to !== undefined && LONG_DRAWINGS.some(([from]) => long[from]?.story === t.story)) out.push([Number(k), t.to]);
-  }
-  return out;
-}
-
 /** Centre of a token's place (engine `Pos`). */
-export function pointOf(layout: BoardLayout, pos: Pos): Point {
-  if (pos === OFF || pos === 0) return layout.start.centre;
+export function pointOf(layout: BoardLayout, pos: Place): Point {
+  if (pos <= 0) return layout.start.centre;
   if (pos === layout.board.endTile) return layout.end;
   return layout.squares[pos];
 }

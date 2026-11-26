@@ -9,7 +9,7 @@ import { KIT_CSS } from "./art-kit";
 import { PLACES } from "./art-places";
 import { TRAVEL } from "./art-travel";
 import { MODERN } from "./art-modern";
-import { LANTERN_ART } from "./art-lantern";
+import { LANTERN_ART, areaSign } from "./art-lantern";
 import { esc } from "./html";
 import { ICONS } from "./icons";
 
@@ -254,4 +254,10 @@ export function artFor(name: string, label: string): string {
   if (a) return `<svg class="art art-${name}" viewBox="${a.box ?? "6 6 88 88"}" role="img" aria-label="${esc(label)}">${a.svg}</svg>`;
   const d = ICONS[name] ?? ICONS.card;
   return `<svg class="art art-icon" viewBox="0 0 24 24" role="img" aria-label="${esc(label)}"><path class="bob" d="${d}" fill="none" stroke="${INK}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+/** An area's sign (owner, 26 Nov 2026): the wooden board with the area's picture inside (src/render/art-lantern.ts). */
+export function areaSignFor(name: string, label: string): string {
+  const a = ART[name], inner = a ? `<g class="art-${name}">${a.svg}</g>` : "";
+  return `<svg class="art area-sign" viewBox="0 0 100 100" role="img" aria-label="${esc(label)}">${areaSign(inner)}</svg>`;
 }
