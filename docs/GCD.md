@@ -136,18 +136,28 @@ See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Exciteme
 
 ## 9. Story: "The Journey" (P4)
 
-> **Step I (owner, 25 Nov 2026):** the whole narrative is rewritten in phase B (voice first, then area by area; a guide figure on the right, short facts on the left). Areas from now on: §8.2a R15. See `docs/prompts/StepI_destinations.md`.
+> **Step I (owner, 25–26 Nov 2026):** the narrative was rewritten in phase B for the Lantern Festival (§9.3). §9.2 is the v2 story, kept as the record until the v2 board is removed in phase C. Areas from now on: §8.2a R15.
 
 ### 9.1 Principle ✅
 The board is **one continuous neutral journey**. Each square is the next moment of the same trip, not a collection of unrelated events. Every event is a travel moment: transport, weather, forgetting things, friendly help, shortcuts, getting lost.
 
-### 9.2 The Grand Journey ✅ (owner, step I-4, 14 Oct 2026)
+### 9.2 The Grand Journey (v2, replaced by §9.3) (owner, step I-4, 14 Oct 2026)
 - **Destination:** the **Festival of Lights** (END). Every player travels from Home to the festival, carrying lanterns.
 - **Voice:** grown-up (owner's choice: "an 18–34 story can appeal to kids, but not the other way round"). Dry humour from moments every adult has lived (missed trains, "did I lock the door?"), still simple enough for a 6-year-old and within C2. At most one short sentence per square, plus an icon.
 - **Regions in order:** Home Town (Start–19) → Countryside (20–49) → Forest (50–81) → River & Lake (82–107) → Mountains (108–137) → Seaside (138–159) → Big City (160–189) → Festival Road (190–202).
 - **Names:** trap (paper "prison") = **The Bog**; waiting stairs (R17) = **porch steps** at Start and **stepping stones** in the Bog; lifelines (R18) = **Lanterns**; roadblock (R19) = **Fallen tree**; two roads (R20) = **Main Road** (safe) and **the Shortcut** (wild); free pass (90) = **Bog boots**; the **Bonus card** and the **Snake Leader** keep their names.
 - **Landmarks:** Forest Station 55 and Hill Station 71 (paper Airport), River Pier 86 and Harbour 102 (Bank), Base Camp 109 and Mountain Lodge 135 (Hotel), The Fair 179 (Party), Central Station 184 (Work).
 - **The texts**, square by square, are in `data/board-long.json` (`story` and `icon` per square, and the `story` block for the rule elements). The paper's own words stay in `text`. Every rule field is identical to `data/board-v0-paper.json`, and the measurement is unchanged (`docs/analysis/measure-long.md` = `docs/analysis/measure-frozen.md`). Working log with every version and decision: `docs/analysis/I-4_story_log.md`.
+
+### 9.3 The Lantern Festival ✅ (owner, Step I phase B, 25–26 Nov 2026)
+- **Destination:** **The Lantern Festival**. Every text is in `data/lantern-festival.json`, approved by the owner word for word, area by area, and checked by the board check (`src/engine/v3/board.ts`) and `test/v3-board.test.ts`.
+- **The guide: Mr. Lin**, an Asian wise man who travels with the players, respectful, no stereotypes. **Voice:** calm and wise (style A of three), in plain English, all ages; "spiritual" means wonder, light, journey and gratitude, never religion. He tells the story **only to people**, never for robots and never about what happens to robots.
+- **Two channels:** Mr. Lin's popup (right) carries the story: at most **2 sentences**. The notifications (left) carry only the facts, at most **50 characters**, from **25 shared patterns** (`{p}` the player, `{q}` the other player, `{n}` a distance), and never repeat the guide. **No square numbers** in any text (no number above 6; die numbers 1–6 are allowed); distances only.
+- **Areas:** each area's announcement is one text with a **saying** that also tells the area's effect (Countryside: "Even a sheet of paper is lighter when lifted together."; Forest: "Take one step back, and the sea and sky open up."; Mountains: "No matter how tall the mountain is, it cannot block the sun"; Seaside: "The waves behind push the waves ahead."; Big City: "Haste does not bring success."). Home Town's announcement is Mr. Lin's welcome.
+- **Squares:** every event square has a title, Mr. Lin's story and a picture. Plot Twist shows no guide text when nobody is ahead (only the notification). The dragon boat is a crew giving a ride, never part of the Lantern Festival itself (dragon-boat racing belongs to another festival).
+- **Story moments:** Home, back Home after a bump, free to go, still at the tree, the Dragon Boat (waiting, missed the 4, won with the 4) and the finish. The Swap Market's partner choice is written with the buttons in phase C.
+- **Landmarks:** Base Camp (55), Mountain Lodge (56), Central Station (92), Festival Pier (97).
+- **Pictures:** `src/render/art-lantern.ts` (the fallen tree, the Village Bus, China's falling-rocks warning sign, the Dragon Boat, the Swap Market, the forest, and the shared area sign frame); the rest reuse the approved pictures. Owner, 26 Nov 2026: pictures are approved only after the owner has seen them, at a grown-up level of detail, and without drawn people where people would be the subject.
 
 ## 10. Boards ✅
 
