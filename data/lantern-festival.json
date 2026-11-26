@@ -22,7 +22,11 @@
       "announce": "The Countryside. Open fields, quiet lanes, and farmers who are happy to help a traveller.",
       "effectText": "A gift from the Countryside: the farmers let you cross 6 fields! Roll again, and the free 6 is added to your roll."
     },
-    { "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" } },
+    {
+      "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" }, "icon": "compass",
+      "announce": "The Forest. The paths here twist and turn, and it is easy to lose your way.",
+      "effectText": "As the old proverb says, \"Take one step back, and the sea and sky open up.\" Whatever you roll next, you will go backward, and then you will find the right path."
+    },
     { "name": "Mountains", "from": 39, "to": 56, "effect": { "type": "double" } },
     { "name": "Seaside", "from": 57, "to": 76, "effect": { "type": "swapAhead", "range": 20, "otherwise": "card" } },
     { "name": "Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" } }
@@ -44,10 +48,23 @@
       "cat": "R", "type": "jump", "to": 36, "name": "The Village Bus", "title": "The Village Bus",
       "guide": "The village bus is just leaving, and there is one seat left. The driver knows the old road around the fallen tree."
     },
-    "27": { "cat": "P", "type": "tree", "name": "The fallen tree" },
-    "30": { "cat": "R", "type": "card", "name": "Bonus card" },
-    "32": { "cat": "R", "type": "nearest", "target": "R", "name": "next good square" },
-    "37": { "cat": "R", "type": "swapLeader", "name": "Plot Twist" },
+    "27": {
+      "cat": "P", "type": "tree", "name": "The fallen tree", "title": "The Fallen Tree", "icon": "fallen-tree",
+      "guide": "A great tree has fallen across the path. We cannot climb it, so we wait until you roll a 6."
+    },
+    "30": {
+      "cat": "R", "type": "card", "name": "Bonus card", "title": "The Ranger's Gift", "icon": "card",
+      "guide": "A forest ranger shares a cup of tea with you and hands you a Bonus card for the road. It may help you out of trouble one day."
+    },
+    "32": {
+      "cat": "R", "type": "nearest", "target": "R", "name": "next good square", "title": "A Path Between the Trees", "icon": "signpost",
+      "guide": "A girl collecting chestnuts shows you a narrow path between the trees. It comes out further along the road."
+    },
+    "37": {
+      "cat": "R", "type": "swapLeader", "name": "Plot Twist (owner, 26 Nov 2026: when nobody is ahead, no guide text, only notes.swapLeaderNone)",
+      "title": "Plot Twist", "icon": "swap-arrows",
+      "guide": "The paths cross in the mist. When it clears, you and the leader have changed places."
+    },
     "40": { "cat": "R", "type": "jump", "to": 56, "name": "Cable car" },
     "45": { "cat": "R", "type": "card", "name": "Bonus card" },
     "49": { "cat": "P", "type": "jump", "to": 31, "name": "The Rockslide" },
@@ -96,6 +113,7 @@
   "moments": {
     "home": { "title": "Home", "guide": "Your bags are packed and the door is locked. The festival is waiting." },
     "backHome": { "guide": "Back Home, but your bags are still packed. Nothing keeps you here for long.", "note": "{p} is Home: no 6 needed to leave." },
-    "freeToGo": { "guide": "The road is open, and the festival is waiting." }
+    "freeToGo": { "guide": "The road is open, and the festival is waiting." },
+    "treeStuck": { "guide": "The tree is still there. Perhaps today we find a way around." }
   }
 }

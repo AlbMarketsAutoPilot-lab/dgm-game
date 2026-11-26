@@ -48,7 +48,7 @@ describe("Lantern Festival (v3)", () => {
 
 // Phase B (owner, 25 Nov 2026): every text a player sees is approved by the owner, area by area, and follows the rules
 // below. An area joins DONE_AREAS once all its texts are approved and in the file.
-const DONE_AREAS: string[] = ["Home Town"];
+const DONE_AREAS: string[] = ["Home Town", "Forest"];
 // Texts in, picture still to draw in B10 (owner, 26 Nov 2026): the Countryside (the Village Bus).
 const withAny = (patch: object) => ({ ...LF, ...patch });
 
