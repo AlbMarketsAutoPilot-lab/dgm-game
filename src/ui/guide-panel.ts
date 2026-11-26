@@ -2,8 +2,10 @@
 // lower panel), covering the zoomed square and the die. It tells the story of a person's turn (never for robots) and
 // holds every choice: its buttons name their action. It shows only after the pieces have stopped moving. While it is
 // open, the next action's button (roll, pass the die) is in it, so the action area under it is never needed.
-// The guide's figure comes in phase C7; until then the panel shows his name.
+// Phase C7 (owner, 26 Nov 2026): his figure is the owner's own picture (src/assets/guide/mr-lin.webp, the white
+// background taken out), in a round medallion at the top right, his name on its left (owner, 26 Nov 2026), breathing gently (still with "reduce motion").
 import { esc } from "../render/html";
+import face from "../assets/guide/mr-lin.webp";
 
 export interface GuideButton {
   label: string;
@@ -41,15 +43,20 @@ export class GuidePanel {
     el.setAttribute("aria-live", "polite");
     el.setAttribute("aria-label", this.name);
     el.innerHTML = `
-      <header class="gp-head"><p class="gp-name">${esc(this.name)}</p></header>
-      <div class="gp-body">
+      <header class="gp-head"><p class="gp-name">${esc(this.name)}</p><div class="gp-face" aria-hidden="true"><img src="${face}" alt=""></div></header>
+      <div class="gp-body"><div class="gp-words">
         ${c.title ? `<h2 class="gp-title">${c.title}</h2>` : ""}
         ${c.text ? `<p class="gp-text">${c.text}</p>` : ""}
         ${c.outcome ? `<p class="gp-outcome">${c.outcome}</p>` : ""}
         ${c.question ? `<p class="gp-question">${c.question}</p>` : ""}
-      </div>
+      </div></div>
       <div class="gp-buttons"></div>`;
-    this.host.append(el);
+    // owner, 26 Nov 2026: a little space around it, so it reads as a popup; the space is a dark backdrop, so what is
+    // behind does not show through
+    const back = document.createElement("div");
+    back.className = "gp-back";
+    back.append(el);
+    this.host.append(back);
     if (!reduced()) el.animate([{ opacity: 0, transform: "translateY(.75rem)" }, { opacity: 1, transform: "none" }], { duration: 240, easing: "ease-out" });
     const p = new Promise<string>((r) => (this.done = r));
     if (c.buttons?.length) void this.buttons(c.buttons);
@@ -87,7 +94,7 @@ export class GuidePanel {
 
   close(): void {
     const d = this.done;
-    this.el?.remove();
+    this.el?.parentElement?.remove();
     this.el = null;
     this.done = null;
     d?.("replaced");
@@ -95,7 +102,7 @@ export class GuidePanel {
 
   private answer(v: string): void {
     const d = this.done;
-    this.el?.remove();
+    this.el?.parentElement?.remove();
     this.el = null;
     this.done = null;
     d?.(v);

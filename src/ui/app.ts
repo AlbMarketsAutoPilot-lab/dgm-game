@@ -43,14 +43,15 @@ const leaveSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v1
 
 // ---- Texts approved by the owner in phase C2 (26 Nov 2026), word for word ----
 const T = {
-  homeQ: "Use your Bonus card to set off now, or roll for a 6?", // A1
-  treeQ: "Use your Bonus card to get past the tree, or roll for a 6?", // A2
+  // A1, A2 (owner, 26 Nov 2026: Mr. Lin's own words, not a plain question)
+  homeQ: "To begin your journey, you may leave your fate to luck and hope to roll a 6. Or will you take your journey's fate into your own hands and use a Bonus card?",
+  treeQ: "The fallen tree blocks the path. You may leave it to luck and hope to roll a 6, or take your journey into your own hands and use a Bonus card to get past it.",
   cancelQ: "Use your Bonus card to cancel this?", // A3, A4
   without: "Without the card:", // A3
   giveQ: "Who receives your Bonus card?", // A5
   takeQ: "Whose Bonus card do you take?", // A6
   rest: "Rest for now. The road will still be there tomorrow.", // A8
-  useCard: "Use my Bonus card", rollSix: "Roll for a 6", keepCard: "Keep my card", letsGo: "Let's go", skip: "Skip this turn",
+  useCard: "Use Bonus card", noCard: "No Bonus card this turn", keepCard: "Keep my card", letsGo: "Let's go", skip: "Skip this turn",
   give: (q: string) => `Give it to ${q}`, take: (q: string) => `Take ${q}'s card`, pass: (q: string) => `Pass the die to ${q} ▶`,
   roll: "Roll die", rollAgain: "Roll again", // B1
   cardHome: "{p} uses a Bonus card to leave Home.", // C1
@@ -222,7 +223,7 @@ export class GameScreen {
       if (this.gone) return;
       // Mr. Lin's welcome (Home Town's announcement), for the people at the table
       const welcome = this.board.areas[0]?.announce;
-      if (people && welcome) { await this.guide.show({ text: esc(welcome), buttons: [{ label: T.letsGo, value: "ok", primary: true }] }); if (this.gone) return; }
+      if (people && welcome) { sound.play("lantern-out"); await this.guide.show({ text: esc(welcome), buttons: [{ label: T.letsGo, value: "ok", primary: true }] }); if (this.gone) return; }
     }
     while (!this.game.over) await this.turn();
     if (this.gone) return;
@@ -415,9 +416,9 @@ export class GameScreen {
         const home = d.where === "home";
         let title: string | undefined, text: string | undefined;
         if (home && !this.homeTold[d.player]) { this.homeTold[d.player] = true; title = esc(M.home?.title ?? ""); text = esc(M.home?.guide ?? ""); }
-        if (!home && M.treeStuck?.guide) text = esc(M.treeStuck.guide);
+        // at the tree the question itself tells of the tree (owner's rule: Mr. Lin never says it twice)
         await this.readFirst();
-        v = await this.guide.show({ title, text, question: home ? T.homeQ : T.treeQ, buttons: [{ label: T.useCard, value: "card", primary: true }, { label: T.rollSix, value: "roll" }] });
+        v = await this.guide.show({ title, text, question: home ? T.homeQ : T.treeQ, buttons: [{ label: T.useCard, value: "card", primary: true }, { label: T.noCard, value: "roll" }] });
         return v === "card";
       }
       case "punishment": {
@@ -516,6 +517,8 @@ export class GameScreen {
         this.areaFx = e.effect;
         const question = asked && after.length === 0;
         if (e.effect === "gifted6") this.note("gifted6", e.player, "good");
+        // owner, 26 Nov 2026: Mr. Lin's welcome and his area announcements have their own sound ("lantern-out")
+        if (me && a.announce) sound.play("lantern-out");
         if (me && !question && a.announce) await this.story({ title: esc(a.name), text: esc(a.announce) });
         await this.wait(me ? 600 : 1200);
         break;
