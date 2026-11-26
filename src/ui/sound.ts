@@ -10,8 +10,8 @@
 import { inApp } from "./android";
 
 export type Effect =
-  | "dice" | "step" | "six" | "good" | "bad" | "bump" | "jump-up" | "jump-down" | "bog" | "card"
-  | "lantern-out" | "lantern-on" | "postcard" | "tap" | "win" | "out";
+  | "dice" | "step" | "six" | "good" | "bad" | "bump" | "jump-up" | "jump-down" | "card"
+  | "lantern-out" | "postcard" | "tap" | "win" | "out";
 export type Music = "menu" | "game";
 
 /** How loud each effect plays (the files are all equally loud): the ones that repeat often are quieter. */
@@ -20,7 +20,7 @@ const MUSIC_LEVEL: Record<Music, number> = { menu: 0.4, game: 0.28 };
 /** The music loops by its original length: an MP3 file is a few milliseconds longer, which would click at each loop. */
 const LOOP: Record<string, number> = { "menu-loop": 8.428844, game: 46.836893 };
 /** Short buzzes on phones, with the sound switch (milliseconds: buzz, pause, buzz …). */
-const BUZZ: Partial<Record<Effect, number | number[]>> = { six: 60, bad: [40, 60, 40], bump: [40, 60, 40], bog: 120, out: [80, 80, 80], win: 300 };
+const BUZZ: Partial<Record<Effect, number | number[]>> = { six: 60, bad: [40, 60, 40], bump: [40, 60, 40], out: [80, 80, 80], win: 300 };
 
 /** Every sound file of the game, by name (the build gives each its address inside the package). */
 const FILES: Record<string, string> = Object.fromEntries(

@@ -5,6 +5,9 @@
 //
 // A turn is a generator: it runs until a player must choose (R19), yields a Decision3 and continues with the answer
 // passed to next(). `runTurn3` plays a turn with a decider function (the robot, simulations, tests).
+// Phase C1 (owner, 26 Nov 2026): every thing that happens is also written to `events`, in order, for the screens
+// (moving the tokens, Mr. Lin's popups, the notifications, the postcards). Writing them never throws a die, so the games
+// stay throw for throw the simulator's (test/v3-equivalence.test.ts).
 import { type Rng, d6, randomSeed, rng } from "../rng";
 import type { AreaEffect, Board3, Tile3 } from "./types";
 
@@ -50,6 +53,49 @@ export type Decision3 =
 
 export type Answer3 = boolean | number;
 
+/** Why a die is thrown: `move` a plain move, `wait` at Home or the tree, `boat` the Dragon Boat's
+ * roll, `dice` an event's dice (square 61, the Countryside's extra roll). */
+export type RollWhy = "move" | "wait" | "boat" | "dice";
+
+/** What happens in a turn, in order (phase C1). Squares are numbers here; the screens never show them (R1 of Part 2). */
+export type Event3 =
+  | { type: "turn"; player: number }
+  /** A missed turn; `left` = turns still to miss after this one. */
+  | { type: "skip"; player: number; left: number }
+  /** One throw of the die. */
+  | { type: "roll"; player: number; value: number; why: RollWhy }
+  /** R2: a run of 3 or more 6s (the sixes postcards). */
+  | { type: "sixes"; player: number; count: number }
+  /** R1 / R6: a throw without a 6 at Home or at the tree; `tries` = throws without a 6 in this stay. */
+  | { type: "noSix"; player: number; where: "home" | "tree"; tries: number }
+  /** R1 / R6 / R20: free to go; then the player rolls to move (`forced`: the robot's card, moving by that same throw). */
+  | { type: "free"; player: number; where: "home" | "tree"; by: "six" | "card" | "forced" }
+  /** A move by dice, square by square: `dir` -1 = the Forest's backward move. `doubled`: a pending double was used. */
+  | { type: "move"; player: number; from: number; to: number; dir: 1 | -1; by: "roll" | "slow" | "dice"; doubled: boolean }
+  /** R7: the total passes the finish, the token stays. */
+  | { type: "overshoot"; player: number; squares: number }
+  /** The square's event starts (before any Bonus card question). */
+  | { type: "square"; player: number; square: number; tile: Tile3 }
+  /** A fixed move by an event: a square's jump, "next good square", the Dragon Boat there and back. */
+  | { type: "jump"; player: number; from: number; to: number; cause: "tile" | "nearest" | "boat" | "boatBack" }
+  /** R4: `victim` goes Home. */
+  | { type: "bump"; player: number; victim: number; square: number }
+  /** R10 / R16: places swapped. */
+  | { type: "swap"; player: number; other: number; cause: "leader" | "ahead" | "behind" }
+  /** R10: Plot Twist with nobody ahead. */
+  | { type: "noLeader"; player: number }
+  /** R16: an area's effect starts (before any Bonus card question). */
+  | { type: "area"; player: number; area: number; effect: AreaEffect["type"] }
+  /** Something waits for a later turn: exactly 1 (7), a double (Mountains, 72), backward (Forest), turns to miss. */
+  | { type: "pending"; player: number; what: "slow" | "double" | "back" | "skip"; turns?: number }
+  /** A Bonus card gained: a card square, the Seaside, the Swap Market (`from` = the giver). */
+  | { type: "card"; player: number; source: "square" | "seaside" | "market"; from?: number }
+  /** A Bonus card used: leave Home, leave the tree, the robot's forced card, cancel a square or an area effect. */
+  | { type: "cardUsed"; player: number; use: "home" | "tree" | "forced" | "square" | "area" }
+  /** R18: nobody can give or take a card. */
+  | { type: "marketNone"; player: number }
+  | { type: "win"; player: number; boat: boolean };
+
 export interface GameView3 {
   board: Board3;
   players: readonly Player3[];
@@ -70,6 +116,8 @@ export interface GameOptions3 {
   setup?: Partial<Player3>[];
   /** The game stops (no winner) instead of starting this round + 1. Default 3000, as in the simulator. */
   maxRounds?: number;
+  /** The seat that plays first (the app draws it at random, U3). Default 0, as in the simulator. */
+  first?: number;
 }
 
 type Turn = Generator<Decision3, void, Answer3>;
@@ -82,8 +130,12 @@ export class Game3 implements GameView3 {
   capped = false;
   /** Whether the winner finished with the Dragon Boat's exact roll. */
   wonByBoat = false;
+  /** Everything that happened, in order (phase C1). */
+  readonly events: Event3[] = [];
 
   private seat: number;
+  /** The seat that played first; a round starts with its turn. */
+  readonly first: number;
   private readonly die: () => number;
   private readonly maxRounds: number;
   private readonly robots: boolean[];
@@ -113,7 +165,14 @@ export class Game3 implements GameView3 {
       got: { square: 0, seaside: 0, market: 0 }, used: { home: 0, tree: 0, forced: 0, square: 0, area: 0 },
     }));
     opts.setup?.forEach((s, i) => Object.assign(this.players[i], s));
-    this.seat = opts.players - 1;
+    this.first = opts.first ?? 0;
+    if (!Number.isInteger(this.first) || this.first < 0 || this.first >= opts.players) throw new Error("first must be a seat");
+    this.seat = (this.first + opts.players - 1) % opts.players;
+  }
+
+  /** The seat whose turn it is (or was last). */
+  get current(): number {
+    return this.seat;
   }
 
   get over(): boolean {
@@ -129,12 +188,13 @@ export class Game3 implements GameView3 {
   *turn(): Turn {
     if (this.over) throw new Error("the game is over");
     this.seat = this.next;
-    if (this.seat === 0) {
+    if (this.seat === this.first) {
       if (this.round >= this.maxRounds) { this.capped = true; return; }
       this.round++;
     }
     const pi = this.seat, p = this.players[pi], before = p.pos;
-    if (p.skip > 0) { p.skip--; p.skipped++; }
+    this.emit({ type: "turn", player: pi });
+    if (p.skip > 0) { p.skip--; p.skipped++; this.emit({ type: "skip", player: pi, left: p.skip }); }
     else if (p.boat) this.boatTurn(pi);
     else if (p.home || p.stuck) yield* this.waitingTurn(pi);
     else yield* this.moveTurn(pi);
@@ -143,16 +203,26 @@ export class Game3 implements GameView3 {
 
   // ---- helpers ----
 
+  private emit(e: Event3): void {
+    this.events.push(e);
+  }
+
   private others(pi: number): number[] {
     const o: number[] = [];
     for (let k = 1; k < this.players.length; k++) o.push((pi + k) % this.players.length);
     return o;
   }
 
-  private rollRun(pi: number): number { // R2: every 6 rolls again, no limit; one move by the total
+  private roll(pi: number, why: RollWhy): number {
+    const value = this.die();
+    this.emit({ type: "roll", player: pi, value, why });
+    return value;
+  }
+
+  private rollRun(pi: number, why: RollWhy): number { // R2: every 6 rolls again, no limit; one move by the total
     let total = 0, sixes = 0, r: number;
-    do { r = this.die(); total += r; if (r === 6) sixes++; } while (r === 6);
-    if (sixes >= 3) this.players[pi].sixRuns[Math.min(sixes, 6) - 3]++;
+    do { r = this.roll(pi, why); total += r; if (r === 6) sixes++; } while (r === 6);
+    if (sixes >= 3) { this.players[pi].sixRuns[Math.min(sixes, 6) - 3]++; this.emit({ type: "sixes", player: pi, count: sixes }); }
     return total;
   }
 
@@ -162,15 +232,18 @@ export class Game3 implements GameView3 {
       if (i === pi || q.pos !== sq) return;
       q.pos = 0; q.home = false; q.stuck = false; q.boat = false; q.back = false; q.tries = 0; q.skip = 0; q.treeRun = 0;
       q.bumped++; this.players[pi].bumps++;
+      this.emit({ type: "bump", player: pi, victim: i, square: sq });
     });
   }
 
-  private jumpTo(pi: number, to: number): void { // a fixed event move (R8): no square event, no area effect, a bump
+  private jumpTo(pi: number, to: number, cause: "tile" | "nearest" | "boat" | "boatBack"): void { // a fixed event move (R8): no square event, no area effect, a bump
+    this.emit({ type: "jump", player: pi, from: this.players[pi].pos, to, cause });
     this.players[pi].pos = to;
     this.bump(pi, to);
   }
 
-  private swap(a: number, b: number): void { // swaps bump nobody, trigger nothing, and end a Dragon Boat deal
+  private swap(a: number, b: number, cause: "leader" | "ahead" | "behind"): void { // swaps bump nobody, trigger nothing, and end a Dragon Boat deal
+    this.emit({ type: "swap", player: a, other: b, cause });
     const P = this.players, t = P[a].pos;
     P[a].pos = P[b].pos; P[b].pos = t;
     P[a].boat = false; P[b].boat = false;
@@ -206,10 +279,11 @@ export class Game3 implements GameView3 {
   // ---- moves ----
 
   /** A forward move by dice. "roll" = a plain roll (may give an area effect); "dice" = an event's dice (no area effect). */
-  private *forward(pi: number, n: number, how: "roll" | "dice"): Turn {
+  private *forward(pi: number, n: number, how: "roll" | "dice", by: "roll" | "slow" | "dice" = how, doubled = false): Turn {
     const p = this.players[pi], from = p.pos, to = from + n;
-    if (to > this.END) return; // R7: exact; too big = stay
-    if (to === this.END) { p.pos = this.END; this.winner = pi; return; }
+    if (to > this.END) { this.emit({ type: "overshoot", player: pi, squares: n }); return; } // R7: exact; too big = stay
+    this.emit({ type: "move", player: pi, from, to, dir: 1, by, doubled });
+    if (to === this.END) { p.pos = this.END; this.winner = pi; this.emit({ type: "win", player: pi, boat: false }); return; }
     p.pos = to;
     this.bump(pi, to);
     const t = this.board.tiles[to];
@@ -217,49 +291,61 @@ export class Game3 implements GameView3 {
     if (how === "roll" && this.winner === null) yield* this.areaEntry(pi, from, to);
   }
 
-  private backward(pi: number, n: number): void { // Forest: never past Home; no square event or area effect; a bump
-    const p = this.players[pi];
+  private backward(pi: number, n: number, doubled: boolean): void { // Forest: never past Home; no square event or area effect; a bump
+    const p = this.players[pi], to = Math.max(0, p.pos - n);
+    this.emit({ type: "move", player: pi, from: p.pos, to, dir: -1, by: "roll", doubled });
     p.stuck = false;
-    p.pos = Math.max(0, p.pos - n);
+    p.pos = to;
     if (p.pos === 0) p.home = false; else this.bump(pi, p.pos);
   }
 
   private *squareEvent(pi: number, sq: number, t: Tile3): Turn {
     const P = this.players, p = P[pi];
-    if (t.cat === "P" && t.type !== "tree" && (yield* this.cancels(pi, sq, t, null))) { p.cards--; p.used.square++; return; }
+    this.emit({ type: "square", player: pi, square: sq, tile: t });
+    if (t.cat === "P" && t.type !== "tree" && (yield* this.cancels(pi, sq, t, null))) {
+      p.cards--; p.used.square++; this.emit({ type: "cardUsed", player: pi, use: "square" }); return;
+    }
     switch (t.type) {
       case "tree": p.stuck = true; p.tries = 0; p.treeRun = 0; p.treeStuck++; break;
-      case "slowNext": p.slow = true; break;
-      case "doubleOthers": for (const q of this.others(pi)) P[q].dbl = true; break;
-      case "jump": this.jumpTo(pi, t.to!); if (t.then === "skip2") p.skip += 2; break;
-      case "card": p.cards++; p.got.square++; break;
+      case "slowNext": p.slow = true; this.emit({ type: "pending", player: pi, what: "slow" }); break;
+      case "doubleOthers": for (const q of this.others(pi)) { P[q].dbl = true; this.emit({ type: "pending", player: q, what: "double" }); } break;
+      case "jump":
+        this.jumpTo(pi, t.to!, "tile");
+        if (t.then === "skip2") { p.skip += 2; this.emit({ type: "pending", player: pi, what: "skip", turns: p.skip }); }
+        break;
+      case "card": p.cards++; p.got.square++; this.emit({ type: "card", player: pi, source: "square" }); break;
       case "nearest": { // R11: the next square of that category, and it applies
         let k = sq + 1;
         while (k <= this.LAST && !(this.board.tiles[k] && this.board.tiles[k].cat === t.target)) k++;
         if (k > this.LAST) break;
-        this.jumpTo(pi, k);
+        this.jumpTo(pi, k, "nearest");
         yield* this.squareEvent(pi, k, this.board.tiles[k]);
         break;
       }
-      case "swapLeader": { const q = this.leaderAhead(pi); if (q >= 0) this.swap(pi, q); break; } // R10
+      case "swapLeader": { // R10
+        const q = this.leaderAhead(pi);
+        if (q >= 0) this.swap(pi, q, "leader"); else this.emit({ type: "noLeader", player: pi });
+        break;
+      }
       case "rollSum": {
         let n = 0;
-        for (let i = 0; i < t.dice!; i++) n += this.die();
+        for (let i = 0; i < t.dice!; i++) n += this.roll(pi, "dice");
         yield* this.forward(pi, n, "dice");
         break;
       }
-      case "dragonBoat": this.jumpTo(pi, t.to!); p.boat = true; p.boatRides++; break; // R17
+      case "dragonBoat": this.jumpTo(pi, t.to!, "boat"); p.boat = true; p.boatRides++; break; // R17
       case "swapMarket": { // R18
         const give = p.cards > 0;
         const cands = give ? this.others(pi) : this.others(pi).filter((q) => P[q].cards > 0);
-        if (!cands.length) break;
+        if (!cands.length) { this.emit({ type: "marketNone", player: pi }); break; }
         let q = cands[0];
         if (cands.length > 1) {
           const a = yield { kind: "swapMarket", player: pi, give, candidates: cands };
           if (typeof a !== "number" || !cands.includes(a)) throw new Error("swapMarket: answer a seat from the candidates");
           q = a;
         }
-        if (give) { p.cards--; P[q].cards++; P[q].got.market++; } else { P[q].cards--; p.cards++; p.got.market++; }
+        if (give) { p.cards--; P[q].cards++; P[q].got.market++; this.emit({ type: "card", player: q, source: "market", from: pi }); }
+        else { P[q].cards--; p.cards++; p.got.market++; this.emit({ type: "card", player: pi, source: "market", from: q }); }
         break;
       }
     }
@@ -271,22 +357,26 @@ export class Game3 implements GameView3 {
     if (a === this.area[from] || !fx || p.done[a]) return;
     if (p.pos >= this.END || this.area[p.pos] !== a) return;
     p.done[a] = true; p.fx++;
+    this.emit({ type: "area", player: pi, area: a, effect: fx.type });
+    const cardUsed = () => { p.cards--; p.used.area++; this.emit({ type: "cardUsed", player: pi, use: "area" }); };
     switch (fx.type) {
-      case "gifted6": yield* this.forward(pi, 6 + this.rollRun(pi), "dice"); break;
+      case "gifted6": yield* this.forward(pi, 6 + this.rollRun(pi, "dice"), "dice"); break;
       case "backward":
-        if (yield* this.cancels(pi, p.pos, null, "backward")) { p.cards--; p.used.area++; } else p.back = true;
+        if (yield* this.cancels(pi, p.pos, null, "backward")) cardUsed();
+        else { p.back = true; this.emit({ type: "pending", player: pi, what: "back" }); }
         break;
-      case "double": p.dbl = true; break;
+      case "double": p.dbl = true; this.emit({ type: "pending", player: pi, what: "double" }); break;
       case "swapAhead": {
         const q = this.ahead(pi);
-        if (q >= 0 && this.players[q].pos - p.pos <= fx.range) this.swap(pi, q); else { p.cards++; p.got.seaside++; }
+        if (q >= 0 && this.players[q].pos - p.pos <= fx.range) this.swap(pi, q, "ahead");
+        else { p.cards++; p.got.seaside++; this.emit({ type: "card", player: pi, source: "seaside" }); }
         break;
       }
       case "swapBehind": {
         const q = this.behind(pi);
-        if (q >= 0 && p.pos - this.players[q].pos <= fx.range) this.swap(pi, q);
-        else if (yield* this.cancels(pi, p.pos, null, "swapBehind")) { p.cards--; p.used.area++; }
-        else p.skip++;
+        if (q >= 0 && p.pos - this.players[q].pos <= fx.range) this.swap(pi, q, "behind");
+        else if (yield* this.cancels(pi, p.pos, null, "swapBehind")) cardUsed();
+        else { p.skip++; this.emit({ type: "pending", player: pi, what: "skip", turns: p.skip }); }
         break;
       }
     }
@@ -295,46 +385,56 @@ export class Game3 implements GameView3 {
   /** A turn that moves (also after leaving Home or the tree). `given`: a throw that already counts (the forced card). */
   private *moveTurn(pi: number, given?: number): Turn {
     const p = this.players[pi];
-    if (p.slow) { p.slow = false; yield* this.forward(pi, 1, "roll"); return; } // square 7: exactly 1
-    let n = given ?? this.rollRun(pi);
+    if (p.slow) { p.slow = false; yield* this.forward(pi, 1, "roll", "slow"); return; } // square 7: exactly 1
+    let n = given ?? this.rollRun(pi, "move");
+    const doubled = p.dbl;
     if (p.dbl) { n *= 2; p.dbl = false; } // never more than ×2
-    if (p.back) { p.back = false; this.backward(pi, n); return; }
-    yield* this.forward(pi, n, "roll");
+    if (p.back) { p.back = false; this.backward(pi, n, doubled); return; }
+    yield* this.forward(pi, n, "roll", "roll", doubled);
   }
 
   private *waitingTurn(pi: number): Turn { // R1 / R6
     const p = this.players[pi], home = p.home;
     if (!home && p.back) { yield* this.moveTurn(pi); return; } // R6: the pending Forest move frees you
-    const free = () => { p.tries = 0; if (home) p.home = false; else p.stuck = false; p.homeRun = 0; p.treeRun = 0; };
-    if (p.cards > 0 && (yield { kind: "waitCard", player: pi, where: home ? "home" : "tree", tries: p.tries }) === true) {
-      p.cards--; p.used[home ? "home" : "tree"]++; free();
+    const where = home ? "home" : "tree";
+    const free = (by: "six" | "card" | "forced") => {
+      p.tries = 0; if (home) p.home = false; else p.stuck = false; p.homeRun = 0; p.treeRun = 0;
+      this.emit({ type: "free", player: pi, where, by });
+    };
+    if (p.cards > 0 && (yield { kind: "waitCard", player: pi, where, tries: p.tries }) === true) {
+      p.cards--; p.used[where]++; this.emit({ type: "cardUsed", player: pi, use: where }); free("card");
       yield* this.moveTurn(pi);
       return;
     }
-    const r = this.die();
-    if (r === 6) { free(); yield* this.moveTurn(pi); return; } // the freeing 6 does not move you
+    const r = this.roll(pi, "wait");
+    if (r === 6) { free("six"); yield* this.moveTurn(pi); return; } // the freeing 6 does not move you
     p.tries++;
     if (this.robots[pi] && p.tries >= this.board.rules.robotForceAfter && p.cards > 0) { // R20
-      p.cards--; p.used.forced++; free();
+      p.cards--; p.used.forced++; this.emit({ type: "cardUsed", player: pi, use: "forced" }); free("forced");
       yield* this.moveTurn(pi, r);
       return;
     }
+    this.emit({ type: "noSix", player: pi, where, tries: p.tries });
     if (home) { p.waitHome++; if (++p.homeRun > p.maxHomeRun) p.maxHomeRun = p.homeRun; }
     else { p.waitTree++; if (++p.treeRun > p.maxTreeRun) p.maxTreeRun = p.treeRun; }
   }
 
   private boatTurn(pi: number): void { // R17: exactly `need` wins; anything else back to the boat's square
-    const p = this.players[pi], r = this.die();
+    const p = this.players[pi], r = this.roll(pi, "boat");
     p.dbl = false; p.boat = false;
-    if (r === this.board.tiles[this.boatSq].need) { p.pos = this.END; this.winner = pi; this.wonByBoat = true; return; }
-    this.jumpTo(pi, this.boatSq);
+    if (r === this.board.tiles[this.boatSq].need) {
+      this.emit({ type: "move", player: pi, from: p.pos, to: this.END, dir: 1, by: "roll", doubled: false }); // ashore
+      p.pos = this.END; this.winner = pi; this.wonByBoat = true; this.emit({ type: "win", player: pi, boat: true }); return;
+    }
+    this.jumpTo(pi, this.boatSq, "boatBack");
   }
 }
 
-/** Plays one turn, answering every choice with `decide`. */
-export function runTurn3(game: Game3, decide: Decider3): void {
-  const t = game.turn();
+/** Plays one turn, answering every choice with `decide`. Returns the events of that turn. */
+export function runTurn3(game: Game3, decide: Decider3): Event3[] {
+  const first = game.events.length, t = game.turn();
   for (let r = t.next(); !r.done; r = t.next(decide(r.value, game)));
+  return game.events.slice(first);
 }
 
 /**

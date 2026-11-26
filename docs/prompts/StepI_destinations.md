@@ -231,6 +231,39 @@ These change the points above where they differ (GCD R16, R20 updated).
 - **Pictures:** the falling-rocks sign follows China's official warning sign; the Dragon Boat and the Swap Market are
   drawn without people; the Forest's sign is a forest (not a compass).
 
+### Owner decisions in phase C (26 Nov 2026)
+
+Phase C (branch `claude/stepI-C`): the app plays the v3 rules on the Lantern Festival. Built in steps C1–C8, each
+approved by the owner after seeing it.
+
+- **Screens.** The action area holds only "Roll die". Mr. Lin's panel (right; on phones held upright the lower panel)
+  covers the die after the pieces stop, holds every choice, and tells his story to people only; robots get none. On
+  small and sideways phones, when his words do not fit, the panel covers the whole game screen. The left notifications
+  use the approved patterns, for everyone. No square numbers on screen except the "→ 24" label.
+- **Mr. Lin's figure** is the owner's own picture (`src/assets/guide/mr-lin.webp`, white background removed), in a round
+  medallion at the top right of his panel, his name on its left, breathing gently. The panel has a little space around
+  it in the colour around the board. His welcome and his area announcements play the "lantern-out" sound. The use
+  rights of the tool that made the picture are to be checked by the owner before release (phase G).
+- **Texts** (C2, all approved word for word, in `src/ui/app.ts`): the questions, buttons, notifications, labels and
+  boxes. At Home and at the fallen tree Mr. Lin speaks in his own words ("To begin your journey, you may leave your fate
+  to luck and hope to roll a 6. Or will you take your journey's fate into your own hands and use a Bonus card?"), with
+  "Use Bonus card" / "No Bonus card this turn"; punishments "Use Bonus card" / "Keep my card". "The Lantern Festival"
+  everywhere (finish square, start screen, the winner's postcard). The old welcome popup is gone.
+- **Win popup:** "{p} made it!", Mr. Lin's finish story, "New game" · "Postcard album". A **Records** button (the
+  ranking of finish times) comes with the leaderboard in phase E.
+- **Board:** event squares are striped in their kind's colour (green ▲, red ▼, blue ◆ for the Swap Market); the area
+  signs (`areaSign()`) say "Now entering"; the last arrow into the festival shows.
+- **Squares 96 and 99** tell of the lantern's flame instead of keys: "The Flame Goes Out" and "Out Again!", with two new
+  pictures (a lantern on the cobbles, no pole, no houses); the rules are unchanged.
+- **Postcards** (17): the six areas (Forest shows the forest, Seaside the sailboat), The Lantern Festival, Fallen Tree,
+  Three / Four / Five / Six Sixes (new dice pictures), The Dragon Boat, Straight Off the Boat, Dodged It!, Plot Twist,
+  Out Again! (keeps the old "Forgot Keys AGAIN!!!" id). The v2-only postcards leave the album; collected ids stay.
+- **Square 7** ("exactly 1 square"): that turn plays without a tap.
+- **Saved games:** version 4; saves of the old version are dropped, collected postcards are kept.
+- **Removed (C8):** the v2 engine, the 202- and old 100-square boards, their tests, the old story texts, "Spoil it?",
+  the sounds lantern-on and bog. The v2 simulator and the paper boards are in `tools/sim/archive/v2/`.
+- **Left for later phases:** "How to play" and its pictures still describe v2 (phase F); the leaderboard (phase E).
+
 ## Phased plan (approved)
 
 S = 1 session, M = 2–3, L = 4+.
@@ -240,7 +273,7 @@ S = 1 session, M = 2–3, L = 4+.
 | A0 | Rewrite GCD rules R1–R21 with all of the above (text only) | S | Low |
 | A | Engine + simulator + tests on board 100 with every agreed rule and square; measurement report (seats, game length, waiting at Home and the tree, lead changes, close finishes, card use, robot vs simple player). Decided (owner, 25 Nov 2026): keep both engines (src/engine and tools/sim/engine.mjs), change both the same way, and keep test/equivalence.test.ts comparing them game by game. Phase A starts in a new session | L | High: waiting and the harsh end may need fixes |
 | B ✅ | Board redesign + full narrative (voice, squares, guide and notification texts, square 54, new pictures: tree, Dragon Boat, Swap Market, area signs); measure again. **Done 26 Nov 2026** (decisions below; GCD §9.3; `docs/analysis/stepI-A_measure.md`, "Phase B") | M–L | Medium |
-| C | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level | M | Medium |
+| C ✅ | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level. **Done 26 Nov 2026** (decisions above) | M | Medium |
 | E | Leaderboard | S–M | Low |
 | F | Opening guide + in-game tips | S | Low |
 | G | New Android (versionCode 4, 2.0.0) and Windows (2.0.0.0) versions, step by step on the owner's PC | M | Low–medium |

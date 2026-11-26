@@ -126,12 +126,12 @@
       "guide": "You were watching the city lights and missed your stop. The train takes you back to the edge of the city."
     },
     "96": {
-      "cat": "P", "type": "jump", "to": 92, "name": "forgot keys", "title": "Forgot Your Keys", "icon": "key",
-      "guide": "Your keys are still on the caf\u00e9 table at Central Station. You go back to fetch them."
+      "cat": "P", "type": "jump", "to": 92, "name": "flame out (owner, 26 Nov 2026: was forgot keys)", "title": "The Flame Goes Out", "icon": "lantern-out",
+      "guide": "A gust of wind blows out the flame in your paper lantern. You walk back to the lamps of Central Station to light it again."
     },
     "99": {
-      "cat": "P", "type": "jump", "to": 92, "then": "skip2", "name": "keys AGAIN, miss 2 turns", "title": "Forgot Your Keys Again!", "icon": "two-keys",
-      "guide": "You had them a moment ago, and now they are gone again. Back at Central Station, you search every bench."
+      "cat": "P", "type": "jump", "to": 92, "then": "skip2", "name": "lantern torn, miss 2 turns (owner, 26 Nov 2026: was keys AGAIN)", "title": "Out Again!", "icon": "lantern-torn",
+      "guide": "The wind blows your flame out once more, and this time it destroys the lantern too. You shelter at Central Station again, but no shop is open, so you wait two turns to buy a new lantern and light it."
     },
     "100": {
       "cat": "P", "type": "jump", "to": 82, "name": "back (everyone)", "title": "The Lantern Parade", "icon": "lanterns",

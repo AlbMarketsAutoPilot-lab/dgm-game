@@ -1,6 +1,6 @@
 // Hand-drawn primitives as SVG markup: wobbly ink outlines, crayon hatching, paper texture.
 // Every wobble comes from a seeded random source, so the board looks the same each time it is drawn.
-import { type Rng, rng } from "../engine";
+import { type Rng, rng } from "../engine/rng";
 
 /** A random source for one drawn element, from a name (the same name always wobbles the same way). */
 export function pen(name: string): Rng {

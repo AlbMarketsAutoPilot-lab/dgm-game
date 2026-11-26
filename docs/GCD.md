@@ -136,7 +136,7 @@ See `docs/analysis/MEASURE_REPORT_v0.md` (14 Oct 2026). Seats are fair. Exciteme
 
 ## 9. Story: "The Journey" (P4)
 
-> **Step I (owner, 25–26 Nov 2026):** the narrative was rewritten in phase B for the Lantern Festival (§9.3). §9.2 is the v2 story, kept as the record until the v2 board is removed in phase C. Areas from now on: §8.2a R15.
+> **Step I (owner, 25–26 Nov 2026):** the narrative was rewritten in phase B for the Lantern Festival (§9.3). §9.2 is the v2 story, kept as the record: the v2 boards and their files were removed in phase C8 (owner, 26 Nov 2026; they are in the git history, the v2 simulator in `tools/sim/archive/v2/`). Areas from now on: §8.2a R15.
 
 ### 9.1 Principle ✅
 The board is **one continuous neutral journey**. Each square is the next moment of the same trip, not a collection of unrelated events. Every event is a travel moment: transport, weather, forgetting things, friendly help, shortcuts, getting lost.
@@ -157,11 +157,12 @@ The board is **one continuous neutral journey**. Each square is the next moment 
 - **Squares:** every event square has a title, Mr. Lin's story and a picture. Plot Twist shows no guide text when nobody is ahead (only the notification). The dragon boat is a crew giving a ride, never part of the Lantern Festival itself (dragon-boat racing belongs to another festival).
 - **Story moments:** Home, back Home after a bump, free to go, still at the tree, the Dragon Boat (waiting, missed the 4, won with the 4) and the finish. The Swap Market's partner choice is written with the buttons in phase C.
 - **Landmarks:** Base Camp (55), Mountain Lodge (56), Central Station (92), Festival Pier (97).
+- **On screen (phase C, owner 26 Nov 2026):** Mr. Lin's panel covers the die after the pieces stop and holds every choice; his figure is the owner's picture; the notifications are on the left. Details: `docs/prompts/StepI_destinations.md`, "Owner decisions in phase C".
 - **Pictures:** `src/render/art-lantern.ts` (the fallen tree, the Village Bus, China's falling-rocks warning sign, the Dragon Boat, the Swap Market, the forest, and the shared area sign frame); the rest reuse the approved pictures. Owner, 26 Nov 2026: pictures are approved only after the owner has seen them, at a grown-up level of detail, and without drawn people where people would be the subject.
 
 ## 10. Boards ✅
 
-> **Step I (owner, 25 Nov 2026):** the long 202-square board is removed; only the 100-square board stays, redesigned in phase B, and 4 more 100-square **Destinations** follow in phase D. See `docs/prompts/StepI_destinations.md`.
+> **Step I (owner, 25 Nov 2026):** the long 202-square board is removed; only the 100-square board stays, redesigned in phase B, and 4 more 100-square **Destinations** follow in phase D. See `docs/prompts/StepI_destinations.md`. The v2 board files (`data/board-long.json`, `data/board-short.json`) were deleted in phase C8 (owner, 26 Nov 2026); the table below is the v2 record.
 
 | Board | Size | Role |
 |---|---|---|
@@ -204,7 +205,7 @@ For every event square, the simulator reports:
 
 ## 12. "One more game" — replay pull (P5) ✅ (owner, I-1 §16 item 6: all)
 
-> **Step I (owner, 25 Nov 2026):** a device-only leaderboard of human win times and new postcards (one set per destination) are added; see `docs/prompts/StepI_destinations.md`.
+> **Step I (owner, 25 Nov 2026):** a device-only leaderboard of human win times and new postcards (one set per destination) are added; see `docs/prompts/StepI_destinations.md`. **Phase C (26 Nov 2026):** the Lantern Festival's 17 postcards are built (`src/ui/postcards.ts`); the rematch button gave way to "New game" and, in phase E, "Records".
 
 No accounts and no data leave the device (C1). Everything below lives on the device only.
 

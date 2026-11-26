@@ -19,18 +19,17 @@ const dev = await devServer();
 let pub = null;
 try {
   // 1. Whole games (in parallel)
-  const GAMES = [
-    { name: "short board, 4 people, reloaded at turn 12", board: "short", players: 4, people: [0, 1, 2, 3], brk: { kind: "reload", at: 12 } },
-    { name: "long board, 3 people, left at turn 20 and continued", board: "long", players: 3, people: [0, 1, 2], brk: { kind: "leave", at: 20 } },
-    { name: "short board, 1 person and 3 Easy computer players", board: "short", players: 4, people: [0], level: "easy" },
-    { name: "long board, 2 people", board: "long", players: 2, people: [0, 1] },
-    { name: "short board, 2 people and 1 Normal computer player", board: "short", players: 3, people: [0, 2], level: "normal" },
-    { name: "short board, 3 people who spend lanterns to leave Home and the Bog, and as shields", board: "short", players: 3, people: [0, 1, 2], spend: true },
+  const GAMES = [ // Step I phase C8: the Lantern Festival
+    { name: "4 people, reloaded at turn 12", players: 4, people: [0, 1, 2, 3], brk: { kind: "reload", at: 12 } },
+    { name: "3 people, left at turn 20 and continued", players: 3, people: [0, 1, 2], brk: { kind: "leave", at: 20 } },
+    { name: "1 person and 3 robots", players: 4, people: [0] },
+    { name: "2 people", players: 2, people: [0, 1] },
+    { name: "2 people and 1 robot", players: 3, people: [0, 2] },
   ].slice(0, quick ? 2 : undefined);
   const results = await Promise.all(GAMES.map((g) => playGame(browser, dev.url, g).catch((e) => ({ diffs: [String(e)], errors: [], turns: 0, compared: 0 }))));
   results.forEach((r, i) => {
     const g = GAMES[i], bad = [...r.diffs, ...r.errors, ...(g.brk && !r.broke?.same ? [`${g.brk.kind}: board not the same after Continue`] : [])];
-    report.add("whole games", g.name, !bad.length, bad.length ? bad.slice(0, 3).join(" | ") : `${r.turns} turns${r.spends ? `, lantern count checked in ${r.spends} "spent a lantern" popups` : ""}${r.notes ? `, ${r.notes} computer notes and no computer popup` : ""}${r.aheads ? `, ${r.aheads} "what's ahead" notices` : ""}${r.compared ? `, ${r.compared} compared with the engine` : ", winner and final board compared"}`);
+    report.add("whole games", g.name, !bad.length, bad.length ? bad.slice(0, 3).join(" | ") : `${r.turns} turns${r.notes ? `, ${r.notes} robot notifications and no Mr. Lin panel for robots` : ""}${r.compared ? `, ${r.compared} compared with the engine` : ", winner and final board compared"}`);
   });
 
   // 2. Screen sizes

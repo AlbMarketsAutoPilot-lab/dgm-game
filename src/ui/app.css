@@ -530,3 +530,87 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   .avs { display: grid; grid-template-columns: repeat(2, 2.75rem); gap: .875rem .875rem; align-content: center; padding: .25rem .5rem; }
   .avatar { width: 2.75rem; }
 }
+/* ---- Step I phase C4 (owner, 25–26 Nov 2026) ---- */
+/* The Bonus card badge replaces the lantern badge: the card and the number held; a faded 0 when none */
+.avatar .badge.c { left: auto; right: -.625rem; bottom: -.375rem; }
+.avatar .badge.c svg, .avatar .badge.c .card-face { width: .875rem; height: 1.2rem; }
+.avatar .badge.c.none { opacity: .45; }
+
+/* Mr. Lin's panel: over the zoomed square, the die and the action area (the lower panel on phones held upright).
+   A deep ink frame with a gold edge, so it never looks like a notification. */
+.gp-back { position: absolute; inset: 0; z-index: 4; background: var(--table); } /* the same colour as around the board (owner, 26 Nov 2026) */
+.guide-panel {
+  position: absolute; inset: .625rem; display: flex; flex-direction: column; min-height: 0;
+  background: var(--paper); color: var(--ink); border: .3125rem solid var(--ink); border-radius: 1.25rem;
+  box-shadow: inset 0 0 0 .1875rem #f2c230, 0 .5rem 1.5rem rgba(43, 18, 72, .35);
+}
+.gp-head { flex: 0 0 auto; display: flex; align-items: center; gap: .625rem; padding: .5rem 1rem; background: var(--ink); color: #fff4c8; border-radius: .875rem .875rem 0 0; }
+.gp-name { margin: 0; font-size: 1.35rem; letter-spacing: .02em; }
+.gp-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: .75rem 1.125rem .25rem; }
+.gp-title { margin: 0 0 .25rem; font-weight: normal; font-size: 1.75rem; line-height: 1.1; }
+.gp-text { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+.gp-outcome { margin: .625rem 0 0; padding: .375rem .625rem; font-size: 1.15rem; line-height: 1.2; border-radius: .625rem; background: #efe5cf; border-left: .375rem solid var(--ink); }
+.guide-panel.bad .gp-outcome { border-color: var(--bad); color: #9c2b20; background: #f6e0d8; }
+.guide-panel.good .gp-outcome { border-color: var(--good); color: var(--good); background: #e5f0dc; }
+.gp-question { margin: .625rem 0 0; font-size: 1.2rem; line-height: 1.3; } /* Mr. Lin's own words (owner, 26 Nov 2026), not a bold form question */
+.gp-buttons { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: .5rem; padding: .5rem 1rem calc(.75rem + env(safe-area-inset-bottom)); }
+.gp-buttons:empty { display: none; }
+.gp-buttons button { flex: 1 1 12rem; }
+@media (max-height: 520px), (max-width: 380px) {
+  .gp-title { font-size: 1.35rem; } .gp-text, .gp-question { font-size: 1.05rem; } .gp-outcome { font-size: 1rem; }
+  .gp-body { padding: .5rem .75rem .25rem; } .gp-buttons { padding: .375rem .75rem .5rem; }
+}
+
+/* The notifications: short facts on the left, over the board (top left), for every player */
+.notes { position: absolute; left: .5rem; top: .5rem; z-index: 3; display: flex; flex-direction: column; gap: .375rem; max-width: min(22rem, calc(100% - 1rem)); pointer-events: none; }
+.notes .note { margin: 0; width: auto; display: flex; align-items: center; gap: .5rem; padding: .3125rem .75rem .3125rem .5rem; border-radius: .75rem;
+  background: rgba(255, 253, 246, .96); border: .125rem solid var(--ink); border-left: .5rem solid var(--who, var(--ink)); box-shadow: 0 .25rem .75rem rgba(43, 18, 72, .25); font-size: 1.05rem; line-height: 1.2; }
+.notes .note .tok { width: 1.5rem; height: 1.5rem; flex: 0 0 auto; }
+.notes .note.good { background: #eef6e8; } .notes .note.bad { background: #fbece6; }
+/* The album shows one set per destination, under its name (Step I phase C6) */
+.album-dest { max-width: 62.5rem; margin: .875rem auto 0; font-weight: normal; font-size: 1.35rem; color: var(--ink); }
+
+/* Mr. Lin's figure (Step I phase C7, owner 26 Nov 2026): the owner's picture in a round medallion with a gold ring,
+   breathing gently; still with "reduce motion" */
+.gp-head { padding-block: .375rem; min-height: 3.5rem; justify-content: space-between; }
+.gp-face { flex: 0 0 auto; width: clamp(4rem, 22cqw, 6.5rem); aspect-ratio: 1; margin-block: -.25rem -1.25rem; border-radius: 50%;
+  background: #fff4c8; border: .25rem solid #f2c230; box-shadow: 0 0 0 .1875rem var(--ink); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; position: relative; z-index: 1; }
+/* the whole head shows: the topknot at the top, the beard down to the robe (owner, 26 Nov 2026: "zoom it down a bit") */
+.gp-face img { height: 90%; width: auto; display: block; transform-origin: 50% 100%; animation: lin-breathe 4.5s ease-in-out infinite alternate; }
+@keyframes lin-breathe { from { transform: translateY(1%) scale(1); } to { transform: translateY(-.5%) scale(1.03); } }
+@media (prefers-reduced-motion: reduce) { .gp-face img { animation: none; transform: translateY(1%); } }
+/* the words sit in the middle, between the header and the buttons; they scroll when there are too many */
+.gp-body { display: flex; flex-direction: column; }
+.gp-words { margin-block: auto; }
+/* Phones held upright: the panel has the lower half only, so it is more compact (everything fits, no scrolling) */
+@media (orientation: portrait) {
+  .guide-panel { inset: .5rem; }
+  .gp-head { min-height: 2.75rem; padding-block: .25rem; }
+  .gp-name { font-size: 1.2rem; }
+  .gp-face { width: 4.25rem; margin-block: -.125rem -1rem; }
+  .gp-body { padding: .375rem .875rem .125rem; }
+  .gp-title { font-size: 1.4rem; margin-bottom: .125rem; }
+  .gp-text, .gp-question { font-size: 1.05rem; line-height: 1.28; }
+  .gp-question { margin-top: .375rem; }
+  .gp-outcome { font-size: 1rem; margin-top: .375rem; padding: .25rem .5rem; }
+  .gp-buttons { gap: .375rem; padding: .375rem .75rem .5rem; }
+  .gp-buttons button { min-height: 2.875rem; font-size: 1.1rem; padding-block: .25rem; }
+}
+/* Small screens: Mr. Lin's words do not fit in his own panel, so it covers the whole game screen (nothing scrolls) */
+.gp-back.gp-wide { z-index: 7; }
+.gp-wide .guide-panel { inset: .5rem; }
+.gp-wide .gp-buttons button { flex: 1 1 8rem; }
+/* Very short screens (phones held sideways): a slim header and the buttons side by side */
+@media (max-height: 420px) {
+  .gp-head { min-height: 2.25rem; padding-block: .125rem; }
+  .gp-name { font-size: 1.1rem; }
+  .gp-face { width: 3.25rem; margin-block: -.125rem -.5rem; }
+  .gp-body { padding: .25rem .75rem 0; }
+  .gp-title { font-size: 1.15rem; margin-bottom: 0; }
+  .gp-text, .gp-question { font-size: .98rem; line-height: 1.2; }
+  .gp-question { margin-top: .25rem; }
+  .gp-outcome { font-size: .95rem; margin-top: .25rem; padding: .125rem .5rem; }
+  .gp-buttons { padding: .25rem .5rem .375rem; gap: .375rem; flex-wrap: nowrap; }
+  .gp-buttons button { flex: 1 1 0; min-height: 2.625rem; font-size: 1rem; padding: .125rem .5rem; }
+  .gp-wide .guide-panel { inset: .375rem; }
+}

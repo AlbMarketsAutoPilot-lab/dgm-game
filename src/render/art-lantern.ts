@@ -28,7 +28,123 @@ const paperLantern = (x: number, y: number, k = 1) => `<g${A("sway", { r: 6, d: 
   + `<path d="M${x - 3.4 * k} ${y + 7.2 * k}q${-1.6 * k} ${5.8 * k} 0 ${11.6 * k}M${x + 3.4 * k} ${y + 7.2 * k}q${1.6 * k} ${5.8 * k} 0 ${11.6 * k}" fill="none" stroke="#00000033" stroke-width="1.2"/>`
   + `<rect x="${x - 3 * k}" y="${y + 19 * k}" width="${6 * k}" height="${2 * k}" rx="0.8" fill="${C.gold}" ${S2}/><path d="M${x} ${y + 21 * k}v${4 * k}" stroke="${C.gold}" stroke-width="1.6"/></g>`;
 
+// ---- The lantern's flame (owner, 26 Nov 2026: squares 96 and 99 replace the keys) ----
+const NIGHT = "#2c3163", STONE = "#4a4466", STONE2 = "#3b3656";
+const RED2 = "#a8322b", RED3 = "#7e2421";
+/** The evening street (owner, 26 Nov 2026: only the sky and the cobbles): sky, stars, the cobbled street. */
+const nightStreet = () => {
+  let s = `<rect x="-10" y="-10" width="120" height="120" fill="${NIGHT}"/>`;
+  for (const [x, y, d] of [[30, 14, 2.2], [72, 10, 2.8], [88, 26, 1.9], [40, 30, 3.1], [64, 24, 2.5]]) s += `<g${A("twinkle", { d, dl: x / 40 })}><path d="M${x} ${y - 2}l.7 1.3 1.3.7-1.3.7-.7 1.3-.7-1.3-1.3-.7 1.3-.7z" fill="#fff4c8"/></g>`;
+  // the street: cobbles in the lamplight
+  s += `<rect x="-10" y="70" width="120" height="40" fill="${STONE}"/><path d="M-10 70H110" stroke="${INK}" stroke-width="1.6"/>`;
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 9; c++) {
+    const x = -6 + c * 13 + (r % 2) * 6.5, y = 74 + r * 7;
+    s += `<rect x="${x}" y="${y}" width="10.5" height="5" rx="2" fill="${STONE2}" opacity=".85"/>`;
+  }
+  return s;
+};
+/** The wind: dashed gusts blowing from the left. */
+const gusts = (ys: number[]) => ys.map((y, i) => `<path d="M-4 ${y}q14-5 26 0t26 0q8 2 12-3" fill="none" stroke="#dfe8ff" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="7 6" opacity=".75"${A("dash", { d: 1.1 + i * 0.3 })}/>`).join("");
+/** A red paper lantern, unlit: ribs, gold caps (x, y: the top of its cord); standing on the street: no cord, no tassel. */
+const darkLantern = (x: number, y: number, standing = false) => {
+  const cy = y + 26, rx = 17, ry = 15;
+  let ribs = "";
+  for (const k of [-0.62, -0.25, 0.25, 0.62]) ribs += `<path d="M${x + k * rx} ${cy - ry * 0.86}q${k * rx * 0.55} ${ry * 0.86} 0 ${ry * 1.72}" fill="none" stroke="${RED3}" stroke-width="1.1"/>`;
+  return (standing ? `<path d="M${x - 3} ${y + 7}q3-5 6 0" fill="none" ${S2}/>` : `<path d="M${x} ${y}v7" ${S2}/>`)
+    + `<rect x="${x - 7}" y="${y + 7}" width="14" height="4.6" rx="1.4" fill="${C.gold}" ${S2}/>`
+    + `<ellipse cx="${x}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${RED2}" ${S}/>` + ribs
+    + `<path d="M${x - rx + 4} ${cy - 6}q3-6 8-7" fill="none" stroke="#c9564c" stroke-width="2" stroke-linecap="round"/>`
+    + `<path d="M${x - rx + 1.5} ${cy + 3}q${rx - 1.5} 5 ${2 * rx - 3} 0" fill="none" stroke="${RED3}" stroke-width="1" opacity=".7"/>`
+    + `<rect x="${x - 7}" y="${cy + ry - 2}" width="14" height="4.6" rx="1.4" fill="${C.gold}" ${S2}/>`
+    + (standing ? "" : `<circle cx="${x}" cy="${cy + ry + 4.2}" r="1.6" fill="${C.gold}" ${S2}/>`
+    + [-2, -1, 0, 1, 2].map((k) => `<path d="M${x + k * 0.5} ${cy + ry + 5.6}l${k * 0.9} 8" stroke="#d9a520" stroke-width="1" stroke-linecap="round"/>`).join(""));
+};
+/** A wisp of smoke curling up from (x, y). */
+const smoke = (x: number, y: number) => [0, 1.3].map((dl) => `<g${A("puff", { d: 2.6, dl, x: 8, y: -16, s: 1.8 })}><path d="M${x} ${y}q-3-4 0-7t0-7" fill="none" stroke="#cfd3e6" stroke-width="2.2" stroke-linecap="round" opacity=".85"/></g>`).join("");
+
+// ---- The sixes postcards (owner, 26 Nov 2026): 3, 4, 5 or 6 dice, every one showing 6, on a wooden table ----
+/** One die seen from the front and a little above: the 6 on the front face, its top and right side in shade. */
+const die3d = (x: number, y: number, k = 1, tilt = 0) => {
+  const w = 18 * k, d = 5.5 * k, r = 2.4 * k;
+  const pip = (px: number, py: number) => `<circle cx="${(x + px * w).toFixed(2)}" cy="${(y + py * w).toFixed(2)}" r="${(1.75 * k).toFixed(2)}" fill="${INK}"/>`;
+  return `<g transform="rotate(${tilt} ${x + w / 2} ${y + w / 2})">`
+    + `<path d="M${x} ${y}l${d} ${-d}h${w}l${-d} ${d}z" fill="#f3ead8" ${S2}/>` // top
+    + `<path d="M${x + w} ${y}l${d} ${-d}v${w}l${-d} ${d}z" fill="#d9ccb2" ${S2}/>` // right side
+    + `<rect x="${x}" y="${y}" width="${w}" height="${w}" rx="${r}" fill="${C.white}" ${S}/>`
+    + [[0.27, 0.25], [0.27, 0.5], [0.27, 0.75], [0.73, 0.25], [0.73, 0.5], [0.73, 0.75]].map(([a, b]) => pip(a, b)).join("")
+    + `<path d="M${x + w + d * 0.5} ${y - d * 0.15}v${w * 0.5}" stroke="#b9ab90" stroke-width="${(1.2 * k).toFixed(2)}" stroke-linecap="round"/>`
+    + `</g>`;
+};
+/** The table and the dice, placed for `n` dice (back row first, so the front ones overlap it). */
+const sixes = (n: number) => {
+  const spots: Record<number, [number, number, number, number][]> = { // x, y, size, tilt: every die stands on the table
+    3: [[20, 55, 1.05, -4], [41, 53, 1.05, 3], [62, 56, 1.05, -2]],
+    4: [[24, 43, 0.92, 3], [52, 43, 0.92, -3], [14, 64, 0.98, -2], [62, 64, 0.98, 4]],
+    5: [[12, 45, 0.84, -3], [39, 44, 0.84, 2], [66, 45, 0.84, -2], [25, 65, 0.92, 3], [55, 66, 0.92, -3]],
+    6: [[10, 46, 0.8, 2], [38, 45, 0.8, -3], [66, 46, 0.8, 3], [8, 67, 0.84, -2], [38, 67, 0.84, 3], [68, 67, 0.84, -2]],
+  };
+  let t = `<rect x="-10" y="-10" width="120" height="120" fill="#f6ecd6"/>`
+    + `<path d="M-10 52H110V110H-10z" fill="${C.brown}"/><path d="M-10 52H110" ${S}/>`
+    + `<path d="M2 60q20-2 40 0t44 0M-2 72q24-2 48 0t50 0M6 86q22-2 44 0t46 0M-4 98q26-2 50 0" fill="none" stroke="#8a5a3c" stroke-width="1.4" stroke-linecap="round"/>`;
+  spots[n].forEach(([x, y, k, tilt], i) => {
+    t += `<ellipse cx="${x + 9 * k + 2}" cy="${y + 18 * k + 1.5}" rx="${11 * k}" ry="${2.2 * k}" fill="#00000026"/>`;
+    t += i === spots[n].length - 1 ? `<g${A("hop", { d: 1.6, a: 3 })}>${die3d(x, y, k, tilt)}</g>` : die3d(x, y, k, tilt);
+  });
+  return t;
+};
+
 export const LANTERN_ART: Record<string, Art> = {
+  "sixes-3": { // the postcard "Three Sixes" (owner, 26 Nov 2026): 3 dice, all showing 6
+    box: "0 0 100 100",
+    svg: sixes(3),
+    css: "",
+  },
+  "sixes-4": { // the postcard "Four Sixes" (owner, 26 Nov 2026): 4 dice, all showing 6
+    box: "0 0 100 100",
+    svg: sixes(4),
+    css: "",
+  },
+  "sixes-5": { // the postcard "Five Sixes" (owner, 26 Nov 2026): 5 dice, all showing 6
+    box: "0 0 100 100",
+    svg: sixes(5),
+    css: "",
+  },
+  "sixes-6": { // the postcard "Six Sixes" (owner, 26 Nov 2026): 6 dice, all showing 6
+    box: "0 0 100 100",
+    svg: sixes(6),
+    css: "",
+  },
+  "lantern-out": { // The Flame Goes Out (owner, 26 Nov 2026; replaces "Forgot Your Keys"): an evening street of an old town;
+    // a traveller's red paper lantern stands on the cobbles (owner: no pole, no person), rocking in the wind, its flame
+    // just blown out: a wisp of smoke rises from it.
+    box: "0 0 100 100",
+    svg: nightStreet() + gusts([30, 56])
+      + `<ellipse cx="50" cy="87" rx="20" ry="2.6" fill="#00000040"/>`
+      + `<g${A("sway", { r: 3, d: .9, o: [50, 86] })}>` + darkLantern(50, 42, true) + `</g>` + smoke(50, 48),
+    css: "",
+  },
+  "lantern-torn": { // Out Again! (owner, 26 Nov 2026; replaces "Forgot Your Keys Again!"): the same street; the wind has
+    // blown the lantern over and torn it: crushed on the cobbles, ribs broken, the gold cap rolled away, the candle out, scraps flying.
+    box: "0 0 100 100",
+    svg: nightStreet()
+      // the lantern lying on its side, squashed, its far end torn open: bare ribs, the dark inside, the candle rolled out
+      + `<g transform="rotate(-6 48 82)">`
+      + `<path d="M30 82q0-11 18-11h10l4 3-3 3 4 2-3 3 4 3-4 4h-11q-19 0-19-7z" fill="${RED2}" ${S}/>`
+      + `<path d="M36 72q-3 10 0 19M45 71q-2 10 0 21M54 71q-2 11 0 21" fill="none" stroke="${RED3}" stroke-width="1.2"/>`
+      + `<path d="M58 74q5 0 4 8t-4 8" fill="#3a1820" ${S2}/>` // the dark inside
+      + `<path d="M58 73q8 2 11-3M60 80q7 1 12 0M58 89q8 0 11 4" fill="none" stroke="#e3c48f" stroke-width="1.6" stroke-linecap="round"/>` // bare ribs
+      + `<path d="M34 76q4-3 9-3" fill="none" stroke="#c9564c" stroke-width="1.8" stroke-linecap="round"/>`
+      + `<rect x="25.5" y="75" width="5" height="14" rx="1.4" fill="${C.gold}" ${S2}/>` // the cap still on
+      + `<circle cx="23.5" cy="82" r="1.6" fill="${C.gold}" ${S2}/>` + [-2, -1, 0, 1, 2].map((k) => `<path d="M22 ${82 + k * 0.5}l-7 ${k * 1.4}" stroke="#d9a520" stroke-width="1" stroke-linecap="round"/>`).join("")
+      + `</g>`
+      + `<rect x="78" y="86" width="12" height="4.6" rx="1.4" fill="${C.gold}" ${S2} transform="rotate(-24 84 88)"/>` // the other cap, rolled away
+      + `<path d="M66 91l9 1.5" stroke="#efe6d2" stroke-width="3.6" stroke-linecap="round"/><path d="M66 91l9 1.5" ${S2} fill="none"/>` // the candle
+      + `<g${A("puff", { d: 2.8, x: 6, y: -12, s: 1.6 })}><path d="M76 91q-2-3 0-6" fill="none" stroke="#cfd3e6" stroke-width="1.6" stroke-linecap="round"/></g>`
+      // torn scraps of red paper blown away by the wind
+      + [[38, 42, 2.6, 0], [56, 32, 3.2, 1.1], [26, 58, 2.9, 2]].map(([x, y, d, dl]) => `<g${A("move", { d, dl, x: 40, y: -12 })}><path d="M${x} ${y}l4-1.5 1 3-3.6 2.2z" fill="${C.red}" stroke="${RED3}" stroke-width=".8" stroke-linejoin="round"/></g>`).join("")
+      + gusts([24, 46]),
+    css: "",
+  },
   "great-tree": { // The Fallen Tree (redraw): an old trunk across a forest path, roots in the air, leaves drifting down
     svg: `<rect x="-10" y="58" width="120" height="50" fill="${C.grass}"/>` + pine(18, 60, 0.9) + pine(30, 58, 0.7) + pine(78, 60, 0.85) + pine(90, 59, 0.7)
       + `<path d="M38 100L46 58h8l8 42z" fill="#d8c29a"/><path d="M6 58H94" ${S}/>`

@@ -2,7 +2,7 @@
 // same seed -> same throws, same winner, same length and the same record for every player, with 2–4 robots.
 // So every number in docs/analysis/stepI-A_measure.md (robot rows) holds for the app (owner, 25 Nov 2026: both engines kept).
 import { describe, expect, it } from "vitest";
-import { rng } from "../src/engine";
+import { rng } from "../src/engine/rng";
 import { DESTINATIONS, playGame3 } from "../src/engine/v3";
 // @ts-expect-error -- plain JavaScript without type declarations
 import { simulate3 } from "../tools/sim/engine3.mjs";

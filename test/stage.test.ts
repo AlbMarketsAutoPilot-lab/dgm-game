@@ -1,30 +1,37 @@
-// What the stage shows for each kind of place (the card and its caption).
+// What the stage shows for each kind of place (the card and its caption). Step I phase C3: the Lantern Festival file;
+// no square numbers on the cards, only an event square's "→ 24" destination label (Part 2, rule 1).
 import { describe as group, expect, it } from "vitest";
-import { BOARDS, OFF } from "../src/engine";
+import { DESTINATIONS } from "../src/engine/v3";
 import { describe } from "../src/ui/stage";
 
-const L = BOARDS.long, S = BOARDS.short;
+const LF = DESTINATIONS["lantern-festival"];
 
 group("stage cards", () => {
-  it("an event square: its crayon card, illustration and story", () => {
-    const d = describe(L, 40);
+  it("an event square: its card in its kind's colour, picture, title and destination label", () => {
+    const d = describe(LF, 40);
     expect(d.cls).toContain("ev");
-    expect(d.html).toContain("art-balloon");
-    expect(d.html).toContain("→ 103");
-    expect(d.caption).toBe(L.tiles[40].story);
+    expect(d.html).toContain("art-cable-car");
+    expect(d.html).toContain("→ 56");
+    expect(d.caption).toBe("The Cable Car");
+    expect(describe(LF, 69).html).toContain("→ 97");
+    expect(describe(LF, 79).style).toContain("#2f6fc4"); // the Swap Market's blue
   });
-  it("a plain square shows its number and region", () => {
-    const d = describe(L, 21);
-    expect(d.html).toContain(">21<");
-    expect(d.caption).toBe("Countryside");
+  it("no square numbers on any card", () => {
+    for (let pos = 0; pos <= LF.endTile; pos++) expect(describe(LF, pos).html, `square ${pos}`).not.toMatch(/class="cnum"/);
+    expect(describe(LF, 21).html).not.toContain(">21<");
   });
-  it("Home, Start and END", () => {
-    expect(describe(L, OFF).caption).toBe("Bags packed. Roll a 6 to leave.");
-    expect(describe(L, 0).caption).toBe("Start");
-    expect(describe(L, L.endTile).html).toContain("art-lanterns");
+  it("a plain square shows its area's picture", () => {
+    expect(describe(LF, 21).caption).toBe("Countryside");
+    expect(describe(LF, 60).html).toContain("art-sailboat");
   });
-  it("landmarks; no crossroads any more (Shortcut removed, owner 15 Oct)", () => {
-    expect(describe(L, 184).caption).toBe("Central Station");
-    expect(describe(S, 41).caption).toBe("River & Lake");
+  it("Home and the destination", () => {
+    expect(describe(LF, 0).caption).toBe("Home");
+    expect(describe(LF, -1).caption).toBe("Home");
+    expect(describe(LF, LF.endTile).caption).toBe("The Lantern Festival");
+    expect(describe(LF, LF.endTile).html).toContain("art-lanterns");
+  });
+  it("landmarks", () => {
+    expect(describe(LF, 92).caption).toBe("Central Station");
+    expect(describe(LF, 97).caption).toBe("Festival Pier");
   });
 });

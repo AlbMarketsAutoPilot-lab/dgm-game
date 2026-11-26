@@ -16,16 +16,15 @@ try {
     await import("/src/ui/app.css");
     await document.fonts.load('20px "Patrick Hand"');
     const { GameScreen } = await import("/src/ui/app.ts");
-    const { BOARDS } = await import("/src/engine/index.ts");
     const root = document.body.appendChild(Object.assign(document.createElement("main"), { id: "app" }));
-    // A game in the middle: Blue has a Bonus card, the players have 3, 2, 3 and 1 lanterns (private parts reached on
-    // purpose: this is a tool, like the browser tests)
-    const s = new GameScreen(root, { board: BOARDS.long, players: 4, computer: [false, true, true, true], level: "normal" }, () => {});
+    // A game in the middle (private parts reached on purpose: this is a tool, like the browser tests). Step I phase C8:
+    // the Lantern Festival; the opening guide and its pictures are redone in phase F.
+    const s = new GameScreen(root, { players: 4, computer: [false, true, true, true] }, () => {});
     s.gone = true;
     await new Promise((r) => setTimeout(r, 50));
     s.pops.clear();
-    s.game.players.forEach((p, i) => Object.assign(p, { pos: [12, 30, 7, 21][i], lanterns: [3, 2, 3, 1][i] }));
-    Object.assign(s.game.players[0], { bonus: 1 });
+    s.game.players.forEach((p, i) => Object.assign(p, { pos: [12, 30, 7, 21][i], home: false, cards: [1, 2, 0, 1][i] }));
+    s.game.players.forEach((p, i) => { s.places[i] = p.pos; s.cards[i] = p.cards; });
     s.seat = 0;
     s.drawn = { bar: "", who: "", hand: "" };
     s.render();
@@ -34,8 +33,8 @@ try {
   await page.waitForTimeout(300);
   await page.locator(".players").screenshot({ path: path.join(OUT, "lanterns.png") });
   await page.locator(".hud .hand").screenshot({ path: path.join(OUT, "cards.png") });
-  // the Bog, tapped on the board
-  await page.evaluate(() => { const s = window.__screen; s.squareInfo(s.board.story.trap.tile); document.activeElement?.blur(); });
+  // the fallen tree, tapped on the board
+  await page.evaluate(() => { const s = window.__screen; s.squareInfo(27); document.activeElement?.blur(); });
   await page.waitForTimeout(300);
   await page.locator(".pop:not([hidden])").last().screenshot({ path: path.join(OUT, "square.png") });
   await ctx.close();

@@ -1,6 +1,8 @@
 // Every screen and popup at every screen size, from a folded phone to a 2560 × 1440 PC screen (owner, 15 Oct: "buttons
 // cut, you need to scroll"). Checked: buttons off screen or cut, popups or the page needing to scroll, buttons
 // overlapping, words squeezed, anything spilling out of the turn panel, and buttons under 40 px.
+// Step I phase C8: the Lantern Festival screens: Mr. Lin's panel (its questions, his longest words; it must never
+// scroll), the notifications, and the rest.
 import { newPage } from "./common.mjs";
 
 export const SIZES = [
@@ -29,7 +31,7 @@ const CHECK = () => {
   }
   // buttons overlapping each other in the same area, and button text squeezed (cut with … or spilling out)
   const shown = [...document.querySelectorAll("button")].filter((b) => visible(b) && !b.closest("[hidden]") && (!cover || cover.contains(b)));
-  const area = (b) => b.closest(".players, .setup, .controls, .pop-buttons, .hud, .album-top, .pop");
+  const area = (b) => b.closest(".players, .setup, .controls, .pop-buttons, .gp-buttons, .hud, .album-top, .pop");
   for (let i = 0; i < shown.length; i++) for (let j = i + 1; j < shown.length; j++) {
     const a = shown[i], c = shown[j];
     if (a.contains(c) || c.contains(a) || area(a) !== area(c) || !area(a)) continue;
@@ -38,7 +40,7 @@ const CHECK = () => {
     if (ix > 3 && iy > 3) bad.push(`overlap: "${(a.getAttribute("aria-label") || a.textContent).trim().slice(0, 20)}" / "${(c.getAttribute("aria-label") || c.textContent).trim().slice(0, 20)}"`);
   }
   for (const b of shown) for (const t of [b, ...b.querySelectorAll("span, b, small")]) {
-    if (t.closest(".badge, .need, .gc-n, .cpu")) continue;
+    if (t.closest(".badge, .need, .gc-n, .cpu, .sr")) continue; // .sr: text for screen readers only, hidden on purpose
     if (t.scrollWidth > t.clientWidth + 1 && getComputedStyle(t).overflow !== "visible") { bad.push(`squeezed text: "${t.textContent.trim().slice(0, 24)}"`); break; }
   }
   // text or pictures spilling out of the turn panel or the players' bar (not counting popups, which float over them)
@@ -50,15 +52,11 @@ const CHECK = () => {
       if (r.width && r.height && (r.top < q.top - 2 || r.bottom > q.bottom + 2 || r.left < q.left - 2 || r.right > q.right + 2)) { bad.push(`spills out of .${panel.className.split(" ")[0]}: ${el.tagName.toLowerCase()}.${[...el.classList].join(".")} "${(el.textContent || "").trim().slice(0, 20)}"`); break; }
     }
   }
-  // the note under the picture (owner, 16 Oct) stays in its lane, and never touches the square or the token
-  for (const n of document.querySelectorAll(".note:not([hidden])")) {
-    const r = n.getBoundingClientRect(), q = n.parentElement.getBoundingClientRect();
-    const p = n.querySelector("p"); if (p && p.scrollHeight > p.clientHeight + 1) bad.push(`note cut: "${p.textContent.slice(0, 30)}…"`);
-    if (r.top < q.top - 1 || r.bottom > q.bottom + 1 || r.left < q.left - 1 || r.right > q.right + 1) bad.push(`note spills out of its lane (${Math.round(r.width)}×${Math.round(r.height)} in ${Math.round(q.width)}×${Math.round(q.height)})`);
-    for (const el of document.querySelectorAll(".strip .card, .stage-token")) {
-      const c = el.getBoundingClientRect();
-      if (c.width && c.bottom > q.top + 1 && c.left < q.right && c.right > q.left && c.top < q.bottom) bad.push(`the note's lane touches the ${el.classList.contains("stage-token") ? "token" : "square"}`);
-    }
+  // Mr. Lin's panel (owner, 26 Nov 2026): everything fits, nothing scrolls; the notifications stay over the board
+  for (const g of document.querySelectorAll(".gp-body")) if (g.scrollHeight > g.clientHeight + 2) bad.push(`Mr. Lin's panel scrolls (${g.scrollHeight} > ${g.clientHeight})`);
+  for (const n of document.querySelectorAll(".notes .note")) {
+    const r = n.getBoundingClientRect(), q = document.querySelector(".overview").getBoundingClientRect();
+    if (r.right > q.right + 1 || r.bottom > q.bottom + 1 || r.left < q.left - 1) bad.push(`notification outside the board: "${n.textContent.trim().slice(0, 30)}"`);
   }
   // no popup covers the action buttons (owner, 16 Oct: "Spoil it!" was under its own popup), unless a popup with its
   // own buttons deliberately takes the whole screen
@@ -77,53 +75,47 @@ const CHECK = () => {
   return { bad, smallest: Math.round(smallest) };
 };
 // Opens a game screen, stops its own play loop, and shows one kind of popup in it (private parts of the game screen
-// are reached on purpose: this is a test).
+// are reached on purpose: this is a test). The longest texts of the destination file are used.
 const SETUP_GAME = async (kind) => {
   const { GameScreen } = await import("/src/ui/app.ts");
-  const { BOARDS } = await import("/src/engine/index.ts");
-  const { SQUARE_TALES, MOMENTS } = await import("/src/ui/tales.ts");
   const root = document.querySelector("#app") ?? document.body.appendChild(Object.assign(document.createElement("main"), { id: "app" }));
   // the gallery page's own style fixes the squares at 180 px: not part of the game (the stage sizes them itself)
   for (const st of document.head.querySelectorAll("style")) st.textContent = st.textContent.replace(/\.card \{ --card: 180px;[^}]*\}/, "");
-  const s = new GameScreen(root, { board: BOARDS.long, players: 4, computer: [false, false, false, false], level: "normal" }, () => {});
+  const s = new GameScreen(root, { players: 4, computer: [false, false, false, false] }, () => {});
   s.gone = true; // the play loop stops at its next pause; the screen stays
   await new Promise((r) => setTimeout(r, 50));
-  s.pops.clear();
-  const p = s.game.players[0];
-  Object.assign(p, { pos: 120, bonus: 2, jailPass: 1, snakeLeader: true, skip: 2, double: true, lanterns: 1 });
-  s.places[0] = { pos: 120, stair: 0 };
+  s.pops.clear(); s.guide.close();
+  const B = s.board, p = s.game.players[0];
+  Object.assign(p, { pos: 40, home: false, cards: 2, skip: 2, dbl: true });
+  s.places[0] = 40; s.cards[0] = 2;
   s.render();
-  const B = BOARDS.long, longest = Object.entries(B.tiles).sort(([, a], [, b]) => (SQUARE_TALES[b.icon]?.text.length ?? 0) - (SQUARE_TALES[a.icon]?.text.length ?? 0))[0];
-  const tile = longest[1], sq = Number(longest[0]);
-  const act = (n) => s.setAct([{ label: "Use the card: dodge it!", value: "a", primary: true }, { label: "Keep the card", value: "b" }, { label: "Don't ask me again this game", value: "c" }].slice(0, n));
-  // the bad-square popup with both the card and a lantern (owner, 22 Oct 2026): its longest buttons
-  const both = () => s.setAct([{ label: "Use the card: dodge it!", value: "card", primary: true }, { label: "Use a lantern (12 left)", value: "lantern" }, { label: "Take it", value: "take" }]);
+  const long = (list, f) => list.sort((a, b) => f(b).length - f(a).length)[0];
+  const tiles = Object.entries(B.tiles).map(([k, t]) => [Number(k), t]);
+  const [sq, bad] = long(tiles.filter(([, t]) => t.cat === "P" && t.type !== "tree"), ([, t]) => t.guide ?? "");
+  const area = long([...B.areas.filter((a) => a.effect)], (a) => a.announce ?? "");
   switch (kind) {
-    case "turn": Object.assign(p, { pos: -1, skip: 0, double: false }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Pass the die to Yellow ▶", value: "roll" }]); s.dice.ready(true); break;
-    case "intro": s.pops.show({ kind: "info", art: "", kicker: "Red starts", title: "You need a 6 to enter", text: "Everyone starts at Home, off the board. <b>Roll a 6 to step onto the board.</b> No 6 in three throws: a spare lantern goes out and you set off anyway. In a hurry? Spend a spare lantern to set off at once.", buttons: [{ label: "Let's go!", value: "ok", primary: true }] }); break;
-    case "story": s.story(0, { ...SQUARE_TALES[tile.icon] }, "Back to square 2. Then miss 3 turns.", "bad"); s.setAct([{ label: "Pass the die to Red ▶", value: "ok" }]); break;
-    case "defend": s.choose({ kind: "punishment", player: 0, square: sq, tile, card: true, shield: true, lanterns: 12 }); break;
-    case "last": s.pops.show({ kind: "info", tone: "bad", art: "", kicker: "Yellow", title: MOMENTS.lastLantern.title, text: MOMENTS.lastLantern.text, buttons: [{ label: "OK", value: "ok", primary: true }] }); break;
-    case "spoil": s.choose({ kind: "bonusAttack", player: 1, target: 0, square: sq, tile: { ...tile, cat: "R" } }); break;
+    case "turn": Object.assign(p, { skip: 0, dbl: false }); s.render(); s.setAct([{ label: "Roll die", value: "roll", primary: true }]); s.dice.ready(true); break;
+    case "home": Object.assign(p, { pos: 0, home: true, skip: 0 }); s.places[0] = 0; s.homeTold[0] = false; s.render(); void s.decide({ kind: "waitCard", player: 0, where: "home", tries: 0 }); break;
+    case "tree": Object.assign(p, { pos: 27, stuck: true, skip: 0 }); s.places[0] = 27; s.render(); void s.decide({ kind: "waitCard", player: 0, where: "tree", tries: 2 }); break;
+    case "punish": void s.decide({ kind: "punishment", player: 0, square: sq, tile: bad, area: null }); break;
+    case "area": void s.decide({ kind: "punishment", player: 0, square: 80, tile: null, area: long([...B.areas.filter((a) => a.effect?.type === "backward" || a.effect?.type === "swapBehind")], (a) => a.announce ?? "").effect.type }); break;
+    case "market": s.places[0] = 79; void s.decide({ kind: "swapMarket", player: 0, give: true, candidates: [1, 2, 3] }); break;
+    case "story": void s.guide.show({ title: area.name, text: area.announce }); void s.ask([{ label: "Roll again", value: "roll", primary: true }]); break;
+    case "pass": void s.guide.show({ title: bad.title, text: bad.guide, tone: "bad" }); void s.ask([{ label: "Pass the die to Yellow ▶", value: "ok", primary: true }]); break;
+    case "skip": void s.guide.show({ text: "Rest for now. The road will still be there tomorrow.", buttons: [{ label: "Skip this turn", value: "ok", primary: true }] }); break;
+    case "welcome-lin": void s.guide.show({ text: B.areas[0].announce, buttons: [{ label: "Let's go", value: "ok", primary: true }] }); break;
+    case "notes": for (const [seat, k] of [[1, "swapMarketTake"], [2, "jumpBackSkip2"], [3, "dragonBoat"]]) s.note(k, seat, "bad", 0, 20); break;
     case "player": s.playerInfo(0); break;
-    case "card": s.cardInfo("bonus"); break;
+    case "card": s.cardInfo(); break;
     case "square": s.squareInfo(sq); break;
     case "leave": s.gone = false; void s.leave(); break;
-    case "win": s.pops.show({ kind: "win", tone: "good", art: "", kicker: "The end of the journey", title: "Yellow made it!", text: "Thousands of lanterns rise over the square as Yellow walks into the Festival of Lights. Music, food stalls, and a very well-earned sit-down.", more: `<p class="pop-sub">New postcards: <b>Home Town, Countryside, Forest, River &amp; Lake, The Bog, Three Sixes</b></p>`, buttons: [{ label: "Play again: same players", value: "again", primary: true }, { label: "New game: change players or board", value: "new" }, { label: "Postcard album", value: "album" }] }); break;
+    case "win": s.pops.show({ kind: "win", tone: "good", art: "", kicker: B.destination.name, title: "Yellow made it!", text: B.moments.finish.guide.replace("{p}", "Yellow"), more: `<p class="pop-sub">New postcards: <b>Home Town, Countryside, Forest, Mountains, Straight Off the Boat, Six Sixes</b></p>`, buttons: [{ label: "New game", value: "new", primary: true }, { label: "Postcard album", value: "album" }] }); break;
     case "sound": void s.soundSwitches(); break;
-    case "home": Object.assign(p, { pos: -1, skip: 0, double: false, lanterns: 3 }); s.places[0] = { pos: -1, stair: 0 }; s.render(); s.setAct([{ label: "Roll for a 6", value: "roll", primary: true }, { label: "Spend a lantern (3 left)", value: "spend" }]); s.dice.ready(true); break;
-    // a computer player's note under the picture (owner, 16 Oct), the longest one the boards can make
-    case "note": s.note(1, "▼ Forgot Your Keys AGAIN!!!: back to square 92, then misses 2 turns", "bad"); break;
-    // a person's turn with what is ahead (owner, 16 Oct): the longest notice the board makes
-    case "ahead": Object.assign(p, { pos: 17, skip: 0, double: true, snakeLeader: false, slow: false }); s.places[0] = 17; s.stage.show(0, 17); s.render();
-      s.note(0, "▼ Roll a 5 (doubled): back to square 92, then misses 2 turns", "bad"); s.setAct([{ label: "Roll the die", value: "roll" }]); s.dice.ready(true); break;
-    case "boots": void s.choose({ kind: "bogBoots", player: 0, square: 30 }); break;
     case "welcome": s.pops.show({ kind: "info", art: "", kicker: "Saved game", title: "Welcome back!", text: "The journey goes on where you left it: round 23, <b>Yellow</b> plays next.", buttons: [{ label: "Let's go on!", value: "ok", primary: true }] }); break;
   }
-  if (kind === "defend") both(); if (kind === "spoil") act(3);
 };
 const GUIDE_PAGES = 8;
-export const SCREENS = ["setup", "album", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "note", "ahead", "intro", "story", "defend", "last", "spoil", "player", "card", "square", "leave", "win", "welcome", "sound", "home", "boots"];
+export const SCREENS = ["setup", "album", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "home", "tree", "punish", "area", "market", "story", "pass", "skip", "welcome-lin", "notes", "player", "card", "square", "leave", "win", "welcome", "sound"];
 
 /** Checks every screen at every size; returns the problems found. */
 export async function checkScreens(browser, url, sizes = SIZES) {

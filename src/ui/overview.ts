@@ -3,14 +3,15 @@
 // numbers, no colours, no lines: good squares have a green frame (and ▲), bad squares a red frame (and ▼). Tap any
 // square to see what happens there; where squares are small (the long board), the first tap zooms in.
 // The squares the current player can reach with one throw of 1–5 show a small die face.
-import { OFF, type Board, type Pos } from "../engine";
-import { type BoardLayout, type Point, designFor, layoutFor, pointOf } from "../render/layout";
-import { INK, PAPER, PUNISH, REWARD } from "../render/palette";
+import type { Board3 } from "../engine/v3";
+import { type BoardLayout, type Place as Pos, type Point, designFor, layoutFor, pointOf } from "../render/layout";
+import { INK, PAPER, catColour } from "../render/palette";
 
 /** Squares smaller than this on screen (px) are zoomed in on first. */
 const TAP = 40;
 import { PLAYERS, tokenSvg } from "./players";
 import { artFor } from "../render/art";
+import { esc } from "../render/html";
 
 const U = 100;
 const WALL = "#3b1f5e";
@@ -28,7 +29,7 @@ export const reachSteps = (double: boolean): { face: number; steps: number }[] =
 
 export class Overview {
   layout!: BoardLayout;
-  private readonly board: Board;
+  private readonly board: Board3;
   private svg!: SVGSVGElement;
   /** The die faces and the fallen tree, over the board with the same view (they change once a turn at most). */
   private live!: SVGSVGElement;
@@ -58,10 +59,10 @@ export class Overview {
   private focusPos = 0;
   private design = "";
 
-  constructor(private readonly host: HTMLElement, board: Board, private readonly players: number, private readonly onPick: (pos: Pos) => void) {
+  constructor(private readonly host: HTMLElement, board: Board3, private readonly players: number, private readonly onPick: (pos: Pos) => void) {
     this.board = board;
     this.end = board.endTile;
-    for (let i = 0; i < players; i++) this.places.push(OFF);
+    for (let i = 0; i < players; i++) this.places.push(0);
     this.zoomOut = document.createElement("button");
     this.zoomOut.className = "zoom-out";
     this.zoomOut.textContent = "Whole board";
@@ -99,33 +100,37 @@ export class Overview {
     for (let n = 1; n < board.lastTile; n++) if (Math.hypot(L.squares[n + 1].x - L.squares[n].x, L.squares[n + 1].y - L.squares[n].y) > 1.12) s += link(L.squares[n], L.squares[n + 1]);
     { // the last square points into the festival: the arrow stops at its edge
       const q = L.squares[board.lastTile], E = L.endPad, edge = { x: Math.max(E.centre.x - E.w / 2, Math.min(E.centre.x + E.w / 2, q.x)), y: Math.max(E.centre.y - E.h / 2, Math.min(E.centre.y + E.h / 2, q.y)) };
-      s += link(q, edge);
+      // start at the square's own edge, so the arrow sits in the gap and is not hidden under the square
+      const dx = edge.x - q.x, dy = edge.y - q.y, k = Math.abs(dx) > Math.abs(dy) ? 0.5 / Math.abs(dx) : 0.5 / Math.abs(dy || 1);
+      s += link({ x: q.x + dx * k, y: q.y + dy * k }, edge);
     }
     // the squares
     for (let n = 1; n <= board.lastTile; n++) {
       const c = P(L.squares[n]), h = L.heading[n], horiz = Math.abs(h.x) > Math.abs(h.y), a = L.along[n] * U;
       const w = (horiz ? a : U) - 4, ht = (horiz ? U : a) - 4, t = board.tiles[n];
-      const frame = t ? (t.cat === "R" ? REWARD : PUNISH) : null;
-      s += `<g class="pick sq" data-pos="${n}" tabindex="-1" role="button" aria-label="Square ${n}${t ? (t.cat === "R" ? ", good square" : ", bad square") : ""}"><rect x="${c.x - w / 2}" y="${c.y - ht / 2}" width="${w}" height="${ht}" rx="7" fill="${PAPER}" stroke="${INK}" stroke-opacity=".35" stroke-width="3"/>`;
+      const frame = t ? catColour(t.cat) : null;
+      const kind = t ? (t.cat === "R" ? ", good square" : t.cat === "P" ? ", bad square" : ", swap square") : "";
+      s += `<g class="pick sq" data-pos="${n}" tabindex="-1" role="button" aria-label="Square ${n}${kind}"><rect x="${c.x - w / 2}" y="${c.y - ht / 2}" width="${w}" height="${ht}" rx="7" fill="${PAPER}" stroke="${INK}" stroke-opacity=".35" stroke-width="3"/>`;
       if (frame) {
         s += `<rect x="${c.x - w / 2 + 7}" y="${c.y - ht / 2 + 7}" width="${w - 14}" height="${ht - 14}" rx="6" fill="none" stroke="${frame}" stroke-width="10"/>`
-          + `<path d="${t!.cat === "R" ? `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 34}l10-14 10 14z` : `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 20}l10 14 10-14z`}" fill="${frame}"/>`;
+          + `<path d="${t!.cat === "R" ? `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 34}l10-14 10 14z` : t!.cat === "P" ? `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 20}l10 14 10-14z` : `M${c.x + w / 2 - 24} ${c.y - ht / 2 + 16}l10 11-10 11-10-11z`}" fill="${frame}"/>`;
       } else if (n % 3 === 1) { // which way the road goes
         const ang = (Math.atan2(h.y, h.x) * 180) / Math.PI;
         s += `<path d="M-8 -12l12 12-12 12" transform="translate(${c.x} ${c.y}) rotate(${ang})" fill="none" stroke="${INK}" stroke-opacity=".3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`;
       }
       s += `</g>`;
     }
-    // Start (four squares long: everyone waits here) and the festival
+    // Home (four squares long: everyone waits here) and the destination
+    const home = board.moments?.home?.title ?? "Home", dest = board.destination?.name ?? "";
     const sp = P(L.start.centre), sw = L.start.w * U - 4, sh = U - 4;
-    s += `<g class="pick" data-pos="0" tabindex="-1" role="button" aria-label="START: a 6 to enter (Home and Start)"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
-      + `<text x="${sp.x}" y="${sp.y - sh / 2 + 34}" text-anchor="middle" class="ov-sub">START: a 6 to enter</text></g>`; // the tokens wait below it (U4)
-    // The Festival of Lights: the destination, a golden plaza in the middle of the spiral with its lanterns
+    s += `<g class="pick" data-pos="0" tabindex="-1" role="button" aria-label="${esc(home)}"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
+      + `<text x="${sp.x}" y="${sp.y - sh / 2 + 34}" text-anchor="middle" class="ov-sub">${esc(home)}</text></g>`; // the tokens wait below it (U4)
+    // The destination, a golden plaza in the middle of the spiral with its lanterns
     const e = P(L.endPad.centre), ew = L.endPad.w * U - 8, eh = L.endPad.h * U - 8, pic = Math.min(ew * 0.8, eh * 0.62), big = ew >= 180 && eh >= 150;
-    s += `<g class="pick" data-pos="${board.endTile}" tabindex="-1" role="button" aria-label="The Festival of Lights"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="24" fill="#f2c230" stroke="${INK}" stroke-width="8"/>`
+    s += `<g class="pick" data-pos="${board.endTile}" tabindex="-1" role="button" aria-label="${esc(dest)}"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="24" fill="#f2c230" stroke="${INK}" stroke-width="8"/>`
       + `<rect x="${e.x - ew / 2 + 14}" y="${e.y - eh / 2 + 14}" width="${ew - 28}" height="${eh - 28}" rx="14" fill="#fff4c8" stroke="${INK}" stroke-width="3" stroke-dasharray="10 8"/>`
-      + (big ? artFor("lanterns", "Festival of Lights").replace("<svg ", `<svg x="${e.x - pic / 2}" y="${e.y - eh / 2 + 22}" width="${pic}" height="${pic}" `)
-        + `<text x="${e.x}" y="${e.y + eh / 2 - 30}" text-anchor="middle" class="ov-fest" style="font-size:${Math.min(46, (ew - 40) / 7.6)}px">Festival of Lights</text>`
+      + (big ? artFor(board.destination?.icon ?? "lanterns", dest).replace("<svg ", `<svg x="${e.x - pic / 2}" y="${e.y - eh / 2 + 22}" width="${pic}" height="${pic}" `)
+        + `<text x="${e.x}" y="${e.y + eh / 2 - 30}" text-anchor="middle" class="ov-fest" style="font-size:${Math.min(46, (ew - 40) / (dest.length * 0.42))}px">${esc(dest)}</text>`
         : `<path d="M0 -30l8 17 19 3-14 13 4 19-17-9-17 9 4-19-14-13 19-3z" transform="translate(${e.x} ${e.y})" fill="#f2c230" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>`)
       + `</g>`;
     const view = `viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet"`;
@@ -243,7 +248,7 @@ export class Overview {
     this.reachFrom = pos;
     this.reachDouble = double;
     let s = "";
-    if (pos !== null && pos !== OFF) {
+    if (pos !== null && pos > 0) {
       for (const { face, steps } of reachSteps(double)) {
         const n = this.ahead(pos, steps);
         if (n === null) break;
@@ -266,9 +271,9 @@ export class Overview {
     return { x: (p.x - B.x) * U, y: (p.y - B.y) * U };
   }
 
-  /** Tokens on the same place sit side by side; on the Start pad, in a 2 × 2 block. */
+  /** Tokens on the same place sit side by side; on the Home pad, each in its own place. */
   private layoutTokens(): void {
-    const key = (pos: Pos) => (pos === OFF || pos === 0 ? "pad" : String(pos));
+    const key = (pos: Pos) => (pos <= 0 ? "pad" : String(pos));
     const groups = new Map<string, number[]>();
     this.places.forEach((pos, i) => { groups.set(key(pos), [...(groups.get(key(pos)) ?? []), i]); });
     // board units → pixels of the token layer, as the drawing is fitted ("meet") into the same box
@@ -280,14 +285,14 @@ export class Overview {
       const same = groups.get(key(pos))!, k = same.indexOf(i), n = same.length, pad = key(pos) === "pad";
       const c = this.px(pointOf(this.layout, pos));
       let dx = 0, dy = 0, scale = "";
-      // On Start each seat has its own place, smaller and in the lower half: the "START" label above stays readable (U4)
+      // At Home each seat has its own place, smaller and in the lower half: the "Home" label above stays readable (U4)
       if (pad) { dx = (i - 1.5) * U; dy = 20; scale = " scale(.6)"; }
       else if (n > 1) { dx = (k - (n - 1) / 2) * 30; dy = n > 2 ? (k % 2 ? 14 : -14) : 0; scale = " scale(.8)"; }
-      t.style.opacity = pos === OFF ? ".75" : "1";
+      t.style.opacity = "1";
       const x = ox + (c.x + dx) * zoom - size / 2, y = oy + (c.y + dy) * zoom - size / 2;
       t.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)${scale}`;
     });
-    const where = (pos: Pos) => pos === OFF ? "at Home" : pos === 0 ? "on Start" : pos === this.end ? "at the festival" : `on square ${pos}`;
+    const where = (pos: Pos) => pos <= 0 ? "at Home" : pos === this.end ? `at ${this.board.destination?.name ?? "the end"}` : `on square ${pos}`;
     this.svg.setAttribute("aria-label", `The whole board. ${this.places.map((pos, i) => `${PLAYERS[i].name} ${where(pos)}`).join(", ")}.`);
   }
 

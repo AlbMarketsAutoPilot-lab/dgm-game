@@ -7,16 +7,9 @@ The engine implements the owner's core rules (docs/GCD.md §8.2a).
 |---|---|
 | `tools/sim/engine3.mjs` | **Step I (v3 rules, GCD R1–R20):** the simulator for the v3 destination files (`data/lantern-festival.json`); robot and simple player. Rule tests: `test/v3-sim.test.ts` (run by `npm test`) |
 | `node tools/sim/stepI.mjs [games] [out.md]` | Step I phase A3: the v3 rules on the Lantern Festival, robots and simple players (`docs/analysis/stepI-A_measure.md`; the app engine `src/engine/v3/` plays the same games: `test/v3-equivalence.test.ts`) |
-| `node tools/sim/test/rules.test.mjs` | **Run first.** Scripted-dice tests: one per owner rule (entering, sixes, capture, trap, END, events, bonus card, Snake Leader) |
-| `node tools/sim/run.mjs <board.json> [games] [out.md]` | All measures (fairness, length, excitement, boredom, every event square) for the board's rules and rule variants |
-| `node tools/sim/ablate.mjs <board.json> [games] [out.md]` | With vs without: removes one event square at a time, with a noise row |
-| `node tools/sim/sixes.mjs <board.json> [games] [out.md]` | Sixes in a row and captures per player, 2–4 players, short vs long games |
-| `node tools/sim/lifelines.mjs <board.json> [games] [out.md]` | Owner idea: lifelines lost at Start/trap and when captured, +1 per 6: chance of being kicked out, lifelines left |
-| `node tools/sim/lifelines-final.mjs <board.json> [games] [out.md]` | Owner's final lifeline rules: kicked out, lifelines left, whole game vs baseline |
-| `node tools/sim/lifelines-compare.mjs <board.json> [games] [out.md]` | Lifeline versions side by side (A, B, B2) for the owner's choice |
-| `node tools/sim/i6.mjs <board.json> [games] [out.md]` | Step I-6: each proposal on its own (stairs, lifelines, roadblock, two roads) and the thinking target (thoughtful vs simple players) |
-| `node tools/sim/shortcut.mjs <board.json> [games]` | R20 check: one player who always takes the Shortcut against 3 simple players (fair = 25%) |
-| `node tools/sim/i5-draft.mjs [games] [out.md]` | Step I-5.1: the draft short board (built from the long board's kept events) with the owner's options, and the Shortcut fairness check |
-| `node tools/sim/options.mjs <board.json> [games] [out.md]` | Small rule options measured against the boredom target |
+`rng.mjs` is the random-number source shared by the v3 simulator and the app engine (`src/engine/rng.ts`).
 
-`archive/` holds earlier engines whose results are invalid or exploratory. Do not use them.
+`archive/` holds earlier engines whose results are invalid or exploratory. Do not use them. `archive/v2/` holds the v2
+simulator (`engine.mjs`), its scripts and rule tests, and the paper boards they read (`data/`), moved there when the v2
+rules were removed (Step I phase C8, owner 26 Nov 2026). They are the record behind the v2 reports in `docs/analysis/`;
+their paths are no longer fixed, so they do not run as they are.

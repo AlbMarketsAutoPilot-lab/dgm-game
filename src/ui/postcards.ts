@@ -1,7 +1,7 @@
 // Journey postcards (GCD §12, owner approved 15 Oct): one per region and eight special moments, collected over many
 // games by the people at the table (computer players do not collect). The album belongs to the device: it is saved
 // only in this browser (C1: no accounts, nothing leaves the device), and the game works the same when saving is blocked.
-import { OFF, type Board, type GameEvent, type Pos } from "../engine";
+import type { Board3, Event3 } from "../engine/v3";
 import { artFor } from "../render/art";
 import { esc } from "../render/html";
 
@@ -15,59 +15,56 @@ export interface Postcard {
   how: string;
 }
 
-/** Region postcards, in the order of the journey (both boards share the region names). */
-const REGIONS: Record<string, Postcard> = {
+/**
+ * Step I phase C6 (owner, 25–26 Nov 2026): the Lantern Festival's postcards, in the order of the journey. Removed from
+ * the album: Bog Boots, Three Sixes (the lantern one), The Bog, Snake Leader, River & Lake, Festival Road (their ids
+ * stay in a device's album, unseen). Kept ids keep what was collected: "forgot-keys" is now "Out Again!" (the same
+ * square, 99), "festival" is now "The Lantern Festival". One set per destination; the album shows it under its name.
+ */
+const AREAS: Record<string, Postcard> = {
   "Home Town": { id: "home-town", icon: "house", title: "Home Town", line: "Wish you were here. Actually, you were. You just left.", how: "Set off from Home" },
   Countryside: { id: "countryside", icon: "sheep", title: "Countryside", line: "Fresh air, open fields and a traffic jam of sheep.", how: "Reach the Countryside" },
-  Forest: { id: "forest", icon: "train", title: "Forest", line: "Tall trees, no signal, and one train actually on time.", how: "Reach the Forest" },
-  "River & Lake": { id: "river-lake", icon: "sailboat", title: "River & Lake", line: "Water everywhere, and not one boat waited for us.", how: "Reach the River & Lake" },
+  Forest: { id: "forest", icon: "forest", title: "Forest", line: "Tall trees, no signal, and not one straight path.", how: "Reach the Forest" },
   Mountains: { id: "mountains", icon: "cabin", title: "Mountains", line: "The view was worth every step. Mostly.", how: "Reach the Mountains" },
-  Seaside: { id: "seaside", icon: "waves", title: "Seaside", line: "Salt in the air, sand in everything.", how: "Reach the Seaside" },
+  Seaside: { id: "seaside", icon: "sailboat", title: "Seaside", line: "Salt in the air, sand in everything.", how: "Reach the Seaside" },
   "Big City": { id: "big-city", icon: "traffic-light", title: "Big City", line: "Bright lights, green lights, no parking.", how: "Reach the Big City" },
-  "Festival Road": { id: "festival-road", icon: "bunting", title: "Festival Road", line: "Almost there. You can hear the music.", how: "Reach Festival Road" },
 };
 
-/** The picture of a region (its postcard), shown on its plain squares and on the sign when you arrive. */
-export const regionIcon = (name: string): string => REGIONS[name]?.icon ?? "flat-path";
-
 const SPECIAL = {
-  festival: { id: "festival", icon: "lanterns", title: "Festival of Lights", line: "Made it. Lanterns up!", how: "Win a game" },
-  snakeLeader: { id: "snake-leader", icon: "snake-crown", title: "Snake Leader", line: "I rode a sea serpent. Ask me how.", how: "Become the Snake Leader" },
-  keys: { id: "forgot-keys", icon: "two-keys", title: "Forgot Keys AGAIN!!!", line: "Same keys. Same café. Same look from the waiter.", how: "Land on Forgot your keys AGAIN" },
-  bog: { id: "the-bog", icon: "boot-in-mud", title: "The Bog", line: "Greetings from the Bog. Send boots.", how: "Get stuck in the Bog" },
-  dodged: { id: "dodged-it", icon: "card", title: "Dodged It!", line: "Bad luck came. I showed it a card. It left.", how: "Cancel a punishment with your Bonus card" }, // replaces the Shortcut jackpot (Shortcut removed, owner 15 Oct)
+  festival: { id: "festival", icon: "lanterns", title: "The Lantern Festival", line: "Made it. Lanterns up!", how: "Win a game" },
+  tree: { id: "fallen-tree", icon: "great-tree", title: "Fallen Tree", line: "We waited. The tree did not move. Then a 6 did.", how: "Get stuck at the fallen tree" },
+  six3: { id: "sixes-3", icon: "sixes-3", title: "Three Sixes", line: "Three sixes in a row. The die is on my side.", how: "Roll three 6s in a row" },
+  six4: { id: "sixes-4", icon: "sixes-4", title: "Four Sixes", line: "Four sixes. Nobody believes me.", how: "Roll four 6s in a row" },
+  six5: { id: "sixes-5", icon: "sixes-5", title: "Five Sixes", line: "Five sixes. I checked the die. Twice.", how: "Roll five 6s in a row" },
+  six6: { id: "sixes-6", icon: "sixes-6", title: "Six Sixes", line: "Six sixes. This postcard is proof.", how: "Roll six 6s in a row" },
+  boat: { id: "dragon-boat", icon: "dragon-boat", title: "The Dragon Boat", line: "Rowed by a real crew, all the way to the pier.", how: "Ride the Dragon Boat" },
+  ashore: { id: "straight-off-the-boat", icon: "pier", title: "Straight Off the Boat", line: "One roll, one 4, one perfect landing.", how: "Win with the Dragon Boat's 4" },
+  dodged: { id: "dodged-it", icon: "card", title: "Dodged It!", line: "Bad luck came. I showed it a card. It left.", how: "Cancel a punishment with your Bonus card" },
   twist: { id: "plot-twist", icon: "swap-arrows", title: "Plot Twist", line: "Swapped places with the leader. Still smiling.", how: "Swap places with the leader" },
-  boots: { id: "bog-boots", icon: "boots", title: "Bog Boots", line: "Walked straight through the Bog. Didn't even look down.", how: "Bog boots save you" },
-  sixes: { id: "three-sixes", icon: "lantern", title: "Three Sixes", line: "Three sixes in a row. The lantern lit itself.", how: "Throw three 6s in a row" },
+  outAgain: { id: "forgot-keys", icon: "lantern-torn", title: "Out Again!", line: "The wind won twice. The third time, I held the lantern closer.", how: "Land on Out Again!" },
 } satisfies Record<string, Postcard>;
 
 /** All postcards, in album order. */
-export const POSTCARDS: Postcard[] = [...Object.values(REGIONS), ...Object.values(SPECIAL)];
+export const POSTCARDS: Postcard[] = [...Object.values(AREAS), ...Object.values(SPECIAL)];
+/** The destination whose set the album shows. */
+export const ALBUM_TITLE = "The Lantern Festival";
 
-/** The region postcard of a place. */
-function regionCard(board: Board, sq: Pos): Postcard | null {
-  if (sq < 1 || sq > board.lastTile) return null;
-  const r = board.story.regions.find((x) => sq >= x.from && sq <= x.to);
-  return r ? REGIONS[r.name] ?? null : null;
-}
-
-/** The postcards one engine event earns, for the people at the table (`person(seat)`); computer players earn none. */
-export function postcardsFor(board: Board, e: GameEvent, person: (seat: number) => boolean): Postcard[] {
-  const who = "player" in e ? e.player : null;
-  if (who === null || !person(who)) return [];
+/** The postcards one engine event earns, for the people at the table (`person(seat)`); robots earn none. */
+export function postcardsFor(board: Board3, e: Event3, person: (seat: number) => boolean): Postcard[] {
+  if (!person(e.player)) return [];
+  const area = (sq: number) => {
+    if (sq < 1 || sq > board.lastTile) return [];
+    const a = board.areas.find((x) => sq >= x.from && sq <= x.to);
+    return a && AREAS[a.name] ? [AREAS[a.name]] : [];
+  };
   switch (e.type) {
-    case "released": return e.where === "start" ? [REGIONS["Home Town"]] : [];
-    case "move": case "jump": { const c = e.to === OFF ? null : regionCard(board, e.to); return c ? [c] : []; }
-    case "win": return [SPECIAL.festival];
-    case "snakeLeader": return [SPECIAL.snakeLeader];
-    case "tile":
-      if (e.tile.icon === "two-keys") return [SPECIAL.keys];
-      return [];
-    case "trapped": return [SPECIAL.bog];
-    case "swap": return [SPECIAL.twist];
-    case "bogBoots": return [SPECIAL.boots];
-    case "lanternWon": return [SPECIAL.sixes];
-    case "bonusUsed": return e.use === "defend" ? [SPECIAL.dodged] : [];
+    case "move": return e.from === 0 && e.to > 0 ? [...new Set([AREAS["Home Town"], ...area(e.to)])] : area(e.to);
+    case "jump": return [...area(e.to), ...(e.cause === "boat" ? [SPECIAL.boat] : [])];
+    case "swap": return [...(e.cause === "leader" ? [SPECIAL.twist] : [])];
+    case "win": return [SPECIAL.festival, ...(e.boat ? [SPECIAL.ashore] : [])];
+    case "square": return e.tile.type === "tree" ? [SPECIAL.tree] : e.tile.icon === "lantern-torn" ? [SPECIAL.outAgain] : [];
+    case "sixes": return [SPECIAL.six3, SPECIAL.six4, SPECIAL.six5, SPECIAL.six6].slice(0, Math.min(4, e.count - 2));
+    case "cardUsed": return e.use === "square" || e.use === "area" ? [SPECIAL.dodged] : [];
     default: return [];
   }
 }
@@ -114,7 +111,7 @@ export function showAlbum(): Promise<void> {
     el.setAttribute("aria-modal", "true");
     el.setAttribute("aria-label", "Postcards");
     el.innerHTML = `<div class="album-top"><h2>Postcards <span>${POSTCARDS.filter((p) => have.has(p.id)).length} / ${POSTCARDS.length}</span></h2><button class="primary">Back</button></div>`
-      + `<div class="album-grid" role="list">${POSTCARDS.map((p) => postcardHtml(p, have.has(p.id))).join("")}</div>`;
+      + `<h3 class="album-dest">${esc(ALBUM_TITLE)}</h3><div class="album-grid" role="list">${POSTCARDS.map((p) => postcardHtml(p, have.has(p.id))).join("")}</div>`;
     const back = el.querySelector("button")!, before = document.activeElement as HTMLElement | null;
     const close = () => { document.removeEventListener("keydown", onKey); el.remove(); before?.focus?.({ preventScroll: true }); done(); };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); close(); } };

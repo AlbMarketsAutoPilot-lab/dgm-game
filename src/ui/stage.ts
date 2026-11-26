@@ -1,13 +1,15 @@
 // The stage: one big square at a time, with its illustration and story. Moving slides a row of squares under the
 // token: a throw walks square by square (the token hops over each one), an event jump glides along the row
 // (ladders, snakes, "go back to 6"), passing the squares in between quickly.
-import { BoardIndex, OFF, type Board, type Pos } from "../engine";
-import { artCss, artFor } from "../render/art";
+// Step I phase C3 (owner, 26 Nov 2026): drawn from a v3 destination file. No square numbers on the card; only an event
+// square's destination keeps its "→ 24" label (Part 2, rule 1). Place 0 (and below) is Home.
+import { areaOf, type Board3 } from "../engine/v3";
+import { type Place as Pos } from "../render/layout";
+import { areaSignFor, artCss, artFor } from "../render/art";
 import { esc } from "../render/html";
 import { cardFace } from "../render/art-modern";
-import { PUNISH, REGION_WASH, REWARD, crayonFor, regionOf } from "../render/palette";
+import { AREA_WASH, catColour } from "../render/palette";
 import { tokenSvg } from "./players";
-import { regionIcon } from "./postcards";
 
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, reduced() ? Math.min(ms, 60) : ms));
@@ -15,38 +17,31 @@ const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, reduced() ? 
 /** How long one hop takes. */
 export const STEP_MS = 340;
 
-type Story = {
-  start?: { name?: string; story?: string; icon?: string };
-  end?: { name?: string; story?: string; icon?: string };
+/** The kind's mark: ▲ reward, ▼ punishment, ◆ the Swap Market. */
+const mark = (cat: "R" | "P" | "S") => {
+  const d = cat === "R" ? "M3 11L10 3l7 8" : cat === "P" ? "M3 3l7 8 7-8" : "M10 1.5l6.5 5.5-6.5 5.5-6.5-5.5z";
+  return `<svg class="cmark" viewBox="0 0 20 14" aria-hidden="true"><path d="${d}" fill="${cat === "S" ? catColour(cat) : "none"}" stroke="${catColour(cat)}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 };
 
-const chevron = (cat: "R" | "P") =>
-  `<svg class="cmark" viewBox="0 0 20 14" aria-hidden="true"><path d="${cat === "R" ? "M3 11L10 3l7 8" : "M3 3l7 8 7-8"}" fill="none" stroke="${cat === "R" ? REWARD : PUNISH}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-
 /** What the stage says about a place: the card's look, and a caption for when a token stands there. */
-export function describe(board: Board, pos: Pos): { html: string; cls: string; style: string; caption: string } {
-  const story = board.story as unknown as Story;
-  if (pos === OFF) {
-    return { cls: "home", style: "", caption: story.start?.story ?? "Home", html: `<div class="cart">${artFor("house", "Home")}</div><span class="cname">${esc(story.start?.name ?? "Home")}</span>` };
+export function describe(board: Board3, pos: Pos): { html: string; cls: string; style: string; caption: string } {
+  const home = board.moments?.home?.title ?? "Home", dest = board.destination?.name ?? "";
+  if (pos <= 0) return { cls: "home", style: "", caption: home, html: `<div class="cart">${artFor("house", home)}</div><span class="cname">${esc(home)}</span>` };
+  if (pos >= board.endTile) {
+    return { cls: "end ev", style: "--c:#f2c230", caption: dest, html: `<div class="cart">${artFor(board.destination?.icon ?? "lanterns", dest)}</div><span class="cname big">${esc(dest)}</span>` };
   }
-  if (pos === board.endTile) {
-    return { cls: "end ev", style: "--c:#f2c230", caption: story.end?.story ?? "END", html: `<div class="cart">${artFor("lanterns", "END")}</div><span class="cname big">${esc(story.end?.name ?? "END")}</span>` };
-  }
-  const region = board.story.regions[regionOf(board, pos)]?.name ?? "";
-  const wash = `--wash:${REGION_WASH[regionOf(board, pos)]}`;
-  if (pos === 0) return { cls: "plain start", style: wash, caption: "Start", html: `<span class="cname big">Start</span>` };
+  const area = areaOf(board, pos), wash = `--wash:${AREA_WASH[board.areas.indexOf(area)] ?? "transparent"}`;
   const t = board.tiles[pos];
   if (t) {
-    const dest = t.type === "jump" && t.to !== undefined ? `<span class="cdest">→ ${t.to === 0 ? "Start" : t.to}</span>` : "";
-    return {
-      cls: "ev", style: `--c:${crayonFor(board, pos, t)}`, caption: t.story ?? t.text,
-      html: `<span class="cnum">${pos}</span>${chevron(t.cat)}<div class="cart">${t.icon === "card" ? cardFace("bonus", t.story ?? t.text) : t.icon === "boots" ? cardFace("jailPass", t.story ?? t.text) : artFor(t.icon ?? "card", t.story ?? t.text)}</div>${dest}`,
-    };
+    const title = t.title ?? "", to = t.type === "jump" || t.type === "dragonBoat" ? t.to : undefined;
+    const destLabel = to !== undefined ? `<span class="cdest">→ ${to}</span>` : "";
+    const art = t.icon === "card" ? cardFace("bonus", title) : artFor(t.icon ?? "card", title);
+    return { cls: "ev", style: `--c:${catColour(t.cat)}`, caption: title, html: `${mark(t.cat)}<div class="cart">${art}</div>${destLabel}` };
   }
-  const lm = board.story.landmarks[pos];
-  if (lm) return { cls: "plain lm", style: wash, caption: lm.name, html: `<span class="cnum">${pos}</span><div class="cart soft">${artFor(lm.icon, lm.name)}</div><span class="cname">${esc(lm.name)}</span>` };
-  // A plain square shows where you are with the region's picture (owner: no repeated region names on every square).
-  return { cls: "plain rg", style: wash, caption: region, html: `<span class="cnum">${pos}</span><div class="cart soft">${artFor(regionIcon(region), region)}</div>` };
+  const lm = board.landmarks?.[pos];
+  if (lm) return { cls: "plain lm", style: wash, caption: lm.name, html: `<div class="cart soft">${artFor(lm.icon ?? area.icon ?? "", lm.name)}</div><span class="cname">${esc(lm.name)}</span>` };
+  // A plain square shows where you are with the area's picture (owner: no repeated area names on every square).
+  return { cls: "plain rg", style: wash, caption: area.name, html: `<div class="cart soft">${artFor(area.icon ?? "", area.name)}</div>` };
 }
 
 let artStyled = false;
@@ -60,8 +55,7 @@ function styleArt(): void {
 }
 
 export class Stage {
-  private readonly board: Board;
-  private readonly index_: BoardIndex;
+  private readonly board: Board3;
   private readonly wrap: HTMLElement;
   private readonly strip: HTMLElement;
   private readonly token: HTMLElement;
@@ -71,10 +65,9 @@ export class Stage {
   private cards: HTMLElement[] = [];
   private index = 0;
 
-  constructor(host: HTMLElement, board: Board) {
+  constructor(host: HTMLElement, board: Board3) {
     styleArt();
     this.board = board;
-    this.index_ = new BoardIndex(board);
     host.innerHTML = `<div class="strip-wrap"><div class="strip"></div><div class="stage-token"></div><div class="fx" aria-hidden="true"></div></div>`;
     this.wrap = host.querySelector(".strip-wrap")!;
     this.strip = host.querySelector(".strip")!;
@@ -130,14 +123,16 @@ export class Stage {
     return word;
   }
 
-  /** A signboard when a token reaches a new region of the journey: "Now entering · Countryside". */
+  /** The area's sign when a token reaches a new area of the journey: "Now entering · Countryside". */
   sign(name: string): void {
+    const area = this.board.areas.find((a) => a.name === name);
+    if (!area) return;
     const now = performance.now(), start = Math.max(now, this.stampFree);
     this.stampFree = start + 2200;
     setTimeout(() => {
       const el = document.createElement("div");
       el.className = "region-sign";
-      el.innerHTML = `<div class="rs-board"><div class="rs-pic">${artFor(regionIcon(name), "")}</div><div><small>Now entering</small><b>${esc(name)}</b></div></div><div class="rs-post"></div>`;
+      el.innerHTML = `<div class="rs-board"><div class="rs-pic">${areaSignFor(area.icon ?? "", "")}</div><div><small>Now entering</small><b>${esc(name)}</b></div></div><div class="rs-post"></div>`;
       this.fx.append(el);
       el.animate(reduced() ? [{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }] : [{ transform: "translate(-50%, -140%)", opacity: 0 }, { transform: "translate(-50%, 0)", opacity: 1, offset: 0.15 },
         { transform: "translate(-50%, 0)", opacity: 1, offset: 0.85 }, { transform: "translate(-50%, 0)", opacity: 0 }], { duration: 2200, easing: "ease-out", fill: "forwards" });
@@ -183,7 +178,7 @@ export class Stage {
       spots = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
     } else {
       spots = [from, NaN, to]; // far: a blur in between
-      if (this.index_.progress(to) < this.index_.progress(from)) spots.reverse(); // backwards: slide the other way
+      if (to < from) spots.reverse(); // backwards: slide the other way
     }
     const a = spots.indexOf(from), b = spots.indexOf(to);
     this.setCards(spots, a < 0 ? 0 : a);
@@ -203,7 +198,7 @@ export class Stage {
 
   private get current(): Pos {
     const c = this.cards[this.index];
-    return Number(c?.dataset.pos ?? OFF);
+    return Number(c?.dataset.pos ?? 0);
   }
 
   private card(pos: Pos): HTMLElement {

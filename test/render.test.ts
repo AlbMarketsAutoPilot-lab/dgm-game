@@ -1,9 +1,7 @@
-// Board painting data (Step 3): every icon and every event colour the boards need exists.
+// Board painting data (Step 3; Step I phase C8: the Lantern Festival file): every picture the destination names exists.
 import { describe, expect, it } from "vitest";
-import { BOARDS } from "../src/engine";
+import { DESTINATIONS } from "../src/engine/v3";
 import { ART } from "../src/render/art";
-import { ICONS } from "../src/render/icons";
-import { crayonFor } from "../src/render/palette";
 
 function iconNames(o: unknown, out = new Set<string>()): Set<string> {
   if (Array.isArray(o)) o.forEach((v) => iconNames(v, out));
@@ -11,19 +9,10 @@ function iconNames(o: unknown, out = new Set<string>()): Set<string> {
   return out;
 }
 
-describe.each(["long", "short"] as const)("%s board", (id) => {
-  it("every icon named in the board file has an animated illustration (not just a line icon)", () => {
-    const missing = [...iconNames(BOARDS[id])].filter((n) => !ART[n]);
+describe("the Lantern Festival", () => {
+  it("every picture named in the destination file has an animated illustration (not just a line icon)", () => {
+    const missing = [...iconNames(DESTINATIONS["lantern-festival"])].filter((n) => !ART[n]);
     expect(missing).toEqual([]);
-  });
-  it("every icon named in the board file has a line icon too (small UI)", () => {
-    const missing = [...iconNames(BOARDS[id])].filter((n) => !ICONS[n]);
-    expect(missing).toEqual([]);
-  });
-  it("every event square has its paper crayon colour (the short board reuses the long board's)", () => {
-    const grey = Object.entries(BOARDS[id].tiles).filter(([k, t]) => crayonFor(BOARDS[id], Number(k), t) === "#9a9a9a").map(([k]) => Number(k));
-    // Grey is also the fallback for a square without a colour, so only the paper's own grey squares (long 45 "throw two times", 178 "forgot your ticket") are grey.
-    expect(grey).toEqual(id === "long" ? [45, 178] : []);
   });
 });
 
