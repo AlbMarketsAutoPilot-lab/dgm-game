@@ -21,6 +21,9 @@ import { Popups, type PopupContent } from "./popup";
 import { sound } from "./sound";
 import { switchIcon } from "./sound-switch";
 import { Stage } from "./stage";
+import { WinClock } from "./clock";
+import { addRecord, recordOf } from "./records";
+import { RT, rankingLine, showRecords } from "./records-page";
 import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 import { clearGame, newGame, replay, saveGame, type DestinationId, type SavedGame } from "./save";
 
@@ -117,6 +120,10 @@ export class GameScreen {
   private readonly answers: Answer3[] = [];
   private turns = 0;
   private readonly resumed: boolean;
+  /** The win clock (phase E): one per person, void after any interruption; a continued game is never timed. */
+  private readonly clock: WinClock;
+  /** The winner's time in ms when it counts for the Records, else null. */
+  winTime: number | null = null;
   /** The players left this game (U2): nothing more happens on this screen. */
   private gone = false;
   /** The area effect of the step on screen (Big City's lost turn is told as such). */
@@ -128,6 +135,7 @@ export class GameScreen {
     this.board = DESTINATIONS[DEST];
     const again = resume ? replay(resume) : null;
     this.resumed = !!again;
+    this.clock = new WinClock(computer.slice(0, players).map((c) => !c), !this.resumed);
     if (again && resume) {
       this.seed = resume.seed;
       this.game = again;
@@ -228,6 +236,7 @@ export class GameScreen {
     while (!this.game.over) await this.turn();
     if (this.gone) return;
     clearGame();
+    this.clock.dispose();
     const w = this.game.winner;
     this.overview.setReach(null);
     this.guide.close();
@@ -239,17 +248,27 @@ export class GameScreen {
     const finish = this.board.moments?.finish?.guide;
     const dest = this.board.destination?.name ?? "";
     const cards = this.newCards.length ? `<p class="pop-sub">New postcard${this.newCards.length > 1 ? "s" : ""}: <b>${this.newCards.map((c) => esc(c.title)).join(", ")}</b></p>` : "";
+    const ranking = this.recordLine(w);
     let again: string;
     for (;;) {
       again = await this.pops.show({
         kind: "win", tone: "good", art: artFor(this.board.destination?.icon ?? "lanterns", dest), kicker: esc(dest),
-        title: w === null ? esc(dest) : this.fill(T.win.title, w), text: w !== null && this.person(w) && finish ? this.fill(esc(finish), w) : undefined, more: cards || undefined,
-        buttons: [{ label: T.win.newGame, value: "new", primary: true }, { label: T.win.album, value: "album" }],
+        title: w === null ? esc(dest) : this.fill(T.win.title, w), text: w !== null && this.person(w) && finish ? this.fill(esc(finish), w) : undefined, more: ranking + cards || undefined,
+        buttons: [{ label: T.win.newGame, value: "new", primary: true }, { label: T.win.album, value: "album" }, { label: RT.button, value: "records" }],
       });
-      if (again !== "album") break;
-      await showAlbum();
+      if (again === "album") await showAlbum();
+      else if (again === "records") await showRecords();
+      else break;
     }
     this.onExit(false);
+  }
+
+  /** Phase E: a person's win goes to the Records when its time counts (R8–R12); otherwise R13. A robot's win: nothing. */
+  private recordLine(w: number | null): string {
+    if (w === null || !this.person(w)) return "";
+    if (this.winTime === null) return `<p class="pop-sub rec-line">${esc(rankingLine(null, 0))}</p>`;
+    const rec = recordOf(this.winTime, w, this.setup.players, DEST);
+    return `<p class="pop-sub rec-line">${esc(rankingLine(addRecord(rec), rec.s))}</p>`;
   }
 
   /** U3: the first player is drawn at random. The avatars take turns lighting up, and stop on the one who starts. */
@@ -277,6 +296,7 @@ export class GameScreen {
 
   /** U7: the sound switches, in a popup; each tap switches one and shows the popup again with the new state. */
   private async soundSwitches(): Promise<void> {
+    this.clock.interrupt(); // the settings are outside the game: the time is void (owner, phase E)
     for (;;) {
       const fx = sound.settings.fx, music = sound.settings.music;
       const v = await this.pops.show({
@@ -297,6 +317,7 @@ export class GameScreen {
   /** U2: leave the game, after "Are you sure?". It stays saved, so "Continue game" brings it back. */
   private async leave(): Promise<void> {
     if (this.gone) return;
+    this.clock.interrupt(); // "Leave game?" is outside the game, even with "Stay": the time is void (owner, phase E)
     const v = await this.pops.show({
       kind: "info", art: artFor("house", "Home"), kicker: "Leave game", title: "Leave this game?",
       text: this.game.over ? "Back to the start screen." : "The game is saved on this device: <b>Continue game</b> on the start screen brings you back to the start of this turn, with the same throws.",
@@ -304,6 +325,7 @@ export class GameScreen {
     });
     if (v !== "leave" || this.gone) return;
     this.gone = true;
+    this.clock.dispose();
     this.guide.close();
     this.onExit(false);
   }
@@ -478,6 +500,7 @@ export class GameScreen {
         await this.wait(900);
         break;
       case "free": {
+        if (e.where === "home") this.clock.start(e.player); // the clock starts on leaving Home; refused for robots and a second time
         if (e.by === "six") { this.dice.freed(); sound.play("six"); st.celebrate("good"); }
         this.note("free", e.player, "good");
         if (e.where === "home") this.homeTold[e.player] = false;
@@ -597,6 +620,7 @@ export class GameScreen {
       }
       case "marketNone": this.notes.push(e.player, esc(T.marketNone), ""); await this.wait(600); break;
       case "win":
+        this.winTime = this.clock.finish(e.player); // the last square: the clock stops here
         if (e.boat) {
           this.notes.push(e.player, this.fill(T.boatWin, e.player), "good");
           if (me && B.moments?.boatWin?.guide) await this.story({ text: esc(B.moments.boatWin.guide), tone: "good" });

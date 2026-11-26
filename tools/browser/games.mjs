@@ -23,6 +23,28 @@ const STATE = () => ({
 const PANEL = (list) => list.find((t) => t === "No Bonus card this turn") ?? list.find((t) => t === "Use Bonus card") ?? list[0];
 const people = (d) => (d.kind === "waitCard" ? false : d.kind === "punishment" ? true : d.candidates[0]);
 
+/**
+ * The Records (Step I phase E, owner 26 Nov 2026), on a device with no records yet: a person's uninterrupted win is
+ * the first record; after a reload or Leave and Continue the time does not count (R13) and nothing is stored; a
+ * robot's win gets no line and nothing is stored.
+ */
+function recordsCheck(winner, seats, players, brk, end) {
+  if (!end || winner === null) return [];
+  const bad = [], person = seats.includes(winner);
+  if (!person) {
+    if (end.recLine) bad.push(`a robot's win has a Records line: "${end.recLine}"`);
+    if (end.records.length) bad.push("a robot's win was stored in the Records");
+  } else if (brk) {
+    if (end.recLine !== "Records count only games played without interruption.") bad.push(`interrupted game: Records line "${end.recLine}"`);
+    if (end.records.length) bad.push("an interrupted game was stored in the Records");
+  } else {
+    if (!/^Your win time, \d+:\d\d(:\d\d)?, sets the first record\.$/.test(end.recLine ?? "")) bad.push(`uninterrupted win: Records line "${end.recLine}"`);
+    const r = end.records[0];
+    if (end.records.length !== 1 || r.seat !== winner || r.players !== players || r.destination !== "lantern-festival") bad.push(`uninterrupted win: stored ${JSON.stringify(end.records)}`);
+  }
+  return bad;
+}
+
 /** Plays one game; `brk` = { kind: "reload" | "leave", at: n } interrupts it at the n-th turn and continues it. */
 export async function playGame(browser, url, { players, people: seats, brk }) {
   const { ctx, page, errors } = await newPage(browser);
@@ -45,7 +67,14 @@ export async function playGame(browser, url, { players, people: seats, brk }) {
     if (s.words && s.words !== lastWords && whoSeat >= 0 && !seats.includes(whoSeat) && !s.panel.some((t) => t.startsWith("Pass the die")) && !(turns.length === 0 && s.panel.includes("Let's go"))) robotPanels.add(`Mr. Lin's panel in ${NAMES[whoSeat]}'s turn (a robot): "${s.words.slice(0, 40)}"`);
     lastWords = s.words;
     if (s.who !== lastWho) { lastWho = s.who; fresh = true; } // a new turn on screen
-    if (s.win) { end = { board: s.board, title: await page.textContent(".pop.win .pop-title") }; break; }
+    if (s.win) {
+      end = {
+        board: s.board, title: await page.textContent(".pop.win .pop-title"),
+        recLine: (await page.locator(".pop.win .rec-line").textContent().catch(() => null)) || null,
+        records: await page.evaluate(() => JSON.parse(localStorage.getItem("dgm.records.v1") ?? "[]")),
+      };
+      break;
+    }
     const buttons = s.panel.length ? s.panel : s.act;
     if (buttons.length) {
       const t = s.panel.length ? PANEL(s.panel) : buttons[0];
@@ -91,8 +120,8 @@ export async function playGame(browser, url, { players, people: seats, brk }) {
     const winner = g.winner === null ? "Nobody" : NAMES[g.winner];
     if (!end?.title?.startsWith(winner)) diffs.push(`winner: screen "${end?.title}", engine ${winner}`);
     if (end?.board !== label(g)) diffs.push(`final board: screen "${end?.board}", engine "${label(g)}"`);
-    return { diffs, compared: allPeople ? turns.length : 0 };
+    return { diffs, compared: allPeople ? turns.length : 0, winner: g.winner };
   }, { players, seats, save, turns, end, people: people.toString() });
   await ctx.close();
-  return { ...check, diffs: [...check.diffs, ...robotPanels, ...(seats.length < players && !robotNotes ? ["no robot notification seen"] : [])], turns: turns.length, notes: robotNotes, broke, errors, ms: Date.now() - t0 };
+  return { ...check, diffs: [...check.diffs, ...recordsCheck(check.winner, seats, players, brk, end), ...robotPanels, ...(seats.length < players && !robotNotes ? ["no robot notification seen"] : [])], turns: turns.length, notes: robotNotes, broke, errors, ms: Date.now() - t0 };
 }

@@ -163,9 +163,10 @@ you are bumped Home and the deal ends; a player who swaps onto 97 (Plot Twist, a
 ### Leaderboard
 
 One top 10 on the device, whoever played. Each person has a clock from leaving Home to the finish; it keeps running
-after a bump, pauses while the game is not on screen, and is kept in a saved game. Only wins by people count (robots may
-play). Columns: rank · player colour · time · date · number of players · destination. Messages for a top-10 time and for
-a time outside the top 10: texts to approve.
+after a bump. **Changed by the owner in phase E (26 Nov 2026):** the clock never pauses and is never saved: any
+interruption voids the time for good (see "Owner decisions in phase E"). Only wins by people count (robots may play).
+Columns: rank · player colour · time · date · number of players · destination. Messages for a top-10 time and for a
+time outside the top 10: approved in phase E.
 
 ### Postcards
 
@@ -264,6 +265,42 @@ approved by the owner after seeing it.
   the sounds lantern-on and bog. The v2 simulator and the paper boards are in `tools/sim/archive/v2/`.
 - **Left for later phases:** "How to play" and its pictures still describe v2 (phase F); the leaderboard (phase E).
 
+### Owner decisions in phase E (26 Nov 2026)
+
+Phase E (branch `claude/stepI-E`): the Records, the device's 10 fastest win times. Built in steps E1–E6, each approved
+by the owner.
+
+- **The clock** (`src/ui/clock.ts`; owner: "any kind of interruption voids time"). A person's clock starts only when
+  they leave Home and stops on the last square; a bump does not restart it. Only a game never interrupted from leaving
+  Home to the last square gives a time. Any interruption stops every clock of the game at once and for good, with no
+  pause, no restart and nothing kept in the saved game: the app hidden, minimised or closed, the window losing the focus
+  (a click in another window on PC; a notification bar, call or system message on phones), the sound settings, "Leave
+  game?" (even with "Stay"), a continued saved game, or a freeze of more than 5 seconds. Only the game's own popups are
+  allowed. Robots are never timed. The time comes from the device's running timer, never from its clock time.
+- **One clock per person** (owner: in another game fast clicks started two timers): a second start for the same person
+  is refused at once, and a new game stops the previous game's clock.
+- **The ranking** (`src/ui/records.ts`): stored only on this device, apart from the saved game and the postcards.
+  Whole seconds; an equal newer time ranks below the older one; a time outside the top 10 is not written. Blocked or
+  tampered storage gives no error. Time "12:34", "1:02:03" from an hour; date "26 Nov 2026" on every device. Records
+  keep their destination's id and stay when a destination's board changes (one list or one per destination: decided in
+  phase D). The saved game is unchanged (version 4).
+- **Texts** (approved word for word; `RT` in `src/ui/records-page.ts`): the button "Records" (win popup: "New game" ·
+  "Postcard album" · "Records"; start screen: next to "Postcards"), "Back", the title "Records", "The 10 fastest win
+  times on this device.", "Only people's wins count, in games played from Home to the finish without interruption.",
+  the columns "Rank · Player · Time · Date · Players · Destination", "No records yet. Win a game without interruption
+  to set the first one." The win popup's line for a person's win: "Your win time, {t}, sets the first record." / "…,
+  ranks 1st, beating all previous records." / "…, ranks {n} of all-time records." / "…, is not in the top 10 this
+  time." / "Your win time is {t}. This device does not let the game keep records." / when the time was voided, only
+  "Records count only games played without interruption." (no details). A robot's win: no line.
+- **Screens:** the Records page is the album's full page with the Lantern Festival picture (reused). On phones under
+  390 px each record shows on two lines, "1st ● Red 8:32" then "26 Nov 2026 · Players: 3 · The Lantern Festival" (three
+  lines on a 280 px folded phone).
+- **Privacy policy:** a row for the Records ("To show the Records"); effective 26 November 2026. Google Play's Data
+  safety help says data processed only on the device is not "collected"; how Android's own backup is treated is checked
+  in phase G.
+- **Left for phase G:** whether the Android app tells the page it is hidden (the 5-second check covers it if not), on
+  the owner's phone.
+
 ## Phased plan (approved)
 
 S = 1 session, M = 2–3, L = 4+.
@@ -274,7 +311,7 @@ S = 1 session, M = 2–3, L = 4+.
 | A | Engine + simulator + tests on board 100 with every agreed rule and square; measurement report (seats, game length, waiting at Home and the tree, lead changes, close finishes, card use, robot vs simple player). Decided (owner, 25 Nov 2026): keep both engines (src/engine and tools/sim/engine.mjs), change both the same way, and keep test/equivalence.test.ts comparing them game by game. Phase A starts in a new session | L | High: waiting and the harsh end may need fixes |
 | B ✅ | Board redesign + full narrative (voice, squares, guide and notification texts, square 54, new pictures: tree, Dragon Boat, Swap Market, area signs); measure again. **Done 26 Nov 2026** (decisions below; GCD §9.3; `docs/analysis/stepI-A_measure.md`, "Phase B") | M–L | Medium |
 | C ✅ | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level. **Done 26 Nov 2026** (decisions above) | M | Medium |
-| E | Leaderboard | S–M | Low |
+| E ✅ | Leaderboard (the Records). **Done 26 Nov 2026** (decisions above) | S–M | Low |
 | F | Opening guide + in-game tips | S | Low |
 | G | New Android (versionCode 4, 2.0.0) and Windows (2.0.0.0) versions, step by step on the owner's PC | M | Low–medium |
 | D | Destination screen + new board shapes, then destinations 1–4 one at a time, each measured, each a later app update | L per destination | High cost, low rule risk |

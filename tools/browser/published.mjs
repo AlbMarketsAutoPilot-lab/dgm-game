@@ -241,6 +241,9 @@ export async function checkPublished(browser, pub, report) {
     await page.goto(url + "/"); await page.waitForSelector(".howto"); await scan("the guide");
     await page.keyboard.press("Escape"); await page.waitForSelector(".setup .go"); await scan("the start screen");
     await page.click(".album-open"); await scan("the postcard album"); await page.keyboard.press("Escape");
+    // Step I phase E: the Records page, with records in its table (written straight into this test window's storage)
+    await page.evaluate(() => localStorage.setItem("dgm.records.v1", JSON.stringify([{ s: 754, seat: 1, date: "2026-11-26", players: 3, destination: "lantern-festival" }, { s: 3723, seat: 3, date: "2026-11-20", players: 4, destination: "lantern-festival" }])));
+    await page.click(".records-open"); await page.waitForSelector(".records .r-table"); await scan("the Records"); await page.keyboard.press("Escape");
     await page.click(".setup .go"); await page.locator(".guide-panel button", { hasText: "Let's go" }).waitFor(); await scan("the game screen with Mr. Lin's panel");
     await page.goto(url + "/copyright.html"); await scan("the copyright page");
     await page.goto(url + "/privacy.html"); await scan("the privacy page");
