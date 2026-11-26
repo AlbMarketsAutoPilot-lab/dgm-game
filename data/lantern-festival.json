@@ -1,6 +1,6 @@
 {
   "id": "lantern-festival",
-  "description": "Step I (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Phase B fills in the owner-approved texts and pictures area by area: per square title, guide (Mr. Lin's story, people only), icon, note (own notification); per area icon, announce, effectText; notes (notification patterns, {p} = player, {n} = distance); landmarks; moments. 'name' is a working label, never shown to players. Not used by the app until phase C.",
+  "description": "Step I (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Phase B fills in the owner-approved texts and pictures area by area: per square title, guide (Mr. Lin's story, people only), icon, note (own notification); per area icon, announce, effectText; notes (notification patterns, {p} = player, {q} = other player, {n} = distance); landmarks; moments. 'name' is a working label, never shown to players. Not used by the app until phase C.",
   "guide": { "name": "Mr. Lin" },
   "lastTile": 100,
   "endTile": 101,
@@ -13,7 +13,10 @@
     "robotForceAfter": 3
   },
   "areas": [
-    { "name": "Home Town", "from": 0, "to": 9, "effect": null },
+    {
+      "name": "Home Town", "from": 0, "to": 9, "effect": null, "icon": "house",
+      "announce": "Welcome, traveller. I am Mr. Lin, and I will guide you on the long road to the Lantern Festival."
+    },
     { "name": "Countryside", "from": 10, "to": 22, "effect": { "type": "gifted6" } },
     { "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" } },
     { "name": "Mountains", "from": 39, "to": 56, "effect": { "type": "double" } },
@@ -21,7 +24,10 @@
     { "name": "Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" } }
   ],
   "tiles": {
-    "7": { "cat": "P", "type": "slowNext", "name": "The Candle Walk" },
+    "7": {
+      "cat": "P", "type": "slowNext", "name": "The Candle Walk", "title": "The Candle Walk", "icon": "lantern",
+      "guide": "By old custom, a traveller to the Lantern Festival carries a lit candle in a paper lantern to the end of their street. Walk slowly, so the flame stays alight."
+    },
     "10": { "cat": "R", "type": "jump", "to": 16, "name": "lift" },
     "17": { "cat": "R", "type": "jump", "to": 33, "name": "hay cart" },
     "20": { "cat": "R", "type": "jump", "to": 36, "name": "The Village Bus" },
@@ -46,7 +52,37 @@
     "99": { "cat": "P", "type": "jump", "to": 92, "then": "skip2", "name": "keys AGAIN, miss 2 turns" },
     "100": { "cat": "P", "type": "jump", "to": 82, "name": "back (everyone)" }
   },
-  "notes": {},
+  "notes": {
+    "jumpForward": "{p}: forward {n} squares.",
+    "jumpBack": "{p}: back {n} squares.",
+    "jumpBackSkip2": "{p}: back {n} squares, misses 2 turns.",
+    "missTurn": "{p} misses this turn.",
+    "card": "{p} gets a Bonus card.",
+    "cardCancel": "{p} uses a Bonus card: no punishment.",
+    "slowNext": "{p}: next move is exactly 1 square.",
+    "nearest": "{p}: forward to the next green square.",
+    "swapLeader": "{p} swaps places with the leader.",
+    "swapLeaderNone": "{p} is leading: nothing happens.",
+    "rollSum": "{p}: 3 rolls, one move by the total.",
+    "doubleOthers": "Everyone else's next roll counts double.",
+    "tree": "{p} is stuck at the fallen tree.",
+    "dragonBoat": "{p} rides the Dragon Boat: next roll needs a 4.",
+    "boatMiss": "{p} missed the 4: back {n} squares.",
+    "swapMarketGive": "{p} gives a Bonus card to {q}.",
+    "swapMarketTake": "{p} takes a Bonus card from {q}.",
+    "bump": "{p} bumps {q} back Home.",
+    "needSix": "{p} needs a 6 to leave Home.",
+    "free": "{p} is free to go: roll to move.",
+    "gifted6": "{p}: a gifted 6, rolls again.",
+    "backward": "{p}: next move goes backward.",
+    "double": "{p}: next roll counts double.",
+    "areaSwap": "{p} swaps places with {q}.",
+    "loseTurn": "{p} loses the next turn."
+  },
   "landmarks": {},
-  "moments": {}
+  "moments": {
+    "home": { "title": "Home", "guide": "Your bags are packed and the door is locked. The festival is waiting." },
+    "backHome": { "guide": "Back Home, but your bags are still packed. Nothing keeps you here for long.", "note": "{p} is Home: no 6 needed to leave." },
+    "freeToGo": { "guide": "The road is open, and the festival is waiting." }
+  }
 }

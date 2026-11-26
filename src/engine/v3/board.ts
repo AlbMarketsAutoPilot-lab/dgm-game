@@ -22,13 +22,13 @@ export const sentences = (s: string): number => (s.replace(/\bMr\. /g, "Mr ").ma
 
 /**
  * Checks one text: not empty; no square numbers (any number above 6; die numbers 1–6 are allowed); only the
- * placeholders {p} and {n}; a notification at most TEXT_LIMITS.noteChars characters; a guide text at most
+ * placeholders {p}, {q} and {n}; a notification at most TEXT_LIMITS.noteChars characters; a guide text at most
  * TEXT_LIMITS.guideSentences sentences.
  */
 function checkText(id: string, where: string, s: unknown, kind: "name" | "guide" | "note"): void {
   if (typeof s !== "string" || !s.trim()) fail(id, `${where}: text must not be empty`);
   for (const m of s.match(/\d+/g) ?? []) if (Number(m) > 6) fail(id, `${where}: no square numbers in texts (found ${m})`);
-  for (const m of s.match(/\{[^}]*\}/g) ?? []) if (m !== "{p}" && m !== "{n}") fail(id, `${where}: unknown placeholder ${m}`);
+  for (const m of s.match(/\{[^}]*\}/g) ?? []) if (m !== "{p}" && m !== "{q}" && m !== "{n}") fail(id, `${where}: unknown placeholder ${m}`);
   if (kind === "note" && s.length > TEXT_LIMITS.noteChars) fail(id, `${where}: a notification has at most ${TEXT_LIMITS.noteChars} characters (${s.length})`);
   if (kind === "guide" && sentences(s) > TEXT_LIMITS.guideSentences) fail(id, `${where}: a guide text has at most ${TEXT_LIMITS.guideSentences} sentences`);
 }

@@ -48,7 +48,7 @@ describe("Lantern Festival (v3)", () => {
 
 // Phase B (owner, 25 Nov 2026): every text a player sees is approved by the owner, area by area, and follows the rules
 // below. An area joins DONE_AREAS once all its texts are approved and in the file.
-const DONE_AREAS: string[] = [];
+const DONE_AREAS: string[] = ["Home Town"];
 const withAny = (patch: object) => ({ ...LF, ...patch });
 
 describe("Lantern Festival (v3): texts and pictures", () => {
@@ -56,6 +56,7 @@ describe("Lantern Festival (v3): texts and pictures", () => {
     expect(() => parseBoard3(withTile(96, { ...LF.tiles[96], guide: "Back to square 92." }))).toThrow(/no square numbers/);
     expect(() => parseBoard3(withTile(96, { ...LF.tiles[96], guide: "Roll a 6. Then roll a 4." }))).not.toThrow();
     expect(() => parseBoard3(withAny({ notes: { jumpBack: "{p}: back {x} squares." } }))).toThrow(/unknown placeholder/);
+    expect(() => parseBoard3(withAny({ notes: { bump: "{p} bumps {q} back Home." } }))).not.toThrow();
     expect(() => parseBoard3(withAny({ notes: { jumpBack: "x".repeat(TEXT_LIMITS.noteChars + 1) } }))).toThrow(/at most 50/);
     expect(() => parseBoard3(withTile(96, { ...LF.tiles[96], guide: "One. Two. Three." }))).toThrow(/2 sentences/);
     expect(() => parseBoard3(withTile(96, { ...LF.tiles[96], title: " " }))).toThrow(/not be empty/);

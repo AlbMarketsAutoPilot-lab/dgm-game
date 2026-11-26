@@ -92,7 +92,7 @@ export interface Board3 {
   /** Phase B: the destination's name and picture, and the guide. */
   destination?: { name: string; icon?: string };
   guide?: { name: string };
-  /** Notification patterns, one per kind of square; {p} = the player, {n} = a distance in squares. */
+  /** Notification patterns, one per kind of square; {p} = the player, {q} = the other player, {n} = a distance in squares. */
   notes?: Record<string, string>;
   landmarks?: Record<string, Landmark>;
   moments?: Partial<Record<MomentKey, Moment>>;
