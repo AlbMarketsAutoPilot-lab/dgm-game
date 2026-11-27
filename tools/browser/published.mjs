@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import { ROOT, newPage, productionBuild } from "./common.mjs";
+import { checkTips } from "./tips.mjs";
 
 const AXE = fs.readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
@@ -105,6 +106,9 @@ export async function checkPublished(browser, pub, report) {
       [!onAtFirst && "not on at first", beforeTap && "sound loaded before the first tap", !on && "switches", !mutedKept && "mute not kept", ...broken, ready.length && `not prepared: ${ready.join(", ")}`, !switched && "speaker popup", !kept && "not kept", ...errors].filter(Boolean).join(", "));
     await ctx.close();
   }
+
+  // 1c. Mr. Lin's tips, game time and his words when the die is passed (Step I phase F)
+  await checkTips(browser, url, report, G);
 
   // 2. Security policy and offline: a game with a reload, then the site gone; another app's cache on the same address
   // survives. Offline is tested by really stopping this check's own server (the browser tool's "offline" switch can
