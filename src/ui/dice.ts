@@ -57,6 +57,16 @@ export class Dice {
     this.show();
   }
 
+  /** The Countryside's gifted 6 (owner, 27 Nov 2026): the die shows a 6 and the list starts with it, so the roll that
+   * follows reads "6 + 3 = 9", as after a rolled 6. */
+  gift(): void {
+    this.face(6);
+    this.throws = [6];
+    this.stale = false;
+    this.list.textContent = "6";
+    this.said.textContent = "A gifted 6";
+  }
+
   /** A move was made: the next throw begins a new list. */
   moved(): void {
     this.stale = true;

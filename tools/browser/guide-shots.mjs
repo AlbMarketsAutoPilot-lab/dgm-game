@@ -8,7 +8,6 @@ import path from "node:path";
 import { ROOT, devServer, launch, newPage } from "./common.mjs";
 
 const OUT = path.join(ROOT, "src/assets/guide");
-const PAPER = [247, 241, 227]; // --paper
 
 const browser = await launch();
 const dev = await devServer();
@@ -43,30 +42,22 @@ async function scene(state) {
 const box = (page, sel, edge) => page.evaluate(([s, e]) => document.querySelector(s).getBoundingClientRect()[e], [sel, edge]);
 const clip = async (page, top, bottom) => ({ x: 0, y: top, width: 390, height: bottom - top });
 
-/** The notifications on clean paper (the board behind them hidden), stacked above a part of the game screen. */
-async function stacked(page, below) {
-  await page.evaluate(() => {
-    document.querySelectorAll(".overview > :not(.notes)").forEach((e) => (e.style.visibility = "hidden"));
-    document.querySelector(".overview").style.background = "var(--paper)";
-  });
-  await page.waitForTimeout(150);
-  const ovTop = await box(page, ".overview", "top");
-  const noteBottom = await page.evaluate(() => Math.max(...[...document.querySelectorAll(".note")].map((n) => n.getBoundingClientRect().bottom)));
-  const top = await page.screenshot({ clip: await clip(page, ovTop + 1, noteBottom + 8) });
+/** The board around its notification over the destination's square (owner, 27 Nov 2026), above a part of the game
+ * screen; `between` runs after the lower part is taken (e.g. waiting for the next notification). */
+async function stacked(page, below, between) {
   const bottom = await page.screenshot({ clip: below });
-  // joined in the page (a canvas), the paper behind the notifications made even
-  return page.evaluate(async ([a, b, paper]) => {
+  if (between) await between();
+  // the band of the board around the destination's square, where the notification is
+  const top = await page.screenshot({ clip: await clip(page, (await box(page, ".notes", "top")) - 14, (await box(page, ".notes", "bottom")) + 14) });
+  return page.evaluate(async ([a, b]) => {
     const load = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = src; });
     const [ia, ib] = await Promise.all([load(a), load(b)]);
     const c = Object.assign(document.createElement("canvas"), { width: ia.width, height: ia.height + ib.height });
     const g = c.getContext("2d");
     g.drawImage(ia, 0, 0);
-    const d = g.getImageData(0, 0, ia.width, ia.height);
-    for (let k = 0; k < d.data.length; k += 4) if ([0, 1, 2].every((j) => Math.abs(d.data[k + j] - paper[j]) <= 4)) [0, 1, 2].forEach((j) => (d.data[k + j] = paper[j]));
-    g.putImageData(d, 0, 0);
     g.drawImage(ib, 0, ia.height);
     return c.toDataURL("image/png").split(",")[1];
-  }, ["data:image/png;base64," + top.toString("base64"), "data:image/png;base64," + bottom.toString("base64"), PAPER]);
+  }, ["data:image/png;base64," + top.toString("base64"), "data:image/png;base64," + bottom.toString("base64")]);
 }
 
 const save = (name, data) => fs.writeFileSync(path.join(OUT, name), typeof data === "string" ? Buffer.from(data, "base64") : data);
@@ -149,7 +140,7 @@ try {
     save("areas.png", await page.screenshot({ clip: await clip(page, await box(page, ".stage", "top"), await box(page, ".stage", "bottom")) }));
     await ctx.close();
   }
-  // 7. Bump: the two notifications above the zoomed square with "Bump!"
+  // 7. Bump: the board with "Red is Home: no 6 needed to leave." over the festival, above the zoomed square with "Bump!"
   {
     const { ctx, page } = await scene({ pos: [24, 30, 7, 21], cards: MID.cards, show: 24 });
     await page.evaluate(() => {
@@ -161,10 +152,11 @@ try {
       s.render();
     });
     await page.waitForTimeout(500);
-    save("bump.png", await stacked(page, await clip(page, await box(page, ".stage", "top"), await box(page, ".stage", "bottom"))));
+    // the stage with "Bump!" first; then the board once the second notification ("…: no 6 needed to leave.") shows
+    save("bump.png", await stacked(page, await clip(page, await box(page, ".stage", "top"), await box(page, ".stage", "bottom")), () => page.waitForTimeout(2200)));
     await ctx.close();
   }
-  // 8. The exact number: "Blue needs exactly 3 to finish." above the square and the die on 5
+  // 8. The exact number: the board with "Blue needs exactly 3 to finish." over the festival, above the square and the die on 5
   {
     const { ctx, page } = await scene({ pos: [98, 30, 7, 21], cards: MID.cards, show: 98 });
     await page.evaluate(async () => {
@@ -173,7 +165,7 @@ try {
       s.notes.push(0, s.fill("{p} needs exactly {n} to finish.", 0, undefined, 3), "bad");
       s.render();
     });
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(700);
     save("finish.png", await stacked(page, await clip(page, await box(page, ".stage", "top"), await box(page, ".controls", "bottom"))));
     await ctx.close();
   }

@@ -367,10 +367,13 @@ all corrections"), and asked to review the result afterwards. Changes to earlier
   repeated; robots keep their notifications. His question at Home goes inside his quote, after his story. **A tip never
   shows unrelated:** the bump tip and the Bonus card tip show at the end of the same turn in which that person bumped
   someone or met bad luck holding no card, never at a later turn (phase F had them at the next quiet turn).
-- **The notifications (owner, 27 Nov 2026, to try in a real game; undone if not liked):** over the destination's square
-  in the middle of the board, always as big as that square however short the text, one at a time (the next waits at
-  least 1.5 seconds), the words broken into lines as needed. The How to play pictures 7 and 8 still show the old
-  notifications (made again once the owner keeps this).
+- **The notifications (owner, 27 Nov 2026: "keep it"):** over the destination's square in the middle of the board,
+  always as big as that square however short the text, one at a time (the next waits at least 1.5 seconds), the words
+  broken into lines as needed. How to play pictures 7 and 8 made again with them.
+- **The Countryside's gifted 6 (owner, 27 Nov 2026):** under Mr. Lin's announcement, the owner's words "Roll one more
+  time and add what you roll to the 6 gifted by farmers!"; the die shows the gifted 6 and the list under it starts
+  with it ("6 + 3 = 9"), as after a rolled 6.
+- **Mr. Lin's breathing** is quicker (2.2 s each way, was 4.5 s), so it reads as breathing, not slow motion.
 
 ## Phased plan (approved)
 
