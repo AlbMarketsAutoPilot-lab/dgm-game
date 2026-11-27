@@ -367,6 +367,10 @@ all corrections"), and asked to review the result afterwards. Changes to earlier
   repeated; robots keep their notifications. His question at Home goes inside his quote, after his story. **A tip never
   shows unrelated:** the bump tip and the Bonus card tip show at the end of the same turn in which that person bumped
   someone or met bad luck holding no card, never at a later turn (phase F had them at the next quiet turn).
+- **The notifications (owner, 27 Nov 2026, to try in a real game; undone if not liked):** over the destination's square
+  in the middle of the board, always as big as that square however short the text, one at a time (the next waits at
+  least 1.5 seconds), the words broken into lines as needed. The How to play pictures 7 and 8 still show the old
+  notifications (made again once the owner keeps this).
 
 ## Phased plan (approved)
 

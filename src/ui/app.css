@@ -581,10 +581,18 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 }
 
 /* The notifications: short facts on the left, over the board (top left), for every player */
-.notes { position: absolute; left: .5rem; top: .5rem; z-index: 3; display: flex; flex-direction: column; gap: .375rem; max-width: min(22rem, calc(100% - 1rem)); pointer-events: none; }
-.notes .note { margin: 0; width: auto; display: flex; align-items: center; gap: .5rem; padding: .3125rem .75rem .3125rem .5rem; border-radius: .75rem;
-  background: rgba(255, 253, 246, .96); border: .125rem solid var(--ink); border-left: .5rem solid var(--who, var(--ink)); box-shadow: 0 .25rem .75rem rgba(43, 18, 72, .25); font-size: 1.05rem; line-height: 1.2; }
-.notes .note .tok { width: 1.5rem; height: 1.5rem; flex: 0 0 auto; }
+/* The notifications (owner, 27 Nov 2026): over the destination's square in the middle of the board, always as big as
+   that square however short the text; one at a time (notes.ts); the words break into lines as needed.
+   overview.ts gives the square's place and size (--end-*). */
+.notes { position: absolute; left: var(--end-x, .5rem); top: var(--end-y, .5rem); width: var(--end-w, 18rem); height: var(--end-h, 12rem);
+  z-index: 3; display: flex; flex-direction: column; gap: .25rem; pointer-events: none; container-type: size; }
+.notes .note { flex: 1 1 0; min-height: 0; margin: 0; width: auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .25em; padding: .25em .5em; border-radius: .875rem; text-align: center; overflow: hidden; overflow-wrap: anywhere;
+  background: rgba(255, 253, 246, .97); border: .1875rem solid var(--ink); border-top: .5rem solid var(--who, var(--ink)); box-shadow: 0 .25rem .75rem rgba(43, 18, 72, .3);
+  font-size: clamp(.75rem, min(10cqw, 14cqh), 2.6rem); line-height: 1.15; }
+/* a small square: the words only (the top edge keeps the player's colour) */
+@container (max-height: 9rem) { .notes .note .tok { display: none; } }
+.notes .note .tok { width: 1.5em; height: 1.5em; flex: 0 0 auto; }
 .notes .note.good { background: #eef6e8; } .notes .note.bad { background: #fbece6; }
 /* The album shows one set per destination, under its name (Step I phase C6) */
 .album-dest { max-width: 62.5rem; margin: .875rem auto 0; font-weight: normal; font-size: 1.35rem; color: var(--ink); }
@@ -650,12 +658,6 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   .gp-text, .gp-quote.small .gp-text { font-size: 1.55rem; line-height: 1.4; }
   .gp-quote .gp-text { font-size: 1.65rem; }
   .gp-question, .gp-outcome { font-size: 1.35rem; }
-}
-/* D6: on phones held sideways and the folded phone, the notifications are smaller, so they cover less of the board */
-@media (max-height: 420px), (max-width: 300px) {
-  .notes { max-width: min(17rem, calc(100% - 1rem)); gap: .25rem; }
-  .notes .note { font-size: .88rem; padding: .1875rem .5rem .1875rem .375rem; border-left-width: .375rem; }
-  .notes .note .tok { width: 1.15rem; height: 1.15rem; }
 }
 /* D4: tablets held upright: everything a little larger, and more room for the board */
 @media (orientation: portrait) and (min-width: 700px) and (min-height: 900px) {
