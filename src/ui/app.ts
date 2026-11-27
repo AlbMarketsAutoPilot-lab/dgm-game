@@ -80,6 +80,7 @@ const T = {
   win: { title: "{p} made it!", newGame: "New game", album: "Postcard album" }, // D6
   sixes: "Sixes!", // D14
   understand: "I understand", // owner, Step I phase F: closes Mr. Lin's stories and tips
+  gifted6: "Roll one more time and add what you roll to the 6 gifted by farmers!", // owner's own words, 27 Nov 2026
 };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -577,10 +578,11 @@ export class GameScreen {
         const a = B.areas[e.area];
         this.areaFx = e.effect;
         const question = asked && after.length === 0;
+        if (e.effect === "gifted6") this.dice.gift(); // the farmers' 6 under the die, as a rolled 6 shows: then "6 + 3 = 9" (owner, 27 Nov 2026)
         if (e.effect === "gifted6" && !(me && a.announce)) this.note("gifted6", e.player, "good"); // he says it to a person (C3)
         // owner, 26 Nov 2026: Mr. Lin's welcome and his area announcements have their own sound ("lantern-out")
         if (me && a.announce) sound.play("lantern-out");
-        if (me && !question && a.announce) await this.story({ title: esc(a.name), text: esc(a.announce), art: artFor(a.icon ?? "", "") });
+        if (me && !question && a.announce) await this.story({ title: esc(a.name), text: esc(a.announce), art: artFor(a.icon ?? "", ""), tone: e.effect === "gifted6" ? "good" : "", outcome: e.effect === "gifted6" ? esc(T.gifted6) : undefined });
         await this.wait(me ? 600 : 1200);
         break;
       }

@@ -588,7 +588,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   z-index: 3; display: flex; flex-direction: column; gap: .25rem; pointer-events: none; container-type: size; }
 .notes .note { flex: 1 1 0; min-height: 0; margin: 0; width: auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: .25em; padding: .25em .5em; border-radius: .875rem; text-align: center; overflow: hidden; overflow-wrap: anywhere;
-  background: rgba(255, 253, 246, .97); border: .1875rem solid var(--ink); border-top: .5rem solid var(--who, var(--ink)); box-shadow: 0 .25rem .75rem rgba(43, 18, 72, .3);
+  background: #fffdf6; border: .1875rem solid var(--ink); border-top: .5rem solid var(--who, var(--ink)); box-shadow: 0 .25rem .75rem rgba(43, 18, 72, .3);
   font-size: clamp(.75rem, min(10cqw, 14cqh), 2.6rem); line-height: 1.15; }
 /* a small square: the words only (the top edge keeps the player's colour) */
 @container (max-height: 9rem) { .notes .note .tok { display: none; } }
@@ -603,7 +603,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .gp-face { flex: 0 0 auto; width: clamp(4rem, 22cqw, 6.5rem); aspect-ratio: 1; margin-block: -.25rem -1.25rem; border-radius: 50%;
   background: #fff4c8; border: .25rem solid #f2c230; box-shadow: 0 0 0 .1875rem var(--ink); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; position: relative; z-index: 1; }
 /* the whole head shows: the topknot at the top, the beard down to the robe (owner, 26 Nov 2026: "zoom it down a bit") */
-.gp-face img { height: 90%; width: auto; display: block; transform-origin: 50% 100%; animation: lin-breathe 4.5s ease-in-out infinite alternate; }
+.gp-face img { height: 90%; width: auto; display: block; transform-origin: 50% 100%; animation: lin-breathe 2.2s ease-in-out infinite alternate; } /* owner, 27 Nov 2026: was 4.5 s, too slow */
 @keyframes lin-breathe { from { transform: translateY(1%) scale(1); } to { transform: translateY(-.5%) scale(1.03); } }
 @media (prefers-reduced-motion: reduce) { .gp-face img { animation: none; transform: translateY(1%); } }
 /* the words sit in the middle, between the header and the buttons; they scroll when there are too many */
