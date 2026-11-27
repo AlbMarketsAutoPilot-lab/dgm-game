@@ -26,6 +26,8 @@ import { addRecord, recordOf } from "./records";
 import { RT, rankingLine, showRecords } from "./records-page";
 import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 import { clearGame, newGame, replay, saveGame, type DestinationId, type SavedGame } from "./save";
+import { Tips } from "./tips";
+import { standingWords } from "./standing";
 
 export interface Setup {
   players: number;
@@ -77,18 +79,9 @@ const T = {
   }, // D12, D13
   win: { title: "{p} made it!", newGame: "New game", album: "Postcard album" }, // D6
   sixes: "Sixes!", // D14
+  understand: "I understand", // owner, Step I phase F: closes Mr. Lin's stories and tips
 };
 
-/** The "one moment" sign: an hourglass turning in the action area (no motion with "reduce motion"). */
-function hourglass(): HTMLElement {
-  const el = document.createElement("div");
-  el.className = "hourglass";
-  el.setAttribute("role", "status");
-  el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="sand" d="M9.2 7.5h5.6L12 11zM12 15.2l3.6 4.3H8.4z" fill="currentColor"/></svg><span class="sr">One moment…</span>`;
-  return el;
-}
-
-const words = (x: string) => x.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export class GameScreen {
@@ -114,7 +107,6 @@ export class GameScreen {
   /** Mr. Lin told this person about Home in this stay (the first turn only: A1). */
   private readonly homeTold: boolean[];
   /** When the panel on screen has been read (see `story`). */
-  private readUntil = 0;
   /** What decides this game (U1: saved after every turn, so it can be continued). */
   private readonly seed: number;
   private readonly answers: Answer3[] = [];
@@ -122,6 +114,8 @@ export class GameScreen {
   private readonly resumed: boolean;
   /** The win clock (phase E): one per person, void after any interruption; a continued game is never timed. */
   private readonly clock: WinClock;
+  /** Mr. Lin's tips (phase F): once per device, to people only, at most one per turn. */
+  private readonly tips = new Tips();
   /** The winner's time in ms when it counts for the Records, else null. */
   winTime: number | null = null;
   /** The players left this game (U2): nothing more happens on this screen. */
@@ -344,7 +338,6 @@ export class GameScreen {
 
   private async turn(): Promise<void> {
     const seat = (this.seat = this.game.next), p = this.game.players[seat], me = this.person(seat);
-    await this.readFirst();
     this.guide.close(); // a new turn starts with the die free
     this.pops.closeStory();
     this.overview.setCurrent(seat);
@@ -357,8 +350,14 @@ export class GameScreen {
     this.render();
     const moving = !(p.skip > 0 || p.boat || (p.home && pl === 0) || p.stuck || p.slow);
     this.overview.setReach(moving ? pl : null, p.dbl);
+    this.tips.newTurn();
     if (me) await this.opening(seat, p);
     else await this.wait(800);
+    // A quiet turn (Mr. Lin says nothing at its start): his tip, if one waits; the roll's button comes into his panel
+    if (me && !(p.skip > 0 || p.boat || p.home || p.stuck || p.slow || pl <= 0)) {
+      const d = this.board.endTile - pl, tip = this.tips.quiet(seat, d >= 1 && d <= 6);
+      if (tip) await this.story({ text: esc(tip) }); // it stays until "I understand"; then "Roll die" in the action area
+    }
 
     this.areaFx = "";
     const t = this.game.turn();
@@ -369,7 +368,9 @@ export class GameScreen {
       for (let i = 0; i < fresh.length; i++) {
         const e = fresh[i];
         if (e.type === "roll" && me && e.player === seat) {
-          await this.rollTap(last === 6 && e.why !== "wait" && e.why !== "boat" ? T.rollAgain : T.roll);
+          const again = last === 6 && e.why !== "wait" && e.why !== "boat";
+          if (again && !this.guide.open) { const tip = this.tips.sixes(); if (tip) await this.story({ text: esc(tip) }); } // T1
+          await this.rollTap(again ? T.rollAgain : T.roll);
           last = e.value;
         }
         if (e.type === "free" || e.type === "move") last = 0;
@@ -390,7 +391,7 @@ export class GameScreen {
     // Pass the die only from one person to another (owner): robots just play, and a person's turn starts at once.
     const next = this.game.next;
     if (!me || next === seat || !this.person(next)) await this.wait(me ? 2200 : 1300);
-    else await this.ask([{ label: T.pass(PLAYERS[next].name), value: "ok", primary: true }]); // A9: a label is plain text
+    else await this.guide.show({ text: this.standing(seat), buttons: [{ label: T.pass(PLAYERS[next].name), value: "ok", primary: true }] }); // A9; a label is plain text
   }
 
   /** Journey postcards (GCD §12): a person earns one the first time on this device; a stamp on the square says so. */
@@ -419,12 +420,17 @@ export class GameScreen {
     if (p.stuck && M.treeStuck?.guide) return this.story({ text: esc(M.treeStuck.guide) });
   }
 
-  /** Waits for a person to roll: "Roll die" (or "Roll again" after a 6), in Mr. Lin's panel if it is open. */
+  /**
+   * Waits for a person to roll: "Roll die" (or "Roll again" after a 6), only ever in the action area, or a tap on the die
+   * (owner, Step I phase F: game time, not talking time; no popup is open). The tap clears the notifications, so the
+   * whole board is in view while the die rolls and the token moves.
+   */
   private async rollTap(label: string): Promise<void> {
-    this.dice.ready(!this.guide.open);
-    await Promise.race([this.ask([{ label, value: "roll", primary: true }]), this.dice.tapped()]);
-    this.dice.ready(false);
     this.guide.close();
+    this.dice.ready(true);
+    await Promise.race([this.setAct([{ label, value: "roll", primary: true }]), this.dice.tapped()]);
+    this.dice.ready(false);
+    this.notes.clear();
     this.setAct([]);
   }
 
@@ -439,7 +445,6 @@ export class GameScreen {
         let title: string | undefined, text: string | undefined;
         if (home && !this.homeTold[d.player]) { this.homeTold[d.player] = true; title = esc(M.home?.title ?? ""); text = esc(M.home?.guide ?? ""); }
         // at the tree the question itself tells of the tree (owner's rule: Mr. Lin never says it twice)
-        await this.readFirst();
         v = await this.guide.show({ title, text, question: home ? T.homeQ : T.treeQ, buttons: [{ label: T.useCard, value: "card", primary: true }, { label: T.noCard, value: "roll" }] });
         return v === "card";
       }
@@ -528,6 +533,7 @@ export class GameScreen {
         st.celebrate(tone);
         st.stamp(tone);
         if (t.type === "tree") this.note("tree", e.player, "bad");
+        if (t.cat === "P" && this.person(e.player) && this.cards[e.player] <= 0) this.tips.earn(e.player, "card"); // T4
         if (t.type === "rollSum") this.note("rollSum", e.player, "good");
         const silent = t.type === "swapLeader" && after[0]?.type === "noLeader"; // owner, 26 Nov 2026: no guide text then
         const question = asked && after.length === 0 && asked.kind !== "waitCard"; // its question tells the story itself
@@ -570,6 +576,7 @@ export class GameScreen {
         st.celebrate("bump");
         st.stamp("bad", "Bump!");
         this.note("bump", e.player, "bad", e.victim);
+        if (this.person(e.player)) this.tips.earn(e.player, "bump"); // T3
         const back = B.moments?.backHome?.note;
         if (back) this.notes.push(e.victim, this.fill(back, e.victim), "");
         this.render();
@@ -594,6 +601,8 @@ export class GameScreen {
         else if (e.what === "double" && e.player === this.seat) this.note("double", e.player, "good");
         else if (e.what === "double") { if (!after.some((x) => x.type === "pending" && x.what === "double")) this.notes.push(null, esc(B.notes?.doubleOthers ?? ""), "bad"); }
         else if (e.what === "skip" && this.areaFx === "swapBehind") this.note("loseTurn", e.player, "bad");
+        // T4: the Forest's backward move or the Big City's lost turn, with no card to cancel it
+        if (((e.what === "back" && this.areaFx === "backward") || (e.what === "skip" && this.areaFx === "swapBehind")) && this.person(e.player) && this.cards[e.player] <= 0) this.tips.earn(e.player, "card");
         this.render();
         await this.wait(500);
         break;
@@ -640,23 +649,19 @@ export class GameScreen {
 
   // ---- Mr. Lin's panel ----
 
-  /**
-   * Mr. Lin's story of a person's turn (owner, 15 Oct: a story stays at least as long as it takes to read it, about
-   * 4 words a second, 1.5 to 5 s, before the next one takes its place; a tap on its button ends that at once).
-   */
-  private async story(c: { title?: string; text: string; tone?: "good" | "bad" | "" }): Promise<void> {
-    await this.readFirst();
-    void this.guide.show(c);
-    this.readUntil = Date.now() + Math.min(5000, Math.max(1500, 500 + words(`${c.title ?? ""} ${c.text}`) * 250));
+  /** Mr. Lin's words when a person passes the die (owner, Step I phase F): `standing.ts`. */
+  private standing(seat: number): string {
+    const p = this.game.players[seat];
+    return standingWords(this.board, seat, this.places, { boat: !!p.boat, stuck: !!p.stuck }, (i) => this.name(i));
   }
 
-  /** Waits until the panel on screen has been on long enough to read. Meanwhile an hourglass turns (owner, 15 Oct). */
-  private async readFirst(): Promise<void> {
-    const left = this.readUntil - Date.now();
-    if (left <= 0) return;
-    const glass = this.act.childElementCount ? null : this.act.appendChild(hourglass());
-    await this.wait(left);
-    glass?.remove();
+  /**
+   * Mr. Lin's story of a person's turn, and his tips (owner, Step I phase F): it stays until the person taps
+   * "I understand", and the game waits meanwhile (talking time); then the game goes on.
+   */
+  private async story(c: { title?: string; text: string; tone?: "good" | "bad" | "" }): Promise<void> {
+    if (this.gone) return;
+    await this.guide.show({ ...c, buttons: [{ label: T.understand, value: "ok", primary: true }] });
   }
 
   // ---- Info popups (over the board) ----
@@ -671,7 +676,7 @@ export class GameScreen {
     else if (pos >= B.endTile) c = { title: esc(B.destination?.name ?? ""), art: artFor(B.destination?.icon ?? "lanterns", B.destination?.name ?? ""), outcome: T.endBox };
     else if (t) {
       const what = this.outcome(t, pos);
-      c = { title: esc(t.title ?? ""), text: esc(t.guide ?? ""), art: t.icon === "card" ? cardFace("bonus", t.title ?? "") : artFor(t.icon ?? "card", t.title ?? ""), outcome: what ? esc(cap(what)) : undefined, tone: t.cat === "P" ? "bad" : "good" };
+      c = { title: esc(t.title ?? ""), text: esc(t.guide ?? ""), art: t.icon === "card" ? cardFace("bonus", t.title ?? "") : artFor(t.icon ?? "card", t.title ?? ""), outcome: what ? esc(cap(what)) : undefined, tone: t.cat === "P" ? "bad" : t.cat === "S" ? "swap" : "good" }; // the Swap Market: blue, like its square (owner, phase F)
     } else {
       const lm = B.landmarks?.[pos];
       c = lm ? { title: esc(lm.name), text: T.squareBox.landmark.replace("{a}", esc(area?.name ?? "")), art: artFor(lm.icon ?? "", lm.name) }
@@ -722,13 +727,6 @@ export class GameScreen {
         return b;
       }));
     });
-  }
-
-  /** A button for the next action: in Mr. Lin's panel when it is open (it covers the action area), else the action area. */
-  private ask(options: GuideButton[]): Promise<string> {
-    const inPanel = this.guide.buttons(options);
-    const p = inPanel ?? this.setAct(options);
-    return p.then((v) => { this.readUntil = 0; this.setAct([]); return v; }); // the player has read on: no more waiting
   }
 
   /** The tag on the avatar: "needs 6" at Home or the tree when a 6 is really needed, else the exact roll to finish. */

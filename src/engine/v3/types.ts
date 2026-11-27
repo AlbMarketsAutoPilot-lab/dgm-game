@@ -51,6 +51,8 @@ export interface Area {
   icon?: string;
   announce?: string;
   effectText?: string;
+  /** Step I phase F: where a traveller stands, as Mr. Lin says it ("in the Mountains", "at the Seaside"). */
+  at?: string;
 }
 
 /** A named plain square (no event). */
@@ -64,6 +66,14 @@ export const MOMENT_KEYS = [
   "home", "backHome", "freeToGo", "treeStuck", "boatWait", "boatMiss", "boatWin", "swapMarket", "finish",
 ] as const;
 export type MomentKey = (typeof MOMENT_KEYS)[number];
+
+/**
+ * Mr. Lin's words when a person passes the die (owner, Step I phase F, 27 Nov 2026): where they stand (road, Home, the
+ * fallen tree, the Dragon Boat), then the others (nearest ahead and behind, leading, last, nobody left Home).
+ * Placeholders: {a} the area's `at`, {n} a distance; {q} / {n} the nearest ahead, {b} / {m} the nearest behind.
+ */
+export const STANDING_KEYS = ["road", "home", "tree", "boat", "both", "leader", "last", "othersHome", "noneLeft"] as const;
+export type StandingKey = (typeof STANDING_KEYS)[number];
 
 export interface Moment {
   title?: string;
@@ -96,4 +106,5 @@ export interface Board3 {
   notes?: Record<string, string>;
   landmarks?: Record<string, Landmark>;
   moments?: Partial<Record<MomentKey, Moment>>;
+  standing?: Partial<Record<StandingKey, string>>;
 }

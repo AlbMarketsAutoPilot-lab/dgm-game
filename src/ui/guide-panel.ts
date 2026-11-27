@@ -1,7 +1,8 @@
 // Mr. Lin's panel (Step I phase C4, owner 25–26 Nov 2026): the guide's popup on the right (on phones held upright, the
 // lower panel), covering the zoomed square and the die. It tells the story of a person's turn (never for robots) and
-// holds every choice: its buttons name their action. It shows only after the pieces have stopped moving. While it is
-// open, the next action's button (roll, pass the die) is in it, so the action area under it is never needed.
+// holds every choice: its buttons name their action. It shows only after the pieces have stopped moving. Step I phase F
+// (owner, 27 Nov 2026): it stays until one of its own buttons is tapped (a story or a tip: "I understand") and the game
+// waits; "Roll die" is never in it, only in the action area (game time, not talking time).
 // Phase C7 (owner, 26 Nov 2026): his figure is the owner's own picture (src/assets/guide/mr-lin.webp, the white
 // background taken out), in a round medallion at the top right, his name on its left (owner, 26 Nov 2026), breathing gently (still with "reduce motion").
 import { esc } from "../render/html";
@@ -40,14 +41,27 @@ export class GuidePanel {
     addEventListener("resize", () => this.fit());
   }
 
-  /** In its own panel if the words fit there, else over the whole game screen. */
+  /**
+   * In its own panel if the words fit there, else over the whole game screen. Step I phase F (owner, 27 Nov 2026): where
+   * there is room, his words read as his quote (a card with quote marks), smaller when space is short, plain when the
+   * quote would not fit; nothing ever scrolls for it.
+   */
   private fit(): void {
-    const back = this.el?.parentElement;
-    if (!back || !this.wide) return;
+    const el = this.el, back = el?.parentElement;
+    if (!el || !back) return;
     const body = back.querySelector<HTMLElement>(".gp-body")!, over = () => body.scrollHeight > body.clientHeight + 2;
-    back.classList.remove("gp-wide");
-    if (back.parentElement !== this.host) this.host.append(back);
-    if (over()) { back.classList.add("gp-wide"); this.wide.append(back); }
+    el.classList.remove("gp-quote", "small");
+    if (this.wide) {
+      back.classList.remove("gp-wide");
+      if (back.parentElement !== this.host) this.host.append(back);
+    }
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    if (el.querySelector(".gp-text") && body.clientWidth > 17 * rem) {
+      el.classList.add("gp-quote");
+      if (over()) el.classList.add("small");
+      if (over()) el.classList.remove("gp-quote", "small");
+    }
+    if (this.wide && over()) { back.classList.add("gp-wide"); this.wide.append(back); }
   }
 
   /** Opens the panel (replacing what it showed). Resolves with the button pressed, or "replaced". */

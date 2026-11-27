@@ -15,27 +15,27 @@
   },
   "areas": [
     {
-      "name": "Home Town", "from": 0, "to": 9, "effect": null, "icon": "house",
+      "name": "Home Town", "at": "in Home Town", "from": 0, "to": 9, "effect": null, "icon": "house",
       "announce": "Welcome, traveller. I am Mr. Lin, and I will guide you on the long road to the Lantern Festival."
     },
     {
-      "name": "Countryside", "from": 10, "to": 22, "effect": { "type": "gifted6" }, "icon": "sheep",
+      "name": "Countryside", "at": "in the Countryside", "from": 10, "to": 22, "effect": { "type": "gifted6" }, "icon": "sheep",
       "announce": "In the Countryside they say, \"Even a sheet of paper is lighter when lifted together.\" The farmers let you cross 6 fields, so roll again and add the free 6 to your roll."
     },
     {
-      "name": "Forest", "from": 23, "to": 38, "effect": { "type": "backward" }, "icon": "forest",
+      "name": "Forest", "at": "in the Forest", "from": 23, "to": 38, "effect": { "type": "backward" }, "icon": "forest",
       "announce": "In the Forest, the paths twist and turn, and as the old proverb says, \"Take one step back, and the sea and sky open up.\" Whatever you roll next, you will go backward, and then you will find the right path."
     },
     {
-      "name": "Mountains", "from": 39, "to": 56, "effect": { "type": "double" }, "icon": "cabin",
+      "name": "Mountains", "at": "in the Mountains", "from": 39, "to": 56, "effect": { "type": "double" }, "icon": "cabin",
       "announce": "Welcome to the Mountains! As the proverb says, \"No matter how tall the mountain is, it cannot block the sun,\" so your next roll counts double."
     },
     {
-      "name": "Seaside", "from": 57, "to": 76, "effect": { "type": "swapAhead", "range": 20, "otherwise": "card" }, "icon": "sailboat",
+      "name": "Seaside", "at": "at the Seaside", "from": 57, "to": 76, "effect": { "type": "swapAhead", "range": 20, "otherwise": "card" }, "icon": "sailboat",
       "announce": "At the Seaside they say, \"The waves behind push the waves ahead.\" If the next traveller ahead is within twenty squares, you change places; if not, the sea brings you a Bonus card."
     },
     {
-      "name": "Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" }, "icon": "traffic-light",
+      "name": "Big City", "at": "in the Big City", "from": 77, "to": 100, "effect": { "type": "swapBehind", "range": 10, "otherwise": "loseTurn" }, "icon": "traffic-light",
       "announce": "In the Big City they say, \"Haste does not bring success.\" If a traveller is within ten squares behind you, you change places; if not, you rest and lose your next turn."
     }
   ],
@@ -180,5 +180,16 @@
     "boatMiss": { "guide": "The current turns, and the crew must row back. You will reach the shore another day." },
     "boatWin": { "guide": "You step ashore at the festival pier, right on time. The crew raise their paddles to wish you well." },
     "finish": { "guide": "You have arrived, {p}, and the night is full of lantern light. Thank you for travelling with me." }
+  },
+  "standing": {
+    "road": "You stand {a}, and {n} squares still lie between you and the festival lights.",
+    "home": "You are still at Home, and the whole road waits for your first step.",
+    "tree": "The fallen tree still bars your way, {n} squares from the festival lights.",
+    "boat": "You wait on the Dragon Boat; only a 4 will bring you ashore.",
+    "both": "{q} walks {n} squares ahead of you, and {b} follows {m} squares behind.",
+    "leader": "You lead all travellers, and {b} follows {m} squares behind.",
+    "last": "{q} walks {n} squares ahead, and no one follows in your footsteps.",
+    "othersHome": "The other travellers have not yet left Home.",
+    "noneLeft": "No traveller has left Home yet."
   }
 }
