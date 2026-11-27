@@ -163,7 +163,10 @@
     "backward": "{p}: next move goes backward.",
     "double": "{p}: next roll counts double.",
     "areaSwap": "{p} swaps places with {q}.",
-    "loseTurn": "{p} loses the next turn."
+    "loseTurn": "{p} loses the next turn.",
+    "areaGifted6": "{p} gets a free 6 and rolls again.",
+    "areaBackward": "{p} goes backward next turn.",
+    "areaDouble": "{p}'s next roll counts double."
   },
   "landmarks": {
     "55": { "name": "Base Camp", "icon": "tent" },

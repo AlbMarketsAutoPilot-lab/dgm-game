@@ -87,7 +87,7 @@ describe("Lantern Festival (v3): texts and pictures", () => {
     expect(DONE_AREAS).toEqual(LF.areas.map((a) => a.name));
     expect(LF.destination?.name && LF.destination.icon && LF.guide?.name).toBeTruthy();
     for (const [sq, l] of Object.entries(LF.landmarks ?? {})) expect(l.icon, `landmark ${sq}`).toBeTruthy();
-    expect(Object.keys(LF.notes ?? {}).length).toBe(25);
+    expect(Object.keys(LF.notes ?? {}).length).toBe(28); // 25 shared patterns (phase B) + 3 area notes named by their area (owner, 27 Nov 2026)
     // "swapMarket" is kept for the partner choice, written with the buttons in phase C.
     for (const k of MOMENT_KEYS.filter((m) => m !== "swapMarket")) expect(LF.moments?.[k]?.guide, `moment ${k}`).toBeTruthy();
     // Step I phase F: Mr. Lin's words when the die is passed, and where a traveller stands in each area
