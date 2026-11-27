@@ -16,9 +16,9 @@ group("stage cards", () => {
     expect(describe(LF, 69).html).toContain("→ 97");
     expect(describe(LF, 79).style).toContain("#2f6fc4"); // the Swap Market's blue
   });
-  it("no square numbers on any card", () => {
-    for (let pos = 0; pos <= LF.endTile; pos++) expect(describe(LF, pos).html, `square ${pos}`).not.toMatch(/class="cnum"/);
-    expect(describe(LF, 21).html).not.toContain(">21<");
+  it("every square's card shows its number; Home and the destination do not (owner, Part 2 rule 1)", () => {
+    for (let pos = 1; pos <= LF.lastTile; pos++) expect(describe(LF, pos).html, `square ${pos}`).toContain(`<span class="cnum">${pos}</span>`);
+    for (const pos of [0, LF.endTile]) expect(describe(LF, pos).html).not.toMatch(/class="cnum"/);
   });
   it("a plain square shows its area's picture", () => {
     expect(describe(LF, 21).html).toContain('aria-label="Countryside"');

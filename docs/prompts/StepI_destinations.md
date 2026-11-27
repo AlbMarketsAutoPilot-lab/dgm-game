@@ -374,6 +374,8 @@ all corrections"), and asked to review the result afterwards. Changes to earlier
   time and add what you roll to the 6 gifted by farmers!"; the die shows the gifted 6 and the list under it starts
   with it ("6 + 3 = 9"), as after a rolled 6.
 - **Mr. Lin's breathing** is quicker (2.2 s each way, was 4.5 s), so it reads as breathing, not slow motion.
+- **Square numbers on the zoomed square (owner, 27 Nov 2026, rule 1 above):** every square's card on the right shows its
+  number again (phase C3 had kept only the "→ 24" label); Home and the destination have none.
 - **Area notifications name their area (owner, 27 Nov 2026, form A, word for word):** "Countryside: {p} gets a free 6
   and rolls again." · "Forest: {p} goes backward next turn." · "Mountains: {p}'s next roll counts double." ·
   "Seaside: {p} swaps places with {q}." · "Seaside: {p} gets a Bonus card." · "Big City: {p} swaps places with {q}." ·

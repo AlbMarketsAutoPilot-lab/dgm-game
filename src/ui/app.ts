@@ -4,7 +4,8 @@
 // - Mr. Lin's panel (guide-panel.ts) covers the stage and the die after the pieces stop: his story of a person's turn
 //   and every choice, with buttons that name their action. Robots get no panel, and he never tells their story.
 // - The notifications (notes.ts) on the left: short facts for everyone, from the destination file's approved patterns.
-// No square numbers anywhere, except the "→ 24" label on the zoomed square; the screen-reader labels keep them.
+// No square numbers anywhere except on the zoomed square (its number and the "→ 24" label); the screen-reader labels
+// keep them.
 // All rules come from the engine (src/engine/v3): this file only shows its events, in order, and answers its questions.
 import { DESTINATIONS, robot, type Answer3, type Board3, type Decision3, type Event3, type Game3, type Player3 } from "../engine/v3";
 import { randomSeed } from "../engine/rng";

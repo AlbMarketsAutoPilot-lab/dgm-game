@@ -1,8 +1,9 @@
 // The stage: one big square at a time, with its picture. Moving slides a row of squares under the token: a throw walks
 // square by square (the token hops over each one), an event's move glides along the row (a lift, the Rockslide, a
 // swap), passing the squares in between quickly.
-// Step I phase C3 (owner, 26 Nov 2026): drawn from a v3 destination file. No square numbers on the card; only an event
-// square's destination keeps its "→ 24" label (Part 2, rule 1). Place 0 (and below) is Home.
+// Step I phase C3 (owner, 26 Nov 2026): drawn from a v3 destination file. Owner, 27 Nov 2026 (Part 2, rule 1: square
+// numbers stay on the zoomed square): every square's card shows its number, and an event square its "→ 24" label.
+// Place 0 (and below) is Home.
 import { areaOf, type Board3 } from "../engine/v3";
 import { type Place as Pos } from "../render/layout";
 import { areaSignFor, artCss, artFor } from "../render/art";
@@ -36,12 +37,12 @@ export function describe(board: Board3, pos: Pos): { html: string; cls: string; 
     const title = t.title ?? "", to = t.type === "jump" || t.type === "dragonBoat" ? t.to : undefined;
     const destLabel = to !== undefined ? `<span class="cdest">→ ${to}</span>` : "";
     const art = t.icon === "card" ? cardFace("bonus", title) : artFor(t.icon ?? "card", title);
-    return { cls: "ev", style: `--c:${catColour(t.cat)}`, html: `${mark(t.cat)}<div class="cart">${art}</div>${destLabel}` };
+    return { cls: "ev", style: `--c:${catColour(t.cat)}`, html: `<span class="cnum">${pos}</span>${mark(t.cat)}<div class="cart">${art}</div>${destLabel}` };
   }
   const lm = board.landmarks?.[pos];
-  if (lm) return { cls: "plain lm", style: wash, html: `<div class="cart soft">${artFor(lm.icon ?? area.icon ?? "", lm.name)}</div><span class="cname">${esc(lm.name)}</span>` };
+  if (lm) return { cls: "plain lm", style: wash, html: `<span class="cnum">${pos}</span><div class="cart soft">${artFor(lm.icon ?? area.icon ?? "", lm.name)}</div><span class="cname">${esc(lm.name)}</span>` };
   // A plain square shows where you are with the area's picture (owner: no repeated area names on every square).
-  return { cls: "plain rg", style: wash, html: `<div class="cart soft">${artFor(area.icon ?? "", area.name)}</div>` };
+  return { cls: "plain rg", style: wash, html: `<span class="cnum">${pos}</span><div class="cart soft">${artFor(area.icon ?? "", area.name)}</div>` };
 }
 
 let artStyled = false;
