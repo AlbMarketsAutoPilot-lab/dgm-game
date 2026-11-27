@@ -26,10 +26,12 @@ export async function checkPublished(browser, pub, report) {
     await page.goto(url + "/");
     const shown = await page.locator(".howto").waitFor({ timeout: 8000 }).then(() => true, () => false);
     const pages = shown ? await page.locator(".g-dots i").count() : 0;
-    let pics = 0;
+    // the picture of each page, page 1 included (Step I phase F: a picture on every page)
+    const pic = () => page.evaluate(async () => (await Promise.all([...document.querySelectorAll(".howto img")].map((m) => m.decode().then(() => m.naturalWidth > 0, () => false)))).filter(Boolean).length);
+    let pics = shown ? await pic() : 0;
     for (let i = 1; i < pages; i++) {
       await page.click(".g-next");
-      pics += await page.evaluate(async () => (await Promise.all([...document.querySelectorAll(".howto img")].map((m) => m.decode().then(() => m.naturalWidth > 0, () => false)))).filter(Boolean).length);
+      pics += await pic();
     }
     const last = shown && (await page.textContent(".g-next")) === "Let's play!";
     if (shown) await page.click(".g-next");
@@ -40,8 +42,8 @@ export async function checkPublished(browser, pub, report) {
     await page.click(".how-open"); await page.waitForSelector(".howto");
     await page.keyboard.press("Escape");
     const escClosed = !(await page.locator(".howto").count());
-    report.add(G, `first visit: the guide shows once, ${pages} pages (${pics} pictures of the game), then the start screen; How to play; Escape`, shown && pages === 8 && pics === 3 && last && setupAfter && notAgain && escClosed && !errors.length,
-      [!shown && "no guide", pages !== 8 && `${pages} pages`, pics !== 3 && `${pics} of 3 pictures`, !last && "last page", !setupAfter && "no start screen", !notAgain && "shown again", !escClosed && "Escape", ...errors].filter(Boolean).join(", "));
+    report.add(G, `first visit: the guide shows once, ${pages} pages (${pics} pictures of the game), then the start screen; How to play; Escape`, shown && pages === 8 && pics === 8 && last && setupAfter && notAgain && escClosed && !errors.length,
+      [!shown && "no guide", pages !== 8 && `${pages} pages`, pics !== 8 && `${pics} of 8 pictures`, !last && "last page", !setupAfter && "no start screen", !notAgain && "shown again", !escClosed && "Escape", ...errors].filter(Boolean).join(", "));
     await ctx.close();
   }
 

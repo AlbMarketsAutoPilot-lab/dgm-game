@@ -61,7 +61,7 @@ lantern and go"; the Bog boots are offered ("Wear your Bog boots?"), as the Bonu
 enough to read (about 4 words a second, 1.5–5 s) before the next one replaces it, with an hourglass turning where the
 buttons go meanwhile.
 
-**How to play** (`guide.ts`, owner 15–16 Oct): eight short pages, rules only, three with pictures of the real game
+**How to play** (`guide.ts`, owner 15–16 Oct): eight short pages, rules only (the v3 rules, Step I phase F), each with a picture of the real game
 screen (`src/assets/guide/`, made by `npm run guide:shots`), once per device before the start screen, and from "How
 to play" on the start screen. **Keyboard** (U5): Escape closes the popup on
 top, the album and the guide; the whole board is one Tab stop, the arrow keys walk the road, Enter / Space tells what a

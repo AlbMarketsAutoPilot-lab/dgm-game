@@ -1,62 +1,58 @@
 // How to play (owner, 15 Oct: "a very short pre-game guide the first time"; 16 Oct: eight short pages, rules only, no
-// story words, with pictures of the real game screen): shown once on this device before the start screen, and any time
+// story words, with pictures of the real game screen; Step I phase F, 27 Nov 2026: the v3 rules, a picture on every page): shown once on this device before the start screen, and any time
 // from "How to play" there. Skip, Back / Next, the arrow keys and Escape all work. Every rule in it is the engine's.
 // The pictures are made from the game itself: `npm run guide:shots` (tools/browser/guide-shots.mjs) makes them again.
-import { artFor } from "../render/art";
-import { tokenSvg } from "./players";
-import lanternsShot from "../assets/guide/lanterns.png";
-import squareShot from "../assets/guide/square.png";
-import cardsShot from "../assets/guide/cards.png";
+import { esc } from "../render/html";
+import welcomeShot from "../assets/guide/welcome.png";
+import homeShot from "../assets/guide/home.png";
+import sixesShot from "../assets/guide/sixes.png";
+import squaresShot from "../assets/guide/squares.png";
+import cardShot from "../assets/guide/card.png";
+import areasShot from "../assets/guide/areas.png";
+import bumpShot from "../assets/guide/bump.png";
+import finishShot from "../assets/guide/finish.png";
 
 interface Page {
-  art: () => string;
+  /** A picture of the game screen and its hidden label (both approved by the owner, Step I phase F2). */
+  pic: string;
+  alt: string;
   title: string;
   text: string;
-  /** The art is a picture of the game screen (wider than the square drawings). */
-  shot?: boolean;
 }
 
-const shot = (src: string, alt: string) => () => `<img src="${src}" alt="${alt}">`;
-
-/** Three dice: 6 + 6 + 3. */
-function dice(): string {
-  const PIPS: Record<number, [number, number][]> = { 6: [[7, 6], [7, 12], [7, 18], [17, 6], [17, 12], [17, 18]], 3: [[6, 6], [12, 12], [18, 18]] };
-  const die = (n: number, x: number) => `<g transform="translate(${x} 38)"><rect x="1" y="1" width="22" height="22" rx="5" fill="#fffdf6" stroke="#4b2377" stroke-width="2"/>${PIPS[n].map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="2.2" fill="#4b2377"/>`).join("")}</g>`;
-  return `<svg class="art" viewBox="0 0 100 100" role="img" aria-label="Dice: 6, 6 and 3">${die(6, 8)}${die(6, 38)}${die(3, 68)}</svg>`;
-}
-
+// Step I phase F (owner, 27 Nov 2026): the v3 rules; texts (F1) and pictures with their labels (F2) approved word for word.
 export const GUIDE: Page[] = [
   {
-    art: () => artFor("lanterns", "The Festival of Lights"), title: "Welcome to Don't Get Mad!",
-    text: "A race game for 2 to 4 players: humans or computer. <b>Be the first to reach the final square of the board</b> and you win!",
+    pic: welcomeShot, alt: "The game screen: the players at the top and the board", title: "Welcome to Don't Get Mad!",
+    text: "A race game for 2 to 4 players: people or computer players. <b>Be the first to reach the last square</b> and you win!",
   },
   {
-    art: () => artFor("house", "Home"), title: "Roll a 6 to enter the game",
-    text: "Roll a <b>6</b> to start the game. No 6 in three turns? You start, but <b>lose a lantern</b>. Or <b>spend a lantern</b> to start at once, without waiting for a 6.",
+    pic: homeShot, alt: "Blue's turn at Home, needing a 6 to set off, with a Bonus card in hand", title: "Roll a 6 to leave Home",
+    text: "Everyone starts at <b>Home</b> with <b>1 Bonus card</b>. Roll a <b>6</b> to leave: one roll per turn, as many turns as it takes. Or <b>use your Bonus card</b> to leave without a 6. Then roll again to move.",
   },
   {
-    art: shot(lanternsShot, "The players at the top of the screen, each with their number of lanterns"), shot: true, title: "Keep your last lantern",
-    text: "You start with <b>3 lanterns</b>. <b>Three 6s in a row</b> earn you one more! You need to keep a lantern to finish the game.",
+    pic: sixesShot, alt: 'A 6 on the die, the sign "A six!" and the button "Roll again"', title: "Sixes add up",
+    text: "Every <b>6</b> gives you another roll, <b>with no limit</b>. Your rolls add up into one move: <b>6 + 6 + 3 = 15 squares</b>. The 6 that lets you leave Home only frees you: it does not move you.",
   },
   {
-    art: dice, title: "Sixes add up",
-    text: "Roll a <b>6</b> and you earn the right to roll again! Up to three rolls if they are all 6s. Then you move by the total: <b>6 + 6 + 3 = 15 squares</b> in one move.",
+    pic: squaresShot, alt: "A square tapped on the board: the box tells what the Swap Market does", title: "Good and bad squares",
+    text: "<b class=\"g\">Green ▲</b> helps you, <b class=\"r\">red ▼</b> sets you back, and <b class=\"b\">blue ◆</b> makes a Bonus card change hands. Only the square where you stop counts. <b>Tap any square</b> on the board to see what it does.",
   },
   {
-    art: shot(squareShot, "A square tapped on the board, telling what it does"), shot: true, title: "Good and bad squares",
-    text: "<b class=\"g\">Green ▲</b> helps, <b class=\"r\">red ▼</b> sets you back. Read what lies on your path in the game notifications, or <b>tap any square</b> on the game board to discover your destiny.",
+    pic: cardShot, alt: "The players at the top of the screen; the small card next to each player shows how many Bonus cards they hold, and is shown large below", title: "Bonus card",
+    text: "Use it to <b>leave Home</b> or <b>pass the fallen tree</b> without a 6, or to <b>cancel your own bad luck</b>. It cannot stop a bump or a swap. One use per card; win more on the way.",
   },
   {
-    art: shot(cardsShot, "The Bonus card and the Bog boots, at the top of the screen"), shot: true, title: "Bonus card",
-    text: "Win cards during the game. <b>Bonus card</b>: cancels your punishment or another player's reward. <b>Bog boots</b>: escape the Bog at once! <b>A lantern</b> can cancel your punishment too!",
+    pic: areasShot, alt: 'A token entering a new area: the sign "Now entering · Mountains"', title: "Areas",
+    text: "The board has <b>6 areas</b>. The first time you enter a new area with your own roll, something happens: a free 6, a move backward, a roll that counts double, a swap, a Bonus card or a lost turn. You are told which as you arrive.",
   },
   {
-    art: () => `<div class="g-two">${tokenSvg(0, "tok", true)}${tokenSvg(1, "tok", true)}</div>`, title: "Bump!",
-    text: "Only one player per square. If you land on another player's square, <b>they go back to the start</b>!",
+    pic: bumpShot, alt: "A bump: Blue lands on Red's square, Red goes back Home and needs no 6 to leave", title: "Bump!",
+    text: "Only one player per square. Land on another player and <b>they go back Home</b>. After a bump, they need <b>no 6</b> to leave again.",
   },
   {
-    art: () => artFor("lanterns", "The finish"), title: "The exact number",
-    text: "If you are 1 square away from the last square, you need to <b>roll a 1</b> to land there and win. If you roll more, you have just <b>wasted this turn</b>.",
+    pic: finishShot, alt: "Blue needs exactly 3 to finish, but the die shows 5: Blue stays where it is", title: "The exact number",
+    text: "To reach the last square you need the <b>exact number</b>. Roll too much and you stay where you are. A <b>6</b> never finishes: it always rolls again.",
   },
 ];
 
@@ -103,7 +99,7 @@ export function showGuide(): Promise<void> {
       const p = GUIDE[page], last = page === GUIDE.length - 1;
       el.innerHTML = `<div class="g-card">`
         + `<button class="g-skip" aria-label="Skip the guide">Skip</button>`
-        + `<div class="g-art${p.shot ? " shot" : ""}">${p.art()}</div>`
+        + `<div class="g-art shot"><img src="${p.pic}" alt="${esc(p.alt)}"></div>`
         + `<p class="g-step">How to play · ${page + 1} of ${GUIDE.length}</p>`
         + `<h2>${p.title}</h2><p class="g-text">${p.text}</p>`
         + `<div class="g-dots" aria-hidden="true">${GUIDE.map((_, i) => `<i${i === page ? ' class="on"' : ""}></i>`).join("")}</div>`

@@ -23,7 +23,7 @@ export interface PopupContent {
   text?: string;
   /** What happens, in plain words. */
   outcome?: string;
-  tone?: "good" | "bad" | "";
+  tone?: "good" | "bad" | "swap" | "";
   /** More below the outcome (HTML: e.g. this turn's earlier moments). */
   more?: string;
   /** Small line above the title (who / where). */

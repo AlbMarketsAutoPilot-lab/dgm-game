@@ -671,7 +671,7 @@ export class GameScreen {
     else if (pos >= B.endTile) c = { title: esc(B.destination?.name ?? ""), art: artFor(B.destination?.icon ?? "lanterns", B.destination?.name ?? ""), outcome: T.endBox };
     else if (t) {
       const what = this.outcome(t, pos);
-      c = { title: esc(t.title ?? ""), text: esc(t.guide ?? ""), art: t.icon === "card" ? cardFace("bonus", t.title ?? "") : artFor(t.icon ?? "card", t.title ?? ""), outcome: what ? esc(cap(what)) : undefined, tone: t.cat === "P" ? "bad" : "good" };
+      c = { title: esc(t.title ?? ""), text: esc(t.guide ?? ""), art: t.icon === "card" ? cardFace("bonus", t.title ?? "") : artFor(t.icon ?? "card", t.title ?? ""), outcome: what ? esc(cap(what)) : undefined, tone: t.cat === "P" ? "bad" : t.cat === "S" ? "swap" : "good" }; // the Swap Market: blue, like its square (owner, phase F)
     } else {
       const lm = B.landmarks?.[pos];
       c = lm ? { title: esc(lm.name), text: T.squareBox.landmark.replace("{a}", esc(area?.name ?? "")), art: artFor(lm.icon ?? "", lm.name) }
