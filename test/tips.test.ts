@@ -34,16 +34,16 @@ describe("Mr. Lin's tips", () => {
     storage();
     const { Tips, TIPS } = await tips();
     const a = new Tips();
-    expect(a.quiet(0, false)).toBe(TIPS.tap);
+    expect(a.quiet(false)).toBe(TIPS.tap);
     a.newTurn();
-    expect(a.quiet(0, false)).toBe(TIPS.records); // T6 only after T2
+    expect(a.quiet(false)).toBe(TIPS.records); // T6 only after T2
     a.newTurn();
-    expect(a.quiet(0, false)).toBeNull();
+    expect(a.quiet(false)).toBeNull();
     expect(a.sixes()).toBe(TIPS.sixes);
     const b = new Tips(); // a new game on the same device
-    expect(b.quiet(1, true)).toBe(TIPS.exact);
+    expect(b.quiet(true)).toBe(TIPS.exact);
     b.newTurn();
-    expect([b.quiet(1, true), b.sixes()]).toEqual([null, null]);
+    expect([b.quiet(true), b.sixes()]).toEqual([null, null]);
     expect(JSON.parse(store.get(KEY)!)).toEqual(["sixes", "tap", "exact", "records"]);
   });
 
@@ -51,36 +51,43 @@ describe("Mr. Lin's tips", () => {
     storage();
     const { Tips, TIPS } = await tips();
     const t = new Tips();
-    expect(t.quiet(0, true)).toBe(TIPS.exact);
+    expect(t.quiet(true)).toBe(TIPS.exact);
     expect(t.sixes()).toBeNull(); // the same turn: the sixes tip waits
-    expect(t.quiet(0, true)).toBeNull();
+    expect(t.quiet(true)).toBeNull();
     t.newTurn();
     expect(t.sixes()).toBe(TIPS.sixes);
   });
 
-  it("keeps the agreed order: exact number, bump, Bonus card, tap a square, Records", async () => {
+  it("keeps the agreed order at a quiet turn: exact number, tap a square, Records", async () => {
     storage();
     const { Tips, TIPS } = await tips();
     const t = new Tips();
-    t.earn(0, "card");
-    t.earn(0, "bump");
     const got: (string | null)[] = [];
-    for (let i = 0; i < 6; i++) { t.newTurn(); got.push(t.quiet(0, true)); }
-    expect(got).toEqual([TIPS.exact, TIPS.bump, TIPS.card, TIPS.tap, TIPS.records, null]);
+    for (let i = 0; i < 4; i++) { t.newTurn(); got.push(t.quiet(true)); }
+    expect(got).toEqual([TIPS.exact, TIPS.tap, TIPS.records, null]);
   });
 
-  it("gives the bump and Bonus card tips only to the person who earned them, and never earned twice", async () => {
+  it("gives the bump and Bonus card tips at the end of the same turn, to the person it happened to, never later (owner, 27 Nov 2026)", async () => {
     storage();
     const { Tips, TIPS } = await tips();
     const t = new Tips();
     store.set(KEY, JSON.stringify(["tap", "records"]));
-    t.earn(1, "bump");
-    expect(t.quiet(0, false)).toBeNull(); // seat 0 did not bump anyone
     t.newTurn();
-    expect(t.quiet(1, false)).toBe(TIPS.bump);
+    t.earn(1, "bump");
+    expect(t.quiet(false)).toBeNull(); // never at a quiet turn
+    expect(t.endOfTurn(0)).toBeNull(); // seat 0 did not bump anyone
+    t.newTurn();
+    t.earn(1, "bump");
+    expect(t.endOfTurn(1)).toBe(TIPS.bump);
     t.newTurn();
     t.earn(1, "bump"); // shown already: not earned again
-    expect(t.quiet(1, false)).toBeNull();
+    expect(t.endOfTurn(1)).toBeNull();
+    t.newTurn();
+    t.earn(2, "card");
+    t.newTurn(); // the turn ended without its tip (another tip was given): it never comes later
+    expect(t.endOfTurn(2)).toBeNull();
+    t.earn(2, "card");
+    expect(t.endOfTurn(2)).toBe(TIPS.card);
   });
 
   it("forgets an earned tip with the game: a new game needs a new bump or punishment", async () => {
@@ -88,17 +95,17 @@ describe("Mr. Lin's tips", () => {
     const { Tips } = await tips();
     store.set(KEY, JSON.stringify(["tap", "records"]));
     new Tips().earn(0, "card");
-    expect(new Tips().quiet(0, false)).toBeNull();
+    expect(new Tips().endOfTurn(0)).toBeNull();
   });
 
   it("\"How to play\" shows them again", async () => {
     storage();
     const { Tips, TIPS, resetTips } = await tips();
     const t = new Tips();
-    expect(t.quiet(0, false)).toBe(TIPS.tap);
+    expect(t.quiet(false)).toBe(TIPS.tap);
     resetTips();
     expect(store.has(KEY)).toBe(false);
-    expect(new Tips().quiet(0, false)).toBe(TIPS.tap);
+    expect(new Tips().quiet(false)).toBe(TIPS.tap);
   });
 
   it("blocked storage: no tips at all (they would come back every game), and no error", async () => {
@@ -106,7 +113,8 @@ describe("Mr. Lin's tips", () => {
     const { Tips, resetTips } = await tips();
     const t = new Tips();
     expect(() => t.earn(0, "bump")).not.toThrow();
-    expect([t.quiet(0, true), t.sixes()]).toEqual([null, null]);
+    expect(t.endOfTurn(0)).toBeNull();
+    expect([t.quiet(true), t.sixes()]).toEqual([null, null]);
     expect(() => resetTips()).not.toThrow();
   });
 
@@ -114,9 +122,9 @@ describe("Mr. Lin's tips", () => {
     vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => { throw new Error("full"); }, removeItem: () => {} });
     const { Tips, TIPS } = await tips();
     const t = new Tips();
-    expect(t.quiet(0, false)).toBe(TIPS.tap);
+    expect(t.quiet(false)).toBe(TIPS.tap);
     t.newTurn();
-    expect([t.quiet(0, true), t.sixes()]).toEqual([null, null]);
+    expect([t.quiet(true), t.sixes()]).toEqual([null, null]);
   });
 
   it("tampered storage reads as none shown, and no error", async () => {
@@ -127,7 +135,7 @@ describe("Mr. Lin's tips", () => {
       expect(() => shownTips()).not.toThrow();
       const t = new Tips();
       // only real tip names count: '["tap", 7, "lunch"]' has shown "tap", so the Records tip comes next
-      expect(t.quiet(0, false)).toBe(bad.startsWith("[") ? TIPS.records : TIPS.tap);
+      expect(t.quiet(false)).toBe(bad.startsWith("[") ? TIPS.records : TIPS.tap);
     }
   });
 });

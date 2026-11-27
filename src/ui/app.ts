@@ -125,6 +125,8 @@ export class GameScreen {
   private areaFx = "";
   /** Skipping Stones' three rolls are on screen: a 6 there rolls nothing more (audit, B3). */
   private stones = false;
+  /** Mr. Lin has just told a person what the square does: its notification is not repeated (owner, 27 Nov 2026). */
+  private toldSquare = false;
   /** Stops listening to the sound switch when the screen goes (audit, B10). */
   private readonly offSound: () => void;
 
@@ -370,12 +372,13 @@ export class GameScreen {
     else await this.wait(800);
     // A quiet turn (Mr. Lin says nothing at its start): his tip, if one waits; the roll's button comes into his panel
     if (me && !(p.skip > 0 || p.boat || p.home || p.stuck || p.slow || pl <= 0)) {
-      const d = this.board.endTile - pl, tip = this.tips.quiet(seat, d >= 1 && d <= 6);
+      const d = this.board.endTile - pl, tip = this.tips.quiet(d >= 1 && d <= 6);
       if (tip) await this.story({ text: esc(tip), art: this.tipArt(tip) }); // it stays until "I understand"; then "Roll die" in the action area
     }
 
     this.areaFx = "";
     this.stones = false;
+    this.toldSquare = false;
     const t = this.game.turn();
     let shown = this.game.events.length, r = t.next(), last = 0;
     for (;;) {
@@ -399,6 +402,8 @@ export class GameScreen {
       r = t.next(a);
     }
     this.overview.setReach(null);
+    // a bump or bad luck of this very turn: its tip now, never at a later turn (owner, 27 Nov 2026)
+    if (me) { const tip = this.tips.endOfTurn(seat); if (tip) await this.story({ text: esc(tip), art: this.tipArt(tip) }); }
     this.turns++;
     this.save();
     this.render();
@@ -435,7 +440,7 @@ export class GameScreen {
     if (p.cards > 0 && (p.home || p.stuck)) return; // the question tells it (A1, A2)
     if (p.home && !this.homeTold[seat]) { this.homeTold[seat] = true; return this.story({ title: esc(M.home?.title ?? ""), text: esc(M.home?.guide ?? ""), art: artFor("house", "") }); }
     // the tree: told once in a stay, not every turn (audit, C4)
-    if (p.stuck && M.treeStuck?.guide && !this.treeTold[seat]) { this.treeTold[seat] = true; return this.story({ text: esc(M.treeStuck.guide), art: artFor("great-tree", "") }); }
+    if (p.stuck && M.treeStuck?.guide && !this.treeTold[seat]) { this.treeTold[seat] = true; return this.story({ text: esc(M.treeStuck.guide), art: artFor("great-tree", ""), tone: "bad", outcome: esc(T.where.tree) }); } // he says the 6 (owner, 27 Nov 2026)
   }
 
   /**
@@ -463,7 +468,7 @@ export class GameScreen {
         let title: string | undefined, text: string | undefined;
         if (home && !this.homeTold[d.player]) { this.homeTold[d.player] = true; title = esc(M.home?.title ?? ""); text = esc(M.home?.guide ?? ""); }
         // at the tree the question itself tells of the tree (owner's rule: Mr. Lin never says it twice)
-        v = await this.talk({ title, text, art: artFor(home ? "house" : "great-tree", ""), question: home ? T.homeQ : T.treeQ, buttons: [{ label: T.useCard, value: "card", primary: true }, { label: T.noCard, value: "roll" }] });
+        v = await this.talk({ title, text, art: artFor(home ? "house" : "great-tree", ""), question: home ? T.homeQ : T.treeQ, says: true, buttons: [{ label: T.useCard, value: "card", primary: true }, { label: T.noCard, value: "roll" }] });
         return v === "card";
       }
       case "punishment": {
@@ -554,12 +559,17 @@ export class GameScreen {
         st.pulse();
         if (tone) { sound.play(tone); st.celebrate(tone); st.stamp(tone); }
         if (t.type === "rollSum") this.stones = true;
-        if (t.type === "tree") { this.treeTold[e.player] = false; if (!(me && t.guide)) this.note("tree", e.player, "bad"); }
-        if (t.cat === "P" && this.person(e.player) && this.cards[e.player] <= 0) this.tips.earn(e.player, "card"); // T4
-        if (t.type === "rollSum") this.note("rollSum", e.player, "good");
         const silent = t.type === "swapLeader" && after[0]?.type === "noLeader"; // owner, 26 Nov 2026: no guide text then
         const question = asked && after.length === 0 && asked.kind !== "waitCard"; // its question tells the story itself
-        if (me && !silent && !question && t.guide) await this.story({ title: esc(t.title ?? ""), text: esc(t.guide), tone, art: this.tileArt(t) });
+        // owner, 27 Nov 2026: for a person, Mr. Lin's story of a green or red square also says what it does, in the
+        // approved words of its notification ("Forward 16 squares."), and the notification is then not repeated;
+        // robots keep only their notifications
+        const what = t.type === "tree" ? T.where.tree : this.outcome(t, e.square); // the tree: "…: needs a 6." (owner, 27 Nov 2026)
+        this.toldSquare = !!(me && !silent && !question && t.guide);
+        if (t.type === "tree") { this.treeTold[e.player] = false; if (!this.toldSquare) this.note("tree", e.player, "bad"); }
+        if (t.cat === "P" && this.person(e.player) && this.cards[e.player] <= 0) this.tips.earn(e.player, "card"); // T4
+        if (t.type === "rollSum" && !this.toldSquare) this.note("rollSum", e.player, "good");
+        if (this.toldSquare) await this.story({ title: esc(t.title ?? ""), text: esc(t.guide!), tone, art: this.tileArt(t), outcome: what && t.cat !== "S" ? esc(cap(what)) : undefined });
         await this.wait(me ? 600 : 1500);
         break;
       }
@@ -576,7 +586,8 @@ export class GameScreen {
       }
       case "jump": {
         sound.play(e.to >= e.from ? "jump-up" : "jump-down");
-        if (e.cause === "tile") {
+        if (e.cause !== "boatBack" && this.toldSquare) { /* Mr. Lin has just said it (owner, 27 Nov 2026) */ }
+        else if (e.cause === "tile") {
           const skip2 = after.some((x) => x.type === "pending" && x.what === "skip" && x.player === e.player);
           this.note(skip2 ? "jumpBackSkip2" : e.to > e.from ? "jumpForward" : "jumpBack", e.player, e.to > e.from ? "good" : "bad", undefined, Math.abs(e.to - e.from));
         } else if (e.cause === "nearest") this.note("nearest", e.player, "good");
@@ -607,7 +618,7 @@ export class GameScreen {
       }
       case "swap": {
         const a = this.places[e.player], b = this.places[e.other];
-        if (e.cause === "leader") this.note("swapLeader", e.player, "good");
+        if (e.cause === "leader") { if (!this.toldSquare) this.note("swapLeader", e.player, "good"); }
         else this.note("areaSwap", e.player, "", e.other);
         await st.fly(b);
         this.places[e.player] = b; this.places[e.other] = a;
@@ -618,11 +629,11 @@ export class GameScreen {
       }
       case "noLeader": this.note("swapLeaderNone", e.player); await this.wait(600); break;
       case "pending":
-        if (e.what === "slow") this.note("slowNext", e.player, "bad");
+        if (e.what === "slow") { if (!this.toldSquare) this.note("slowNext", e.player, "bad"); }
         // the Forest's and the Mountains' effects: Mr. Lin has just said them to a person (owner's rule; audit, C3)
         else if (e.what === "back") { if (!(me && this.areaFx === "backward")) this.note("backward", e.player, "bad"); }
         else if (e.what === "double" && e.player === this.seat) { if (!(me && this.areaFx === "double")) this.note("double", e.player, "good"); }
-        else if (e.what === "double") { if (!after.some((x) => x.type === "pending" && x.what === "double")) this.notes.push(null, esc(B.notes?.doubleOthers ?? ""), "bad"); }
+        else if (e.what === "double") { if (!this.toldSquare && !after.some((x) => x.type === "pending" && x.what === "double")) this.notes.push(null, esc(B.notes?.doubleOthers ?? ""), "bad"); }
         else if (e.what === "skip" && this.areaFx === "swapBehind") this.note("loseTurn", e.player, "bad");
         // T4: the Forest's backward move or the Big City's lost turn, with no card to cancel it
         if (((e.what === "back" && this.areaFx === "backward") || (e.what === "skip" && this.areaFx === "swapBehind")) && this.person(e.player) && this.cards[e.player] <= 0) this.tips.earn(e.player, "card");
@@ -635,7 +646,7 @@ export class GameScreen {
         if (e.source === "market" && e.from !== undefined) {
           this.cards[e.from]--;
           if (e.from === this.seat) this.note("swapMarketGive", e.from, "", e.player); else this.note("swapMarketTake", e.player, "", e.from);
-        } else this.note("card", e.player, "good");
+        } else if (!(e.source === "square" && this.toldSquare)) this.note("card", e.player, "good");
         this.render();
         await this.wait(700);
         break;
@@ -724,7 +735,7 @@ export class GameScreen {
    * Mr. Lin's story of a person's turn, and his tips (owner, Step I phase F): it stays until the person taps
    * "I understand", and the game waits meanwhile (talking time); then the game goes on.
    */
-  private async story(c: { title?: string; text: string; tone?: "good" | "bad" | ""; art?: string }): Promise<void> {
+  private async story(c: { title?: string; text: string; tone?: "good" | "bad" | ""; art?: string; outcome?: string }): Promise<void> {
     await this.talk({ ...c, buttons: [{ label: T.understand, value: "ok", primary: true }] });
   }
 

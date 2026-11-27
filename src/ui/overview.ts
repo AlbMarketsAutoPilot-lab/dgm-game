@@ -279,6 +279,16 @@ export class Overview {
       const x = ox + (c.x + dx) * zoom - size / 2, y = oy + (c.y + dy) * zoom - size / 2;
       t.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)${scale}`;
     });
+    // the notifications sit over the destination's square, as big as it (owner, 27 Nov 2026); when the board is zoomed
+    // in and the square is out of view, they stay inside the board panel
+    const E = this.layout.endPad, ec = this.px(E.centre), ew = (E.w * U - 8) * zoom, eh = (E.h * U - 8) * zoom;
+    const hw = this.host.clientWidth, hh = this.host.clientHeight, lx = this.tokenLayer.offsetLeft, ly = this.tokenLayer.offsetTop;
+    const keep = (v: number, size: number, full: number) => Math.max(0, Math.min(full - size, v));
+    const st = this.host.style;
+    st.setProperty("--end-x", `${keep(lx + ox + ec.x * zoom - ew / 2, ew, hw).toFixed(1)}px`);
+    st.setProperty("--end-y", `${keep(ly + oy + ec.y * zoom - eh / 2, eh, hh).toFixed(1)}px`);
+    st.setProperty("--end-w", `${Math.min(ew, hw).toFixed(1)}px`);
+    st.setProperty("--end-h", `${Math.min(eh, hh).toFixed(1)}px`);
     const where = (pos: Pos) => pos <= 0 ? "at Home" : pos === this.end ? `at ${this.board.destination?.name ?? "the end"}` : `on square ${pos}`;
     this.svg.setAttribute("aria-label", `The whole board. ${this.places.map((pos, i) => `${PLAYERS[i].name} ${where(pos)}`).join(", ")}.`);
   }

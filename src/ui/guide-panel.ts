@@ -29,6 +29,9 @@ export interface GuideContent {
   tone?: "good" | "bad" | "";
   /** The question of a choice. */
   question?: string;
+  /** The question is his own words (at Home and at the fallen tree, owner 26–27 Nov 2026): it goes inside his quote,
+   * after his story. */
+  says?: boolean;
   buttons?: GuideButton[];
 }
 
@@ -100,9 +103,9 @@ export class GuidePanel {
       <header class="gp-head"><p class="gp-name">${esc(this.name)}</p><div class="gp-face" aria-hidden="true"><img src="${face}" alt=""></div></header>
       <div class="gp-body">${c.art ? `<div class="gp-art" aria-hidden="true">${c.art}</div>` : ""}<div class="gp-words">
         ${c.title ? `<h2 class="gp-title">${c.title}</h2>` : ""}
-        ${c.text ? `<p class="gp-text">${c.text}</p>` : ""}
+        ${c.text ? `<p class="gp-text">${c.text}${c.question && c.says ? `<span class="gp-says">${c.question}</span>` : ""}</p>` : ""}
         ${c.outcome ? `<p class="gp-outcome">${c.outcome}</p>` : ""}
-        ${c.question ? `<p class="${c.text ? "gp-question" : "gp-text"}">${c.question}</p>` : "" /* his question alone is his quote (D3) */}
+        ${c.question && !(c.text && c.says) ? `<p class="${c.text ? "gp-question" : "gp-text"}">${c.question}</p>` : "" /* his question alone is his quote (D3) */}
       </div></div>
       <div class="gp-buttons"></div>`;
     // owner, 26 Nov 2026: a little space around it, so it reads as a popup; the space is a dark backdrop, so what is

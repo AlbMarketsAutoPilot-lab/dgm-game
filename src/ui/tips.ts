@@ -3,9 +3,10 @@
 // shows them again. A tip stays until the person taps "I understand" (owner, 27 Nov 2026): no reading timer, and
 // nothing happens while it is open. At most one tip per turn.
 //   T1 sixes: the first "Roll again" after a 6 that moves (not the 6 that frees), if his panel is closed.
+//   T3 bump and T4 card (owner, 27 Nov 2026: a tip never shows unrelated): at the end of the same turn in which this
+//   person bumped someone (T3) or met a punishment the card could have cancelled, holding none (T4); never later.
 //   The others wait for a "quiet turn" (a person's turn where he says nothing at the start), in this order:
-//   T5 exact (the last square 6 or fewer squares away) · T3 bump (after this person bumped someone) · T4 card (after
-//   this person met a punishment the card could have cancelled, holding none) · T2 tap · T6 records (after T2).
+//   T5 exact (the last square 6 or fewer squares away) · T2 tap · T6 records (after T2).
 // Storage: the list of tips shown, apart from the other saved data. Blocked storage: no tips at all (so they never
 // repeat every game); tampered storage: read as none shown. Neither ever shows an error.
 
@@ -63,17 +64,18 @@ export function resetTips(): void {
   }
 }
 
-/** One game's tips: what waits for a person's next quiet turn, and one tip per turn. */
+/** One game's tips: what this turn's person earned (T3, T4), and one tip per turn. */
 export class Tips {
   private readonly waiting = new Map<number, Set<"bump" | "card">>();
   private given = false;
 
-  /** A new turn: a tip may show again. */
+  /** A new turn: a tip may show again; nothing earned in an earlier turn is kept. */
   newTurn(): void {
     this.given = false;
+    this.waiting.clear();
   }
 
-  /** T3 / T4: a person's moment that earns a tip at their next quiet turn (nothing if it was shown already). */
+  /** T3 / T4: a person's moment that earns a tip at the end of this turn (nothing if it was shown already). */
   earn(seat: number, id: "bump" | "card"): void {
     if (shownTips().has(id)) return;
     let w = this.waiting.get(seat);
@@ -86,19 +88,25 @@ export class Tips {
     return this.take("sixes");
   }
 
-  /** The tip for a person's quiet turn (T5, T3, T4, T2, T6), or null. `near`: the last square is 1–6 squares away. */
-  quiet(seat: number, near: boolean): string | null {
+  /** The tip for a person's quiet turn (T5, T2, T6), or null. `near`: the last square is 1–6 squares away. */
+  quiet(near: boolean): string | null {
     if (this.given) return null;
-    const shown = shownTips(), w = this.waiting.get(seat);
-    const order: TipId[] = ["exact", "bump", "card", "tap", "records"];
+    const shown = shownTips();
+    const order: TipId[] = ["exact", "tap", "records"];
     for (const id of order) {
       if (shown.has(id)) continue;
       if (id === "exact" && !near) continue;
-      if ((id === "bump" || id === "card") && !w?.has(id)) continue;
       if (id === "records" && !shown.has("tap")) continue;
-      w?.delete(id as "bump" | "card");
       return this.take(id);
     }
+    return null;
+  }
+
+  /** At the end of a person's turn: the tip of what happened to them in this very turn (T3 bump, then T4 card), or null. */
+  endOfTurn(seat: number): string | null {
+    const w = this.waiting.get(seat);
+    this.waiting.clear();
+    for (const id of ["bump", "card"] as const) if (w?.has(id)) return this.take(id);
     return null;
   }
 
