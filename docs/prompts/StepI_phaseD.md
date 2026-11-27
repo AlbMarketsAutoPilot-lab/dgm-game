@@ -1,11 +1,13 @@
 # Step I, phase D: the destinations (4 new boards with their own designs), prompt for a new session
 
 > Prepared at the end of the audit before phase G (owner, 27 Nov 2026; the audit and its fixes are merged in PR #55).
-> Owner, 27 Nov 2026: the next session works on phase D. Kept as the record of the request.
+> Owner, 27 Nov 2026: the next session works on phase D. Updated the same day after the owner's changes merged in
+> PRs #57–#59 (Mr. Lin's square lines, tips, notifications over the destination's square, area notifications).
+> Kept as the record of the request.
 
 ```text
 Step I, phase D of docs/prompts/StepI_destinations.md for "Don't Get Mad!" (repository AlbMarketsAutoPilot-lab/dgm-game).
-Work on a new branch claude/stepI-D, from main (the audit before phase G is merged: PR #55).
+Work on a new branch claude/stepI-D, from main (the audit before phase G and the owner's changes after it are merged: PRs #55–#59).
 
 HOW TO WORK (my rules; DGM has no CLAUDE.md):
 * One step at a time. When I have to do something, give exactly ONE step with the exact clicks or Command Prompt line (I am on Windows) and what I should see. Stop. Continue only when I say "done".
@@ -15,9 +17,10 @@ HOW TO WORK (my rules; DGM has no CLAUDE.md):
 * Never guess. Verify in the code, the docs or what I paste. If unsure, ASK.
 * Check your own work as a player would before you show it to me (phone upright, phone sideways, PC). Never show me half-empty or placeholder screens.
 * I am on a limited plan: short plain answers, no repeated research, no long logs.
+* When I say STOP, stop at once: end anything still running and do nothing until I say so. When I ask a yes/no question, answer yes or no first.
 
 READ FIRST:
-docs/prompts/StepI_destinations.md Part 2 (all of it: "Destinations", "Rules", "Squares", "Screens and the guide", "Postcards", "Leaderboard", and every "Owner decisions" section, A to F and the audit before phase G), docs/GCD.md (§8.2a rules v3, §9.3 the Lantern Festival's narrative, §11 measurement, §12, §14), docs/analysis/stepI-A_measure.md (how the Lantern Festival was measured), docs/analysis/audit-2026-11-27.md, data/lantern-festival.json (the model for a destination file), src/engine/v3/ (board.ts checks a destination file), tools/sim/engine3.mjs and tools/sim/stepI.mjs (the simulator and the measurement), src/render/layout.ts (the board's shape: only the spiral so far), src/render/art-lantern.ts (the newest pictures), src/ui/ (app.ts, setup.ts, postcards.ts, records-page.ts, guide-panel.ts, tips.ts, save.ts), test/, tools/browser/ (screens.mjs: the 22 sizes).
+docs/prompts/StepI_destinations.md Part 2 (all of it: "Destinations", "Rules", "Squares", "Screens and the guide", "Postcards", "Leaderboard", and every "Owner decisions" section, A to F and the audit before phase G), docs/GCD.md (§8.2a rules v3, §9.3 the Lantern Festival's narrative, §11 measurement, §12, §14), docs/analysis/stepI-A_measure.md (how the Lantern Festival was measured), docs/analysis/audit-2026-11-27.md (and the owner's changes after it: Part 2, "Owner decisions in the audit before phase G"), data/lantern-festival.json (the model for a destination file), src/engine/v3/ (board.ts checks a destination file), tools/sim/engine3.mjs and tools/sim/stepI.mjs (the simulator and the measurement), src/render/layout.ts (the board's shape: only the spiral so far), src/render/art-lantern.ts (the newest pictures), src/ui/ (app.ts, setup.ts, postcards.ts, records-page.ts, guide-panel.ts, tips.ts, save.ts), test/, tools/browser/ (screens.mjs: the 22 sizes).
 In this cloud container the browser checks need: CHROMIUM_PATH=/opt/pw-browsers/chromium npm run test:browser
 
 PHASE D (agreed in Part 2, "Destinations"; the plan's row D):
@@ -26,7 +29,7 @@ PHASE D (agreed in Part 2, "Destinations"; the plan's row D):
 3. Each destination is designed, written and measured on its own, one at a time (the measurement targets of GCD §11.3, as the Lantern Festival in phase A), and each is a later app update.
 4. Postcards: one set per destination; the album sorted by destination. Records: one list for all, or one per destination (to decide; records already keep their destination's id).
 
-What the code does today (checked at the end of the audit, 27 Nov 2026; verify again): the engine reads any destination file that passes src/engine/v3/board.ts (Home + 100 squares, exactly one fallen tree, at most one Dragon Boat, the five area effects); the app plays only "lantern-festival" (DEST in src/ui/app.ts, the start screen's picture, the Records page's picture); the board is drawn only as a spiral (src/render/layout.ts); the postcards, the album title and Mr. Lin's figure are the Lantern Festival's (src/ui/postcards.ts, src/ui/guide-panel.ts); some words in the code name the festival (src/ui/app.ts "squares to the festival", the tip "exact" in src/ui/tips.ts); the saved game keeps its destination (save version 4).
+What the code does today (checked on 27 Nov 2026 after PR #59; verify again): the engine reads any destination file that passes src/engine/v3/board.ts (Home + 100 squares, exactly one fallen tree, at most one Dragon Boat, the five area effects); the app plays only "lantern-festival" (DEST in src/ui/app.ts, the start screen's picture, the Records page's picture); the board is drawn only as a spiral (src/render/layout.ts); the postcards, the album title and Mr. Lin's figure are the Lantern Festival's (src/ui/postcards.ts, src/ui/guide-panel.ts); the notifications sit over the destination's square in the middle of the board (overview.ts gives its place: a new board shape must give it too); area notifications take the area's name from the destination file ("Forest: Red goes backward next turn."); Mr. Lin's square stories end with what the square does, from the destination file's note patterns; some words in the code are the Lantern Festival's and would need each destination's own (src/ui/app.ts: "squares to the festival", the Countryside line "…the 6 gifted by farmers!"; src/ui/tips.ts: the tip "exact"); the saved game keeps its destination (save version 4).
 
 FIRST TASK (no code, no texts, no pictures yet): read the files, then give me
 (1) a few lines on what you found,
