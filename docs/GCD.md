@@ -108,6 +108,8 @@ Decided in the Step I planning session (`docs/prompts/StepI_destinations.md`, Pa
 **Removed (owner, 25 Nov 2026):** lanterns (v2 R18), the third throw (v2 R15–R17), the maximum of three 6s, the moving fallen tree (v2 R19), the Bog and the Bog boots (v2 R6), Hospital (v2 R7, long board only), the Snake Leader, cancelling another player's reward, the two robot levels, the 202-square board, crossroads (v2 R20, removed 15 Oct 2026).
 
 ### 8.3 Event families
+> **Step I (owner, 25 Nov 2026):** the Badge family (the Snake Leader) and the Card family's Bog boots are removed; the Lantern Festival's squares are in `data/lantern-festival.json` (§8.2a, §9.3). The table keeps the v2 origins as the record.
+
 All events belong to a few families. The exact squares, sizes and amounts were decided with the simulator (steps I-3 to I-6 for the long board, I-5 for the short board) and are in the board files.
 
 | Family | What happens | Paper-board origin | Purpose |
@@ -121,7 +123,7 @@ All events belong to a few families. The exact squares, sizes and amounts were d
 | **Badge** | Special status with a duty | **Snake Leader** (138 → 195; the badge holder must take the 202 snake back to 165) | Family signature, late drama |
 | **Landmark** | A named place, no event | Airport, Bank, Hotel, Work, Party | Story anchors |
 
-### 8.4 Heritage that stays ✅
+### 8.4 Heritage that stays ✅ (v2, 14 Oct 2026; Step I removed the 202-square board and the Snake Leader, and the keys squares became "The Flame Goes Out" and "Out Again!": §9.3)
 - ✅ Long board of 202 squares + END (203); short board of 100 + END (101).
 - ✅ Snake Leader: landing on 138 → slide to 195 and get the badge; only the badge holder landing on 202 follows the snake back to 165. Its exact numbers will be confirmed by measurement (§11), not by signature.
 - ✅ "Forgot keys!" and "Forgot keys AGAIN!!!" near the end, swap with the player ahead, and others doubling their throw, all re-told inside the journey (I-4, both boards).
@@ -183,7 +185,7 @@ Game duration is **not** a target ✅. It comes from luck, and the simulator onl
 
 ### 11.1 The three groups of measures ✅ (agreed principle) / 📊 (engine)
 
-| Group | Question | Measures | Status in code (`tools/sim/engine.mjs`) |
+| Group | Question | Measures | Status in code (v2: `tools/sim/archive/v2/engine.mjs`; v3: `tools/sim/engine3.mjs`) |
 |---|---|---|---|
 | **A. Fairness** (before the game) | Does every player start with the same chance? | Win % by seat (turn order), with 95% confidence interval | 📊 exists |
 | **B. Excitement** (during the game) | Is it full of swings and surprises until the end? | Lead changes per game; win % of the player leading at halfway (lower = more open); win % of the player last at halfway (higher = more hope); **late overtakes**; **close finishes**; **jackpots and falls per game**; % of games where someone hits a jackpot | 📊 all exist (step I-2) |
@@ -238,7 +240,7 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 - **One "Roll die"**, only in the action area beside the die, never in a popup; popups are talking time and wait for their own button, the roll is game time with the whole board in view (owner, Step I phase F).
 
 ## 15. Technology ✅ (all free)
-TypeScript + Vite, HTML Canvas, PWA on GitHub Pages; Android: the web game inside a WebView on Google Play, built like the owner's KAJ app (owner, 16 Oct 2026: no Capacitor; plan: `docs/prompts/Step8_android_app.md`). The rules engine reads the frozen board files (`data/board-long.json`, `data/board-short.json`) and is covered by tests that reproduce the simulator's numbers.
+TypeScript + Vite, HTML Canvas, PWA on GitHub Pages; Android: the web game inside a WebView on Google Play, built like the owner's KAJ app (owner, 16 Oct 2026: no Capacitor; plan: `docs/prompts/Step8_android_app.md`). The rules engine (`src/engine/v3`) reads the destination file (`data/lantern-festival.json`, Step I; the v2 board files were removed in phase C8) and is covered by tests that play the simulator's games (`tools/sim/engine3.mjs`) game by game.
 
 ## 16. Owner decisions on I-1 (14 Oct 2026)
 

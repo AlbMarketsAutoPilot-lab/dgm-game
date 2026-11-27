@@ -35,6 +35,8 @@
 | 7b | Thu 15 | **Owner playtest fixes and full audit** (`docs/analysis/audit-2026-10-15.md`): no engine counting bug; screen fixes (die total, ring openings drawn as arrows, overlaps, {p}, waiting reasons, a person rolls every die, a 6 is celebrated, no die passing to robots, "needs exactly N", region pictures and signs, Bonus card text, end buttons), 10 screen sizes, slow-phone check. Owner's rule changes after the real-life test: a 6 only lets you in (6, 2 → square 2), no stair steps, every 6 gives one more throw, Shortcut removed (GCD R2, R17, R20). A second Bonus card: measured, waiting for the owner | `src/ui/*`, `src/render/layout.ts`, report | **High** | – |
 | 8 | Sat 17 | **Android app** — the only reference: `docs/prompts/Step8_android_app.md` (owner's plan, approved 16 Oct). The web game inside a WebView, built like the owner's KAJ app (no Capacitor, no permissions); the owner builds and signs it in **their own Android Studio** on Windows; every step approved first | `android/` | **Medium** | Yes |
 | 9 | Sun 18 | Family playtest → bug list → fixes | fixes | **Low/Medium** | Yes |
+| H ✅ | 21–22 Oct | **Step H** (lanterns, no kick-out, Easy/Normal robots): `docs/prompts/StepH_lanterns.md`; Android 1.1.0 and Windows 1.1.0.0 | `src/*` | High | – ✅ |
+| I | 25 Nov → | **Step I** (new rules v3, Mr. Lin, the Lantern Festival redesigned, Records, How to play, tips; destinations later): plan and every decision in `docs/prompts/StepI_destinations.md`, Part 2. Phases A, B, C, E, F ✅; **audit before G** ✅ (`docs/analysis/audit-2026-11-27.md`, all findings fixed); G (Android 2.0.0, Windows 2.0.0.0) next; D (destinations) after | `src/*`, `data/lantern-festival.json` | High | per phase |
 
 ## Notes
 

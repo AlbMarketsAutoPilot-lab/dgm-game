@@ -1,6 +1,6 @@
 {
   "id": "lantern-festival",
-  "description": "Step I (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Phase B fills in the owner-approved texts and pictures area by area: per square title, guide (Mr. Lin's story, people only), icon, note (own notification); per area icon, announce (owner, 26 Nov 2026: one text with a saying that also tells the area effect; effectText only if a separate effect text is ever needed); notes (notification patterns, {p} = player, {q} = other player, {n} = distance); landmarks; moments. 'name' is a working label, never shown to players. Not used by the app until phase C.",
+  "description": "Step I (owner, 25 Nov 2026): the Lantern Festival on 100 squares with the v3 rules (GCD §8.2a R1-R20, docs/prompts/StepI_destinations.md Part 2). Phase B fills in the owner-approved texts and pictures area by area: per square title, guide (Mr. Lin's story, people only), icon, note (own notification); per area icon, announce (owner, 26 Nov 2026: one text with a saying that also tells the area effect; effectText only if a separate effect text is ever needed); notes (notification patterns, {p} = player, {q} = other player, {n} = distance); landmarks; moments. 'name' is a working label, never shown to players. The app plays it since phase C.",
   "destination": { "name": "The Lantern Festival", "icon": "lanterns" },
   "guide": { "name": "Mr. Lin" },
   "lastTile": 100,

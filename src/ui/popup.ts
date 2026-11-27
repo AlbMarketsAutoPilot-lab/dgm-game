@@ -1,8 +1,7 @@
-// Popups over the whole-board panel (owner, 15 Oct): every story moment, choice and info card is a popup. The
-// stage stays free for the action. A story popup stays open until the next one replaces it, or until the player
-// closes it with ✕ to look at the board. A choice popup can be put aside with ✕ (to look at the board first) and
-// brought back with "Back to your choice". Info popups (a square, a player, a card) open on top and, when closed,
-// give back the popup that was there before.
+// Popups over the whole-board panel (owner, 15 Oct; since Step I phase C, Mr. Lin's story and choices are in his own
+// panel, guide-panel.ts): the info boxes (a tapped square, a player, the Bonus card, the sound switches, "Leave this
+// game?", "Welcome back!") and the win. An info box opens on top and, when closed, gives back what was there before.
+// The win can be put aside with ✕ (to look at the board) and brought back with "Back to the results".
 //
 // Fitting (owner, 15 Oct: "buttons cut, you need to scroll to see them"): a popup sits over the board when it fits
 // there. When it does not (phones: the board is under half the screen), it moves to the big layer, over everything
@@ -107,25 +106,12 @@ export class Popups {
     });
   }
 
-  /** Closes the story popup on screen, if that is all it is (info popups the player opened and choices stay). */
-  closeStory(): void {
-    if (!this.base || this.base.c.buttons?.length || (this.base.c.kind ?? "story") !== "story") return;
-    this.drop(this.base, "replaced");
-    this.base = null;
-    this.back.hidden = true;
-  }
-
   /** Closes everything (a new turn). */
   clear(): void {
     this.closeInfos();
     this.drop(this.base, "replaced");
     this.base = null;
     this.back.hidden = true;
-  }
-
-  /** Whether a story / choice popup is showing. */
-  get showing(): boolean {
-    return !!this.base && !this.base.el.hidden;
   }
 
   /**

@@ -5,6 +5,10 @@
 // waits; "Roll die" is never in it, only in the action area (game time, not talking time).
 // Phase C7 (owner, 26 Nov 2026): his figure is the owner's own picture (src/assets/guide/mr-lin.webp, the white
 // background taken out), in a round medallion at the top right, his name on its left (owner, 26 Nov 2026), breathing gently (still with "reduce motion").
+// Audit of 27 Nov 2026 (D1–D3): where there is room, the panel also shows the picture of what he speaks about (the
+// square, the area, Home, the tree, the boat: the game's own pictures) and his words are larger, so a big panel is never
+// half empty; his words are his quote at every size where it fits, also when the panel covers the whole screen, and
+// also when his words are a question.
 import { esc } from "../render/html";
 import face from "../assets/guide/mr-lin.webp";
 
@@ -16,6 +20,8 @@ export interface GuideButton {
 
 export interface GuideContent {
   title?: string;
+  /** The picture of what he speaks about (inline SVG), shown where there is room. */
+  art?: string;
   /** Mr. Lin's words (our own text, HTML allowed). */
   text?: string;
   /** What happens, in plain words (e.g. "Without the card: back 18 squares."). */
@@ -37,8 +43,15 @@ export class GuidePanel {
    * small screens where his words do not fit in `host` (a folded phone, a small phone, a phone held sideways): then the
    * panel covers everything, so nothing has to scroll.
    */
+  private readonly onResize = () => this.fit();
+
   constructor(private readonly host: HTMLElement, private readonly name: string, private readonly wide?: HTMLElement) {
-    addEventListener("resize", () => this.fit());
+    addEventListener("resize", this.onResize);
+  }
+
+  /** The game screen goes: stop listening to the window (audit, B10). */
+  dispose(): void {
+    removeEventListener("resize", this.onResize);
   }
 
   /**
@@ -50,18 +63,29 @@ export class GuidePanel {
     const el = this.el, back = el?.parentElement;
     if (!el || !back) return;
     const body = back.querySelector<HTMLElement>(".gp-body")!, over = () => body.scrollHeight > body.clientHeight + 2;
-    el.classList.remove("gp-quote", "small");
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const art = !!el.querySelector(".gp-art"), quote = !!el.querySelector(".gp-text");
+    // the best that fits: picture and quote, picture and small quote, quote, small quote, picture and plain words, plain
+    const tries: [boolean, "" | "gp-quote" | "small"][] = [[true, "gp-quote"], [true, "small"], [false, "gp-quote"], [false, "small"], [true, ""], [false, ""]];
+    const place = (): boolean => {
+      for (const [pic, q] of tries) {
+        if (pic && !art) continue;
+        if (q && !(quote && body.clientWidth > 17 * rem)) continue;
+        el.classList.toggle("gp-noart", !pic);
+        el.classList.toggle("gp-quote", !!q);
+        el.classList.toggle("small", q === "small");
+        if (!over()) return true;
+      }
+      return false;
+    };
     if (this.wide) {
       back.classList.remove("gp-wide");
       if (back.parentElement !== this.host) this.host.append(back);
     }
-    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    if (el.querySelector(".gp-text") && body.clientWidth > 17 * rem) {
-      el.classList.add("gp-quote");
-      if (over()) el.classList.add("small");
-      if (over()) el.classList.remove("gp-quote", "small");
-    }
-    if (this.wide && over()) { back.classList.add("gp-wide"); this.wide.append(back); }
+    if (place() || !this.wide) return;
+    back.classList.add("gp-wide"); // the whole game screen; the quote is tried again there (audit, D2)
+    this.wide.append(back);
+    place();
   }
 
   /** Opens the panel (replacing what it showed). Resolves with the button pressed, or "replaced". */
@@ -74,11 +98,11 @@ export class GuidePanel {
     el.setAttribute("aria-label", this.name);
     el.innerHTML = `
       <header class="gp-head"><p class="gp-name">${esc(this.name)}</p><div class="gp-face" aria-hidden="true"><img src="${face}" alt=""></div></header>
-      <div class="gp-body"><div class="gp-words">
+      <div class="gp-body">${c.art ? `<div class="gp-art" aria-hidden="true">${c.art}</div>` : ""}<div class="gp-words">
         ${c.title ? `<h2 class="gp-title">${c.title}</h2>` : ""}
         ${c.text ? `<p class="gp-text">${c.text}</p>` : ""}
         ${c.outcome ? `<p class="gp-outcome">${c.outcome}</p>` : ""}
-        ${c.question ? `<p class="gp-question">${c.question}</p>` : ""}
+        ${c.question ? `<p class="${c.text ? "gp-question" : "gp-text"}">${c.question}</p>` : "" /* his question alone is his quote (D3) */}
       </div></div>
       <div class="gp-buttons"></div>`;
     // owner, 26 Nov 2026: a little space around it, so it reads as a popup; the space is a dark backdrop, so what is
@@ -114,11 +138,6 @@ export class GuidePanel {
     row.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
     this.fit();
     return p;
-  }
-
-  /** Takes the buttons away (the panel stays). */
-  noButtons(): void {
-    this.el?.querySelector(".gp-buttons")?.replaceChildren();
   }
 
   get open(): boolean {

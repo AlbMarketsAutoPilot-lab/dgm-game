@@ -1,6 +1,6 @@
 // npm run guide:shots — the 8 pictures of the game screen in "How to play" (owner, 16 Oct; Step I phase F2, 27 Nov 2026:
 // a picture on every page, each approved by the owner), taken from the game itself at phone size (390 × 844, sharp at
-// 2×), so they always show the game as it looks now. Writes src/assets/guide/*.png; run it again after a change to the
+// 3×: audit of 27 Nov 2026, sharp on high-density phones too), so they always show the game as it looks now. Writes src/assets/guide/*.png; run it again after a change to the
 // players' bar, the board, the zoomed square, the die, the notifications or the square boxes. CHROMIUM_PATH=… uses
 // another Chromium.
 import fs from "node:fs";
@@ -15,7 +15,7 @@ const dev = await devServer();
 
 /** A game in the middle: Blue (a person) to play, three robots; private parts reached on purpose, as in the browser tests. */
 async function scene(state) {
-  const { ctx, page } = await newPage(browser, { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  const { ctx, page } = await newPage(browser, { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 });
   await page.goto(dev.url + "/gallery.html");
   await page.evaluate(async (st) => {
     document.body.innerHTML = "";

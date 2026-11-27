@@ -56,8 +56,6 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .ov-sub { font-size: 40px; fill: var(--ink); }
 .ov-fest { font-size: 46px; fill: var(--ink); }
 .zoom-out { position: absolute; left: .5rem; bottom: .5rem; z-index: 0; font-size: 1.05rem; min-height: 2.75rem; padding: .25rem .75rem; }
-.overview-board .flow { animation: flow 1.6s linear infinite; }
-@keyframes flow { to { stroke-dashoffset: -64; } }
 /* P1: the tokens are page elements over the board, so their glide runs on the graphics chip, not the main thread */
 .ov-tokens { position: absolute; inset: .125rem; pointer-events: none; overflow: hidden; }
 .ov-token { position: absolute; left: 0; top: 0; transition: transform 300ms ease-in-out, opacity 300ms; pointer-events: none; will-change: transform; }
@@ -128,20 +126,16 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .pop-head { grid-area: head; min-width: 0; padding-right: 2.625rem; }
 .pop-body { grid-area: body; min-width: 0; }
 .pop-kicker { margin: .25rem 0 0; font-size: 1rem; display: flex; align-items: center; gap: .3125rem; opacity: .9; }
-.pop-kicker .kick { width: 1.25rem; height: 1.25rem; }
 .pop-title { margin: 0; font-weight: normal; font-size: 1.75rem; line-height: 1.05; }
 .pop-text { margin: .125rem 0 0; font-size: 1.12rem; line-height: 1.3; }
 .pop-outcome + .pop-text { margin-top: .5rem; }
 .pop-text .line { display: block; margin-bottom: .1875rem; }
-.pop-text .inl { width: 1rem; height: 1rem; vertical-align: -.125rem; }
 .pop-outcome { margin: .25rem 0 0; padding: .375rem .625rem; font-size: 1.15rem; line-height: 1.2; border-radius: .625rem; background: #efe5cf; border-left: .375rem solid var(--ink); }
 .pop.good .pop-outcome { border-color: var(--good); color: var(--good); background: #e5f0dc; }
 .pop.bad .pop-outcome { border-color: var(--bad); color: #9c2b20; background: #f6e0d8; }
 .pop.swap .pop-outcome { border-color: var(--swap); color: var(--swap-text); background: #e2ebf6; }
 .pop-sub { margin: .5rem 0 0; font-size: .95rem; opacity: .8; }
 .pop-sub.rec-line { font-size: 1.05rem; opacity: 1; }
-.pop-earlier { margin: .125rem 0 0; padding-left: 1.125rem; font-size: 1rem; line-height: 1.25; }
-.pop-earlier .good { color: var(--good); } .pop-earlier .bad { color: #9c2b20; }
 /* The popup's own buttons stay in view when its text has to scroll (owner: no cut buttons) */
 .pop-buttons {
   display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem;
@@ -192,9 +186,9 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .hud .st { display: block; font-size: .95rem; }
 .hud .st.guide { font-size: 1.02rem; line-height: 1.15; color: var(--ink); }
 .hud .who > div { min-width: 0; }
-/* The hand: game cards (Bonus card, Bog boots, Snake Leader); held ones glow, all can be tapped */
+/* The hand: the Bonus card slot (Step I); it glows when held and can be tapped */
 .hand { display: flex; gap: .5rem; margin-left: auto; }
-/* The cards in hand: each card's own face (Bonus card, Bog boots, Snake Leader); grey until held, glowing when held */
+/* The card in hand: the Bonus card's face; grey until held, glowing when held */
 .gcard {
   position: relative; width: clamp(2.5rem, 12vw, 3.625rem); height: auto; aspect-ratio: 58 / 81; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: .5625rem;
   background: none; box-shadow: none; filter: grayscale(1); opacity: .45;
@@ -233,15 +227,11 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 /* ---- The stage ---- */
 .stage { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .strip-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; --card: 12.5rem; }
-/* The note under the picture (owner, 16 Oct, design B): a lane of its own, so it never covers the square or the token;
-   a computer player's event, or what is ahead before a person rolls. Same look as a popup's rule line. */
-.note-lane { flex: 0 0 auto; min-height: 3.25rem; padding-block: .1875rem; display: flex; align-items: center; padding: 0 .75rem; }
+/* A notification's look (notes.ts; .notes .note below places them over the board) */
 .note { width: 100%; display: flex; align-items: center; gap: .5rem; padding: .3125rem .625rem; border-radius: .625rem; background: #efe5cf; border-left: .375rem solid var(--ink); }
 .note.good { background: #e5f0dc; border-color: var(--good); } .note.bad { background: #f6e0d8; border-color: var(--bad); }
 .note .tok { width: 1.6rem; height: 1.6rem; flex: 0 0 auto; }
-.note p { margin: 0; min-width: 0; font-size: 1.08rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-@media (max-width: 360px), (orientation: landscape) and (max-height: 420px) { .note-lane { padding: 0 .5rem; } .note { padding: .25rem .5rem; gap: .375rem; } .note p { font-size: .9rem; line-height: 1.2; } .note .tok { width: 1.3rem; height: 1.3rem; } }
-.note p b { font-weight: bold; } .note.good .m { color: var(--good); } .note.bad .m { color: #9c2b20; }
+@media (max-width: 360px), (orientation: landscape) and (max-height: 420px) { .note { padding: .25rem .5rem; gap: .375rem; } .note p { font-size: .9rem; line-height: 1.2; } .note .tok { width: 1.3rem; height: 1.3rem; } }
 .strip { position: absolute; left: 0; top: 50%; display: flex; gap: calc(var(--card) * .12); margin-top: calc(var(--card) * -0.56); will-change: transform; }
 .card {
   position: relative; flex: 0 0 auto; width: var(--card); height: var(--card);
@@ -250,11 +240,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   box-shadow: 0 .3125rem 0 rgba(75, 35, 119, .25);
 }
 .card.ev { background: repeating-linear-gradient(-52deg, var(--c) 0 .375rem, color-mix(in srgb, var(--c) 45%, var(--paper)) .375rem .6875rem); }
-.card .cnum { position: absolute; left: .625rem; top: .125rem; font-size: calc(var(--card) * .16); line-height: 1; text-shadow: 0 0 .25rem var(--paper), 0 0 .25rem var(--paper); }
-.card .cnum.small { font-size: calc(var(--card) * .1); top: .375rem; }
 /* On the crayon stripes, the number and the good / bad marker sit on paper (like the destination chip) for contrast */
-.card.ev .cnum { top: .375rem; left: .5rem; padding: 0 .375rem .125rem; border-radius: .5625rem; background: var(--paper); border: .125rem solid var(--ink); text-shadow: none; font-size: calc(var(--card) * .13); }
-.card.ev .cnum.small { font-size: calc(var(--card) * .09); }
 .card .cmark { position: absolute; right: .5rem; top: .375rem; width: calc(var(--card) * .16); height: calc(var(--card) * .12); padding: .1875rem .3125rem; box-sizing: content-box; background: var(--paper); border: .125rem solid var(--ink); border-radius: .5625rem; }
 .card .cart { position: absolute; inset: 19% 8% 8%; }
 .card.ev .cart { background: rgba(247, 241, 227, .96); border-radius: .75rem; box-shadow: inset 0 0 0 .125rem rgba(75, 35, 119, .45); overflow: hidden; }
@@ -315,7 +301,7 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 
 /* ---- Start screen ----
    Fits every screen without scrolling (owner, 15 Oct): one column in portrait, sized by the screen's height; two columns
-   when the screen is wider than tall (phones sideways, tablets, PC): journey on the left, players on the right. */
+   when the screen is wider than tall (phones sideways, tablets, PC): the title and buttons on the left, players on the right. */
 .setup {
   --gap: clamp(.25rem, 1.4vh, 1rem); --btn: clamp(2.5rem, 6.2vh, 3.5rem);
   display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: var(--gap);
@@ -329,7 +315,6 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup h2 { font-size: clamp(1.1rem, 2.8vh, 1.4rem); font-weight: normal; margin: 0 0 calc(var(--gap) * .6); line-height: 1.1; }
 .setup .row { display: flex; gap: .625rem; justify-content: center; flex-wrap: wrap; }
 .setup .pick { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; padding: .25rem .875rem; }
-.setup .s-journey .pick { flex: 1 1 10rem; max-width: 15rem; }
 .setup .pick small { font-size: .9rem; opacity: .8; }
 .setup .pick[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .setup .pick.num { width: 4.5rem; font-size: 1.6rem; }
@@ -341,15 +326,9 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup .go { font-size: 1.6rem; padding: .25rem 2.5rem; }
 .setup .continue { display: flex; flex-direction: column; align-items: center; justify-content: center; width: auto; max-width: 100%; font-size: 1.45rem; line-height: 1.1; padding: .25rem 1.75rem; }
 .setup .continue small { font-size: .95rem; opacity: .85; }
-/* The computer players' level (owner, 22 Oct 2026): Easy / Normal under the seats */
-.setup .level { margin-top: var(--gap); }
-/* Short portrait screens: the players in two columns, each with its name over Person / Computer; the level on one line */
+/* Short portrait screens: the players in two columns, each with its name over Person / Computer */
 @media (orientation: portrait) and (max-height: 760px) {
-  .setup .level { display: flex; align-items: center; justify-content: center; gap: .5rem; margin-top: calc(var(--gap) * .5); }
   .setup .seats { margin-top: calc(var(--gap) * .5); }
-  .setup .level h2 { margin: 0; }
-  .setup .level .row { flex-wrap: nowrap; gap: .375rem; }
-  .setup .level .pick { padding: 0 .625rem; }
   .setup .seats { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)); }
   .setup .seat { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "tok name" "tok role"; column-gap: .5rem; row-gap: 0; line-height: 1.05; }
   .setup .seat .mini { grid-area: tok; width: 1.75rem; height: 1.75rem; }
@@ -358,10 +337,10 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 @media (orientation: landscape) {
   .setup {
     display: grid; max-width: 64rem; column-gap: clamp(1rem, 4vw, 3rem); align-content: safe center; justify-items: center;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: ". players" "head players" "cont players" "journey players" "go players" ". players";
-    grid-template-rows: 1fr auto auto auto auto 1fr; row-gap: var(--gap); align-content: stretch; min-height: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: ". players" "head players" "cont players" "go players" ". players";
+    grid-template-rows: 1fr auto auto auto 1fr; row-gap: var(--gap); align-content: stretch; min-height: 100%;
   }
-  .setup .s-head { grid-area: head; } .setup .continue { grid-area: cont; } .setup .s-journey { grid-area: journey; }
+  .setup .s-head { grid-area: head; } .setup .continue { grid-area: cont; }
   .setup .s-players { grid-area: players; align-self: center; } .setup .s-go { grid-area: go; }
   .setup .seats { grid-template-columns: minmax(0, 1fr); }
 }
@@ -457,9 +436,6 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   .act button.big { font-size: 1.15rem; min-height: 3rem; padding: .25rem .5rem; line-height: 1.1; }
   .act { gap: .375rem; }
   .act button.big:not(:only-child) { font-size: .95rem; padding: .25rem .375rem; }
-  /* three choices (the spoil question) stack, each the full width, instead of three slivers */
-  .act:has(> :nth-child(3)) { flex-direction: column; gap: .25rem; }
-  .act:has(> :nth-child(3)) button.big { min-height: 2.5rem; flex: 0 0 auto; }
 }
 
 /* ---- How to play (first time on this device, and from the start screen) ---- */
@@ -513,14 +489,18 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   .records .r-date { white-space: normal; }
 }
 .records .r-lbl { display: none; }
-/* Phones under 390 px (owner, 26 Nov 2026): each record on two lines, "1st ● Red 8:32" then "26 Nov 2026 · Players: 3 · The Lantern Festival" */
-@media (max-width: 389px) {
+/* Phones held upright (owner, 26 Nov 2026, "under 390 px"; audit 27 Nov 2026, D5: up to 440 px, where the table's dates
+   and destinations broke onto two lines): each record on two lines, "1st ● Red 8:32" then "26 Nov 2026 · Players: 3 ·
+   The Lantern Festival"; the second line always starts on its own line */
+@media (max-width: 440px) {
   .records .r-table, .records .r-table tbody { display: block; }
   .records .r-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .records .r-table tr { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .5rem; row-gap: .125rem; padding: .5rem .25rem; border-bottom: .0625rem dashed rgba(75, 35, 119, .3); }
   .records .r-table td { padding: 0; border: 0; font-size: .95rem; }
   .records .r-table tbody tr td.r-rank, .records .r-table tbody tr td.r-player, .records .r-table tbody tr td.r-time { font-size: 1.2rem; }
-  .records .r-rank { flex: 0 0 2.75rem; } .records .r-player { flex: 1 0 55%; } .records .r-time { margin-left: auto; }
+  .records .r-rank { flex: 0 0 2.75rem; } .records .r-player { flex: 1 1 0; min-width: 0; } .records .r-time { flex: 0 0 auto; margin-left: auto; white-space: nowrap; }
+  .records .r-table tr::after { content: ""; order: 1; flex: 0 0 100%; height: 0; }
+  .records .r-date, .records .r-players, .records .r-dest { order: 2; }
   .records .r-players, .records .r-dest { white-space: nowrap; }
   .records .r-date::after, .records .r-players::after { content: " ·"; }
   .records .r-lbl { display: inline; }
@@ -540,11 +520,11 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup .s-legal { margin: 0; font-size: .85rem; line-height: 1.2; opacity: .85; }
 .setup .s-legal a { color: inherit; display: inline-block; padding: .25rem .125rem; }
 @media (orientation: landscape) {
-  .setup { grid-template-areas: ". players" "head players" "cont players" "journey players" "go players" "legal players" ". players"; grid-template-rows: 1fr auto auto auto auto auto 1fr; }
+  .setup { grid-template-areas: ". players" "head players" "cont players" "go players" "legal players" ". players"; grid-template-rows: 1fr auto auto auto auto 1fr; }
   .setup .s-legal { grid-area: legal; }
 }
 @media (orientation: landscape) and (max-height: 420px) {
-  .setup { grid-template-areas: ". players" "head players" "cont players" "journey players" "go players" ". players"; grid-template-rows: 1fr auto auto auto auto 1fr; }
+  .setup { grid-template-areas: ". players" "head players" "cont players" "go players" ". players"; grid-template-rows: 1fr auto auto auto 1fr; }
   .setup .seats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .setup .seat { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "tok name" "tok role"; column-gap: .5rem; row-gap: 0; line-height: 1.05; }
   .setup .seat .mini { grid-area: tok; width: 1.75rem; height: 1.75rem; }
@@ -553,10 +533,8 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 }
 @media (orientation: portrait) and (max-width: 300px) { .setup .s-legal { font-size: .75rem; } .setup .s-legal a { padding-block: 0; } }
 
-/* A folded phone held sideways (280 px high): the four players in two columns, Leave above them; the journeys without
-   their second line */
+/* A folded phone held sideways (280 px high): the four players in two columns, Leave above them */
 @media (orientation: landscape) and (max-height: 300px) {
-  .setup .s-journey .pick small { display: none; }
   .players { grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "leave" "avs"; gap: .375rem; padding: .375rem .5rem; }
   .avs { display: grid; grid-template-columns: repeat(2, 2.75rem); gap: .875rem .875rem; align-content: center; padding: .25rem .5rem; }
   .avatar { width: 2.75rem; }
@@ -655,3 +633,36 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
   .gp-buttons button { flex: 1 1 0; min-height: 2.625rem; font-size: 1rem; padding: .125rem .5rem; }
   .gp-wide .guide-panel { inset: .375rem; }
 }
+
+/* ---- Audit of 27 Nov 2026 ---- */
+/* D1: where there is room, Mr. Lin's panel shows the picture of what he speaks about, and his words are larger on a big
+   panel, so it is never half empty; the picture and his words sit together in the middle (guide-panel.ts decides what
+   fits: the picture goes first when space is short) */
+.guide-panel { container-type: size; }
+.gp-art { flex: 0 0 auto; align-self: center; height: clamp(5.5rem, 34cqh, 16rem); aspect-ratio: 1; margin: auto 0 .625rem; border: .1875rem solid var(--ink);
+  border-radius: 1rem; background: #fffdf6; overflow: hidden; box-shadow: 0 .3125rem 0 rgba(75, 35, 119, .16); }
+.gp-art > svg, .gp-art > .card-face { width: 100%; height: 100%; display: block; }
+.gp-body:has(.gp-art) .gp-words { margin-top: 0; }
+.gp-noart .gp-art { display: none; }
+.gp-noart .gp-body .gp-words { margin-top: auto; }
+@container (min-width: 32rem) and (min-height: 28rem) {
+  .gp-title { font-size: 2.1rem; }
+  .gp-text, .gp-quote.small .gp-text { font-size: 1.55rem; line-height: 1.4; }
+  .gp-quote .gp-text { font-size: 1.65rem; }
+  .gp-question, .gp-outcome { font-size: 1.35rem; }
+}
+/* D6: on phones held sideways and the folded phone, the notifications are smaller, so they cover less of the board */
+@media (max-height: 420px), (max-width: 300px) {
+  .notes { max-width: min(17rem, calc(100% - 1rem)); gap: .25rem; }
+  .notes .note { font-size: .88rem; padding: .1875rem .5rem .1875rem .375rem; border-left-width: .375rem; }
+  .notes .note .tok { width: 1.15rem; height: 1.15rem; }
+}
+/* D4: tablets held upright: everything a little larger, and more room for the board */
+@media (orientation: portrait) and (min-width: 700px) and (min-height: 900px) {
+  html { font-size: clamp(16px, 2.6vw, 30px); }
+  .game { grid-template-rows: auto minmax(0, 52fr) minmax(0, 48fr); }
+}
+/* D8: the start screen shows the destination's picture, where there is room */
+.setup .s-art { width: clamp(5rem, 18vh, 11rem); aspect-ratio: 1; margin: 0 auto calc(var(--gap) * .5); }
+.setup .s-art > svg { width: 100%; height: 100%; display: block; }
+@media (max-height: 700px), (orientation: landscape) and (max-height: 500px) { .setup .s-art { display: none; } }

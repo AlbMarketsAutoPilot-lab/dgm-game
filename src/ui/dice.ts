@@ -1,6 +1,6 @@
 // The die: tumbles, then shows the thrown face. A row beside it lists the throws of the move being made
-// ("6 + 6 + 3 = 15"). A 6 that only lets you enter or leave the Bog moves nobody (R15), so it is shown apart
-// ("6 to enter · 2"): the total is always exactly the squares the token walks (audit, 15 Oct).
+// ("6 + 6 + 3 = 15"). The 6 that frees a player from Home or the fallen tree moves nobody (R2), so it leaves the list:
+// the total is always exactly the squares the token walks (audit, 15 Oct).
 const PIPS: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -10,8 +10,6 @@ export class Dice {
   /** What a screen reader hears: every throw, and the total. */
   private readonly said: HTMLElement;
   private throws: number[] = [];
-  /** A throw that moved nobody (the 6 to enter, the 6 out of the Bog), shown before the list. */
-  private note = "";
   /** The next throw starts a new list (after a move: a new move). */
   private stale = false;
   /** The waiting tap listener, dropped when the throw was made with the button instead (audit: they piled up). */
@@ -47,17 +45,9 @@ export class Dice {
 
   clear(): void {
     this.throws = [];
-    this.note = "";
     this.stale = false;
     this.list.textContent = "";
     this.said.textContent = "";
-  }
-
-  /** The last throw was the 6 that let the player enter (or leave the Bog): it moves nobody. */
-  released(where: "start" | "trap"): void {
-    const six = this.throws.pop();
-    this.note = `${six ?? 6} ${where === "start" ? "to enter" : "out of the Bog"}`;
-    this.show();
   }
 
   /** Step I (owner, 25 Nov 2026): the last throw was the 6 that freed the player (Home, the tree): it moves nobody,
@@ -74,7 +64,7 @@ export class Dice {
 
   private show(): void {
     const total = this.throws.reduce((a, b) => a + b, 0), sum = this.throws.length > 1 ? `${this.throws.join(" + ")} = ${total}` : this.throws.join("");
-    this.list.textContent = this.note ? [this.note, sum].filter(Boolean).join(" · ") : this.throws.length > 1 ? sum : "";
+    this.list.textContent = this.throws.length > 1 ? sum : "";
     this.said.textContent = this.list.textContent || (this.throws.length ? `Rolled ${this.throws[this.throws.length - 1]}` : "");
   }
 
@@ -92,7 +82,7 @@ export class Dice {
     this.die.classList.remove("landed");
     void this.die.offsetWidth;
     if (!reduced()) this.die.classList.add("landed");
-    if (this.stale) { this.throws = []; this.note = ""; this.stale = false; }
+    if (this.stale) { this.throws = []; this.stale = false; }
     this.throws.push(n);
     this.show();
     await new Promise((r) => setTimeout(r, reduced() ? 50 : n === 6 ? 650 : 380));

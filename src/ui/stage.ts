@@ -1,6 +1,6 @@
-// The stage: one big square at a time, with its illustration and story. Moving slides a row of squares under the
-// token: a throw walks square by square (the token hops over each one), an event jump glides along the row
-// (ladders, snakes, "go back to 6"), passing the squares in between quickly.
+// The stage: one big square at a time, with its picture. Moving slides a row of squares under the token: a throw walks
+// square by square (the token hops over each one), an event's move glides along the row (a lift, the Rockslide, a
+// swap), passing the squares in between quickly.
 // Step I phase C3 (owner, 26 Nov 2026): drawn from a v3 destination file. No square numbers on the card; only an event
 // square's destination keeps its "→ 24" label (Part 2, rule 1). Place 0 (and below) is Home.
 import { areaOf, type Board3 } from "../engine/v3";
@@ -23,12 +23,12 @@ const mark = (cat: "R" | "P" | "S") => {
   return `<svg class="cmark" viewBox="0 0 20 14" aria-hidden="true"><path d="${d}" fill="${cat === "S" ? catColour(cat) : "none"}" stroke="${catColour(cat)}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 };
 
-/** What the stage says about a place: the card's look, and a caption for when a token stands there. */
-export function describe(board: Board3, pos: Pos): { html: string; cls: string; style: string; caption: string } {
+/** What the stage shows for a place: the card's look. */
+export function describe(board: Board3, pos: Pos): { html: string; cls: string; style: string } {
   const home = board.moments?.home?.title ?? "Home", dest = board.destination?.name ?? "";
-  if (pos <= 0) return { cls: "home", style: "", caption: home, html: `<div class="cart">${artFor("house", home)}</div><span class="cname">${esc(home)}</span>` };
+  if (pos <= 0) return { cls: "home", style: "", html: `<div class="cart">${artFor("house", home)}</div><span class="cname">${esc(home)}</span>` };
   if (pos >= board.endTile) {
-    return { cls: "end ev", style: "--c:#f2c230", caption: dest, html: `<div class="cart">${artFor(board.destination?.icon ?? "lanterns", dest)}</div><span class="cname big">${esc(dest)}</span>` };
+    return { cls: "end ev", style: "--c:#f2c230", html: `<div class="cart">${artFor(board.destination?.icon ?? "lanterns", dest)}</div><span class="cname big">${esc(dest)}</span>` };
   }
   const area = areaOf(board, pos), wash = `--wash:${AREA_WASH[board.areas.indexOf(area)] ?? "transparent"}`;
   const t = board.tiles[pos];
@@ -36,12 +36,12 @@ export function describe(board: Board3, pos: Pos): { html: string; cls: string; 
     const title = t.title ?? "", to = t.type === "jump" || t.type === "dragonBoat" ? t.to : undefined;
     const destLabel = to !== undefined ? `<span class="cdest">→ ${to}</span>` : "";
     const art = t.icon === "card" ? cardFace("bonus", title) : artFor(t.icon ?? "card", title);
-    return { cls: "ev", style: `--c:${catColour(t.cat)}`, caption: title, html: `${mark(t.cat)}<div class="cart">${art}</div>${destLabel}` };
+    return { cls: "ev", style: `--c:${catColour(t.cat)}`, html: `${mark(t.cat)}<div class="cart">${art}</div>${destLabel}` };
   }
   const lm = board.landmarks?.[pos];
-  if (lm) return { cls: "plain lm", style: wash, caption: lm.name, html: `<div class="cart soft">${artFor(lm.icon ?? area.icon ?? "", lm.name)}</div><span class="cname">${esc(lm.name)}</span>` };
+  if (lm) return { cls: "plain lm", style: wash, html: `<div class="cart soft">${artFor(lm.icon ?? area.icon ?? "", lm.name)}</div><span class="cname">${esc(lm.name)}</span>` };
   // A plain square shows where you are with the area's picture (owner: no repeated area names on every square).
-  return { cls: "plain rg", style: wash, caption: area.name, html: `<div class="cart soft">${artFor(area.icon ?? "", area.name)}</div>` };
+  return { cls: "plain rg", style: wash, html: `<div class="cart soft">${artFor(area.icon ?? "", area.name)}</div>` };
 }
 
 let artStyled = false;
@@ -102,6 +102,12 @@ export class Stage {
       return b;
     });
     setTimeout(() => bits.forEach((b) => b.remove()), kind === "win" ? 5600 : 1600);
+  }
+
+  /** How long the stamps and the area sign still waiting or showing take (ms): Mr. Lin's panel waits for them, so it
+   * never covers them (audit, 27 Nov 2026: C2). */
+  busyFor(): number {
+    return Math.max(0, this.stampFree - performance.now());
   }
 
   /** A big stamp over the square: "Lucky!", "Don't get mad!" … */
@@ -168,7 +174,7 @@ export class Stage {
     this.settle();
   }
 
-  /** Event move (ladder, snake, "go to", fallen tree, swap): glides along the row to `to`. */
+  /** An event's move (a square's jump, "next good square", the Dragon Boat, a swap): glides along the row to `to`. */
   async fly(to: Pos): Promise<void> {
     const from = this.current, end = this.board.endTile;
     const main = (p: Pos) => p >= 0 && p < end;

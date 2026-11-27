@@ -83,7 +83,7 @@ const SETUP_GAME = async (kind) => {
   // the gallery page's own style fixes the squares at 180 px: not part of the game (the stage sizes them itself)
   for (const st of document.head.querySelectorAll("style")) st.textContent = st.textContent.replace(/\.card \{ --card: 180px;[^}]*\}/, "");
   const s = new GameScreen(root, { players: 4, computer: [false, false, false, false] }, () => {});
-  s.gone = true; // the play loop stops at its next pause; the screen stays
+  s.wait = () => new Promise(() => {}); // the play loop stops at its next pause; the screen stays (not "gone": a game left shows no panel)
   await new Promise((r) => setTimeout(r, 50));
   s.pops.clear(); s.guide.close();
   const B = s.board, p = s.game.players[0];

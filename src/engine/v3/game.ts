@@ -1,7 +1,6 @@
 // The v3 rules engine (Step I, owner 25 Nov 2026): one game under docs/GCD.md §8.2a R1–R20 on a v3 destination file.
 // Ported from the v3 simulator (tools/sim/engine3.mjs): with the same seed it plays exactly the same games, throw for
-// throw; test/v3-equivalence.test.ts checks this game by game. Built next to the v2 engine (src/engine/game.ts), which
-// the app uses until phase C.
+// throw; test/v3-equivalence.test.ts checks this game by game. The app plays it since phase C (the v2 engine is gone).
 //
 // A turn is a generator: it runs until a player must choose (R19), yields a Decision3 and continues with the answer
 // passed to next(). `runTurn3` plays a turn with a decider function (the robot, simulations, tests).
