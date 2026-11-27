@@ -362,6 +362,11 @@ all corrections"), and asked to review the result afterwards. Changes to earlier
 - **The start screen** shows the Lantern Festival's picture where there is room.
 - **The Android Back button** closes the postcard album, the Records and How to play first.
 - The How to play pictures are made at 3× (the same approved pictures, sharper).
+- **After the audit (owner, 27 Nov 2026):** Mr. Lin's story of a green or red square also says what it does, in the
+  approved words of its notification ("Forward 16 squares."), for people only; that person's notification is then not
+  repeated; robots keep their notifications. His question at Home goes inside his quote, after his story. **A tip never
+  shows unrelated:** the bump tip and the Bonus card tip show at the end of the same turn in which that person bumped
+  someone or met bad luck holding no card, never at a later turn (phase F had them at the next quiet turn).
 
 ## Phased plan (approved)
 

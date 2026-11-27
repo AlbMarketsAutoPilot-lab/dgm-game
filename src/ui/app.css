@@ -666,3 +666,6 @@ button:focus-visible { outline: .25rem solid var(--ink); outline-offset: .1875re
 .setup .s-art { width: clamp(5rem, 18vh, 11rem); aspect-ratio: 1; margin: 0 auto calc(var(--gap) * .5); }
 .setup .s-art > svg { width: 100%; height: 100%; display: block; }
 @media (max-height: 700px), (orientation: landscape) and (max-height: 500px) { .setup .s-art { display: none; } }
+/* His own question after his story, inside the same quote (owner, 27 Nov 2026: "To begin your journey…" is said by
+   Mr. Lin) */
+.gp-says { display: block; margin-top: .5em; }
