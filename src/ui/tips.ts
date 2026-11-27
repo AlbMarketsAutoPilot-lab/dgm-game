@@ -1,7 +1,7 @@
 // Mr. Lin's tips (Step I phase F, owner 27 Nov 2026): six game tips in his own words, in his panel, each shown once on
 // this device, to people only (never for robots), never when he already says something at that moment; "How to play"
-// shows them again. A tip stays until the person taps its button (the turn's own "Roll die" or "Roll again"): no
-// reading timer, and nothing happens while it is open. At most one tip per turn.
+// shows them again. A tip stays until the person taps "I understand" (owner, 27 Nov 2026): no reading timer, and
+// nothing happens while it is open. At most one tip per turn.
 //   T1 sixes: the first "Roll again" after a 6 that moves (not the 6 that frees), if his panel is closed.
 //   The others wait for a "quiet turn" (a person's turn where he says nothing at the start), in this order:
 //   T5 exact (the last square 6 or fewer squares away) · T3 bump (after this person bumped someone) · T4 card (after

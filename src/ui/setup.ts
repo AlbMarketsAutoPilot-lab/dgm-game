@@ -1,7 +1,9 @@
 // Start screen: how many players, and which seats the computer plays (GCD §8.6). Step I phase C4 (owner, 25–26 Nov
-// 2026): one destination, the Lantern Festival (no board choice), and one robot level (no Easy/Normal choice).
+// 2026): one destination, the Lantern Festival (no board choice), and one robot level (no Easy/Normal choice). Audit of
+// 27 Nov 2026 (D8): the destination's picture above the title, where there is room.
 import { DESTINATIONS } from "../engine/v3";
 import type { Setup } from "./app";
+import { artFor } from "../render/art";
 import { esc } from "../render/html";
 import { PLAYERS, tokenSvg } from "./players";
 import { POSTCARDS, loadAlbum, showAlbum } from "./postcards";
@@ -22,7 +24,7 @@ export function showSetup(root: HTMLElement, last: Setup | null, start: (s: Setu
     // Groups, so the screen can lay them out in one column (portrait) or two (sideways phones, tablets, PC).
     root.innerHTML = `
       <div class="setup">
-        <header class="s-head"><h1>Don't Get Mad!</h1><p class="sub">A hand-drawn journey to the Lantern Festival</p></header>
+        <header class="s-head"><div class="s-art" aria-hidden="true">${artFor(DESTINATIONS["lantern-festival"].destination?.icon ?? "lanterns", "")}</div><h1>Don't Get Mad!</h1><p class="sub">A hand-drawn journey to the Lantern Festival</p></header>
         ${saved ? `<button class="continue primary">Continue game<small>${esc(DESTINATIONS[saved.destination].destination?.name ?? "")} · ${saved.players} players · round ${saved.round}</small></button>` : ""}
         <section class="s-players"><h2>Players</h2>
           <div class="row">${[2, 3, 4].map((n) => `<button class="pick num" data-players="${n}" aria-pressed="${players === n}">${n}</button>`).join("")}</div>

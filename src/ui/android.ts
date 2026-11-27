@@ -10,11 +10,14 @@ export const APP_HOST = "appassets.androidplatform.net";
 export const inApp = (host: string = location.hostname): boolean => host === APP_HOST;
 
 /**
- * B2, the Android Back button (owner: as in KAJ). The app calls `window.dgmBack()`: on the game screen it shows the
- * existing "Leave this game?" popup, the same as the Leave button (true: the page took it); anywhere else the page does
- * not take it (false) and the app closes.
+ * B2, the Android Back button (owner: as in KAJ). The app calls `window.dgmBack()`: a full page on top (the postcard
+ * album, the Records, How to play) closes first, as with its own Back or Skip (audit of 27 Nov 2026); on the game
+ * screen it shows the existing "Leave this game?" popup, the same as the Leave button (true: the page took it);
+ * anywhere else the page does not take it (false) and the app closes.
  */
 export function back(doc: Pick<Document, "querySelector"> = document): boolean {
+  const page = doc.querySelector<HTMLButtonElement>(".album .album-top button, .howto .g-skip");
+  if (page) { page.click(); return true; }
   const leave = doc.querySelector<HTMLButtonElement>(".game .leave");
   if (!leave) return false;
   if (!doc.querySelector('.pop[aria-label="Leave this game?"]:not([hidden])')) leave.click(); // already shown: once is enough

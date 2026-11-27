@@ -343,6 +343,26 @@ and after seeing it.
 - **Checks:** `test/tips.test.ts`, `test/standing.test.ts`; browser checks for the 8 pages at every size and real games
   (`tools/browser/tips.mjs`): tips, game time, the passing of the die, blocked storage.
 
+### Owner decisions in the audit before phase G (27 Nov 2026)
+
+A full audit of the game (code, logic in real games, every screen at 22 sizes): `docs/analysis/audit-2026-11-27.md`.
+The owner approved fixing **every** finding in one batch ("no need for approval, you have my approval right now for
+all corrections"), and asked to review the result afterwards. Changes to earlier decisions that this brought:
+
+- **Mr. Lin's panel** shows the picture of what he speaks about (the game's own approved pictures: the square, the
+  area, Home, the tree, the Dragon Boat, the festival) where there is room, and his words larger on big panels; his
+  question alone (the fallen tree, Home after the first turn) is his quote too. It opens only once the square's stamps
+  and the area sign have been seen (Part 2: his panel never covers them).
+- **Notifications** no longer repeat what Mr. Lin has just said to a person (the Countryside's gifted 6, the Forest's
+  backward move, the Mountains' double, the fallen tree, free to go, the Dragon Boat's 4); they still show for the
+  others' turns. "1 square" instead of "1 squares". At the fallen tree, "The tree is still there…" is said once in a
+  stay, not every turn.
+- **The Swap Market** has no cheer and no "Lucky!" stamp when a player lands on it.
+- **Records:** each record on two lines on phones up to 440 px wide (was: under 390 px).
+- **The start screen** shows the Lantern Festival's picture where there is room.
+- **The Android Back button** closes the postcard album, the Records and How to play first.
+- The How to play pictures are made at 3× (the same approved pictures, sharper).
+
 ## Phased plan (approved)
 
 S = 1 session, M = 2–3, L = 4+.
@@ -355,7 +375,7 @@ S = 1 session, M = 2–3, L = 4+.
 | C ✅ | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level. **Done 26 Nov 2026** (decisions above) | M | Medium |
 | E ✅ | Leaderboard (the Records). **Done 26 Nov 2026** (decisions above) | S–M | Low |
 | F ✅ | Opening guide + in-game tips. **Done 27 Nov 2026** (decisions above) | S | Low |
-| G | New Android (versionCode 4, 2.0.0) and Windows (2.0.0.0) versions, step by step on the owner's PC | M | Low–medium |
+| G | New Android (versionCode 4, 2.0.0) and Windows (2.0.0.0) versions, step by step on the owner's PC (after the audit of 27 Nov 2026) | M | Low–medium |
 | D | Destination screen + new board shapes, then destinations 1–4 one at a time, each measured, each a later app update | L per destination | High cost, low rule risk |
 
 Order: A0 → A → B → C → E → F → G (the improved Lantern Festival is released first), then D.

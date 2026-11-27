@@ -25,46 +25,6 @@ interface Art {
 }
 
 export const ART: Record<string, Art> = {
-  balloon: {
-    svg: `
-      <g class="cloud c1"><path d="M6 80c0-5 6-7 9-4 2-5 10-5 12 0 4-1 7 2 6 6H8c-1 0-2-1-2-2z" fill="#fff" ${S2}/></g>
-      <g class="cloud c2"><path d="M66 30c0-4 5-6 8-3 2-4 8-4 10 0 3-1 6 2 5 5H67c-1 0-1-1-1-2z" fill="#fff" ${S2}/></g>
-      <g class="float">
-        <path d="M50 8C31 8 21 22 24 37c2 10 12 18 18 26h16c6-8 16-16 18-26C79 22 69 8 50 8z" fill="#e8562f" ${S}/>
-        <path d="M50 8c-8 6-10 30-6 55h12c4-25 2-49-6-55z" fill="#f2c230" ${S}/>
-        <path d="M26 31c15 4 33 4 48 0" fill="none" ${S2} opacity=".55"/>
-        <path d="M44 63l2 9M56 63l-2 9" fill="none" ${S2}/>
-        <rect x="41" y="72" width="18" height="12" rx="2.5" fill="#a0683f" ${S}/>
-        <path d="M41 77h18" ${S2}/>
-      </g>`,
-    css: `
-      .art-balloon .float { animation: balloon-float 3.2s ease-in-out infinite alternate; }
-      .art-balloon .c1 { animation: drift 7s ease-in-out infinite alternate; }
-      .art-balloon .c2 { animation: drift 9s ease-in-out infinite alternate-reverse; }
-      @keyframes balloon-float { from { transform: translateY(4px) rotate(-3deg); } to { transform: translateY(-4px) rotate(3deg); } }
-      @keyframes drift { from { transform: translateX(-5px); } to { transform: translateX(6px); } }`,
-  },
-
-  "boot-in-mud": { // The Bog
-    svg: `
-      <ellipse cx="50" cy="76" rx="42" ry="15" fill="#7a5c3e" ${S}/>
-      <ellipse cx="44" cy="73" rx="26" ry="7" fill="#9a7650"/>
-      <g class="boot">
-        <path d="M38 24h17v28l14 6c4 2 5 5 4 9H38z" fill="#4c8a4f" ${S}/>
-        <path d="M38 67h35" ${S}/>
-        <path d="M43 33h8M43 41h8" ${S2}/>
-      </g>
-      <path d="M10 76c9 6 23 9 40 9s31-3 40-9c-7 3-17 5-40 5s-33-2-40-5z" fill="#6b4f34" ${S2}/>
-      <circle class="bub b1" cx="24" cy="74" r="3.4" fill="#b08b62" ${S2}/>
-      <circle class="bub b2" cx="76" cy="75" r="2.8" fill="#b08b62" ${S2}/>
-      <circle class="bub b3" cx="62" cy="71" r="2.2" fill="#b08b62" ${S2}/>`,
-    css: `
-      .art-boot-in-mud .boot { transform-origin: 50% 100%; animation: boot-sink 2.6s ease-in-out infinite alternate; }
-      .art-boot-in-mud .bub { animation: bubble 2.8s ease-out infinite; }
-      .art-boot-in-mud .b2 { animation-delay: .9s; } .art-boot-in-mud .b3 { animation-delay: 1.8s; }
-      @keyframes boot-sink { from { transform: rotate(-6deg) translateY(0); } to { transform: rotate(5deg) translateY(4px); } }
-      @keyframes bubble { 0% { transform: translateY(0) scale(.3); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-22px) scale(1.15); opacity: 0; } }`,
-  },
 
   sheep: {
     svg: `
@@ -89,21 +49,6 @@ export const ART: Record<string, Art> = {
   },
 
 
-
-  fog: {
-    svg: `
-      <path d="M22 84V52M78 84V48" ${S}/>
-      <path d="M12 64l10-20 10 20zM68 60l10-22 10 22z" fill="#3c8c50" ${S}/>
-      <path d="M4 84h92" ${S}/>
-      <rect class="fog f1" x="-14" y="30" width="80" height="13" rx="6.5" fill="#fff" opacity=".92" ${S2}/>
-      <rect class="fog f2" x="34" y="50" width="80" height="13" rx="6.5" fill="#fff" opacity=".92" ${S2}/>
-      <rect class="fog f3" x="-6" y="68" width="72" height="12" rx="6" fill="#fff" opacity=".92" ${S2}/>`,
-    css: `
-      .art-fog .f1 { animation: fog-drift 5s ease-in-out infinite alternate; }
-      .art-fog .f2 { animation: fog-drift 6.5s ease-in-out infinite alternate-reverse; }
-      .art-fog .f3 { animation: fog-drift 4.2s ease-in-out infinite alternate; }
-      @keyframes fog-drift { from { transform: translateX(-8px); } to { transform: translateX(12px); } }`,
-  },
 
   "cable-car": {
     svg: `
@@ -162,43 +107,6 @@ export const ART: Record<string, Art> = {
       @keyframes glow { from { opacity: .45; } to { opacity: 1; } }`,
   },
 
-  "snake-crown": { // the Snake Leader
-    svg: `
-      <path d="M14 86c18 0 22-14 36-14s18-12 6-17-10-16 8-17" fill="none" stroke="${INK}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M14 86c18 0 22-14 36-14s18-12 6-17-10-16 8-17" fill="none" stroke="#e8862f" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M14 86c18 0 22-14 36-14s18-12 6-17-10-16 8-17" fill="none" stroke="${INK}" stroke-width="3" stroke-dasharray="1 9" stroke-linecap="round"/>
-      <g class="tongue"><path d="M78 38h8l3-3M86 38l3 3" fill="none" stroke="#d8433b" stroke-width="2" stroke-linecap="round"/></g>
-      <ellipse cx="68" cy="38" rx="11" ry="8.5" fill="#e8862f" ${S}/>
-      <circle cx="71" cy="35" r="2.6" fill="#fff"/><circle cx="72" cy="35" r="1.3" fill="${INK}"/>
-      <g class="crown"><path d="M57 29l2-13 7 7 4-10 4 10 7-7 2 13z" fill="#f2c230" ${S}/><circle cx="70" cy="23" r="2.4" fill="#d8433b"/></g>
-      <path class="spark s1" d="M88 10l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff6b0" ${S2}/>
-      <path class="spark s2" d="M48 10l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z" fill="#fff6b0" ${S2}/>`,
-    css: `
-      .art-snake-crown .tongue { transform-origin: 0% 50%; animation: tongue 2.2s infinite; }
-      .art-snake-crown .crown { animation: crown-bob 1.6s ease-in-out infinite alternate; }
-      .art-snake-crown .spark { animation: sparkle 1.8s ease-in-out infinite; }
-      .art-snake-crown .s2 { animation-delay: -.9s; }
-      @keyframes tongue { 0%, 70%, 100% { transform: scaleX(0); } 78%, 90% { transform: scaleX(1); } }
-      @keyframes crown-bob { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-2px) rotate(3deg); } }
-      @keyframes sparkle { 0%, 100% { transform: scale(.3) rotate(0); opacity: 0; } 50% { transform: scale(1) rotate(45deg); opacity: 1; } }`,
-  },
-
-  key: {
-    svg: `
-      <g class="jingle">
-        <circle cx="32" cy="42" r="15" fill="#f2c230" ${S}/>
-        <circle cx="32" cy="42" r="5" fill="#f7f1e3" ${S2}/>
-        <path d="M47 42h38M77 42v12M68 42v9" fill="none" stroke="${INK}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M47 42h38M77 42v12M68 42v9" fill="none" stroke="#f2c230" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-      </g>
-      <path class="bang" d="M86 70v12M86 89v.5" fill="none" stroke="#d8433b" stroke-width="5" stroke-linecap="round"/>`,
-    css: `
-      .art-key .jingle { transform-origin: 32% 42%; transform-box: view-box; animation: jingle 1.4s ease-in-out infinite; }
-      .art-key .bang { animation: bang 1.4s ease-in-out infinite; }
-      @keyframes jingle { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(-14deg); } 30% { transform: rotate(10deg); } 45% { transform: rotate(-6deg); } 60% { transform: rotate(0); } }
-      @keyframes bang { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.25); } }`,
-  },
-
   house: { // Home / Start
     svg: `
       <path d="M4 88h92" ${S}/>
@@ -219,17 +127,6 @@ export const ART: Record<string, Art> = {
       @keyframes smoke { 0% { transform: translate(0, 0) scale(.5); opacity: 0; } 20% { opacity: .95; } 100% { transform: translate(10px, -16px) scale(1.4); opacity: 0; } }
       @keyframes window { from { opacity: .7; } to { opacity: 1; } }`,
   },
-};
-
-const keyOnly = ART.key.svg.replace(/<path class="bang"[^>]*\/>/, "");
-ART["two-keys"] = { // "Forgot your keys AGAIN!!!"
-  svg: `<g transform="translate(2 0) scale(.75)">${keyOnly}</g>`
-    + `<g class="k2" transform="translate(16 30) scale(.75)">${keyOnly}</g>`
-    + `<path class="bang" d="M80 22v13M80 42v.5M89 22v13M89 42v.5" fill="none" stroke="#d8433b" stroke-width="5" stroke-linecap="round"/>`,
-  css: `
-    .art-two-keys .jingle { transform-origin: 32% 42%; transform-box: view-box; animation: jingle 1.2s ease-in-out infinite; }
-    .art-two-keys .k2 .jingle { animation-delay: -.5s; }
-    .art-two-keys .bang { animation: bang 1.2s ease-in-out infinite; }`,
 };
 
 Object.assign(ART, TRAVEL, PLACES);

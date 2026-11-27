@@ -1,5 +1,5 @@
 // Types of a v3 destination file (data/lantern-festival.json). Rules: docs/GCD.md §8.2a R1–R20 (owner, 25 Nov 2026).
-// Step I phase A: built next to the v2 engine (src/engine/*.ts), which the app still uses until phase C.
+// The app plays these files since Step I phase C (the v2 engine and its boards were removed in phase C8).
 
 /** R = reward (green ▲), P = punishment (red ▼), S = the Swap Market (blue ◆). */
 export type Category3 = "R" | "P" | "S";

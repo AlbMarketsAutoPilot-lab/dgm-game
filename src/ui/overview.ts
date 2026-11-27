@@ -1,7 +1,7 @@
 // The whole board (the info area, owner 15 Oct): where am I, and what is ahead of me?
 // A labyrinth spiral of plain paper squares with thin ink walls between the rings, as big as the panel allows. No
-// numbers, no colours, no lines: good squares have a green frame (and ▲), bad squares a red frame (and ▼). Tap any
-// square to see what happens there; where squares are small (the long board), the first tap zooms in.
+// numbers: good squares have a green frame (and ▲), bad squares a red frame (and ▼), the Swap Market a blue one (◆).
+// Tap any square to see what happens there; where squares are too small to tap, the first tap zooms in.
 // The squares the current player can reach with one throw of 1–5 show a small die face.
 import type { Board3 } from "../engine/v3";
 import { type BoardLayout, type Place as Pos, type Point, designFor, layoutFor, pointOf } from "../render/layout";
@@ -31,11 +31,11 @@ export class Overview {
   layout!: BoardLayout;
   private readonly board: Board3;
   private svg!: SVGSVGElement;
-  /** The die faces and the fallen tree, over the board with the same view (they change once a turn at most). */
+  /** The die faces, over the board with the same view (they change once a turn at most). */
   private live!: SVGSVGElement;
   /**
    * P1 (owner approved, 15 Oct): the tokens are page elements over the board, not part of its drawing. A glide inside
-   * the drawing made the browser lay out and repaint the whole 200-square board on every frame of every hop (measured:
+   * the drawing made the browser lay out and repaint the whole board on every frame of every hop (measured:
    * 3.4× the work on a slow phone); a page element glides on the graphics chip.
    */
   private readonly tokenLayer: HTMLElement;
@@ -44,7 +44,6 @@ export class Overview {
   private tokenSize = 0;
   private tokens: HTMLElement[] = [];
   private readonly places: Pos[] = [];
-  private tree!: SVGGElement;
   private reach!: SVGGElement;
   private readonly end: number;
   private full = "";
@@ -52,7 +51,6 @@ export class Overview {
   private zoomed = false;
   /** What is shown, so the board can be drawn again in another shape (the screen turned). */
   private current = -1;
-  private roadblock: number | null = null;
   private reachFrom: Pos | null = null;
   private reachDouble = false;
   /** The square that has the board's Tab stop (U5). */
@@ -136,15 +134,13 @@ export class Overview {
     const view = `viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet"`;
     const markup = `<svg class="overview-board" ${view} role="group" aria-label="The whole board">${s}</svg>`
       + `<svg class="overview-live" ${view} aria-hidden="true">`
-      + `<g class="reach"></g>`
-      + `<g class="tree" opacity="0"><path d="M-34 16l64-28M-30 26l64-28" stroke="#6b4f34" stroke-width="13" stroke-linecap="round"/><circle cx="32" cy="-16" r="18" fill="#3c8c50" stroke="${INK}" stroke-width="4"/></g></svg>`;
+      + `<g class="reach"></g></svg>`;
     const tmp = document.createElement("div");
     tmp.innerHTML = markup;
     const svg = tmp.firstElementChild as SVGSVGElement, live = tmp.lastElementChild as SVGSVGElement;
     if (this.svg) { this.svg.replaceWith(svg); this.live.replaceWith(live); } else host.prepend(svg, live);
     this.svg = svg;
     this.live = live;
-    this.tree = live.querySelector(".tree")!;
     this.reach = live.querySelector(".reach")!;
     this.full = `0 0 ${B.w * U} ${B.h * U}`;
     // U5, the keyboard: the board is one Tab stop; the arrow keys walk the road (Home, Start … the festival), Enter or
@@ -187,16 +183,15 @@ export class Overview {
     }
     this.layoutTokens();
     if (this.current >= 0) this.setCurrent(this.current);
-    this.setRoadblock(this.roadblock);
     this.setReach(this.reachFrom, this.reachDouble);
   }
 
-  /** Zooms in around a tap so the squares are big enough to tap (null = the whole board again). */
   /** Back to the whole board (a new turn). */
   zoomOutAll(): void {
     if (this.zoomed) this.zoom(null);
   }
 
+  /** Zooms in around a tap so the squares are big enough to tap (null = the whole board again). */
   private zoom(ev: MouseEvent | null): void {
     if (!ev) { this.view(this.full); this.zoomed = false; this.zoomOut.hidden = true; return; }
     const r = this.svg.getBoundingClientRect(), B = this.layout.bounds;
@@ -233,14 +228,6 @@ export class Overview {
     this.current = seat;
     this.tokens.forEach((t, i) => t.classList.toggle("current", i === seat));
     this.tokens[seat].parentNode!.append(this.tokens[seat]);
-  }
-
-  setRoadblock(square: number | null): void {
-    this.roadblock = square;
-    if (square === null) { this.tree.setAttribute("opacity", "0"); return; }
-    const c = this.px(this.layout.squares[square]);
-    this.tree.setAttribute("transform", `translate(${c.x} ${c.y})`);
-    this.tree.setAttribute("opacity", "1");
   }
 
   /** Die faces on the squares one throw reaches from `pos` (null = none), see `reachSteps`. */

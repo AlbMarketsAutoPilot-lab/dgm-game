@@ -1,6 +1,7 @@
 // npm run test:browser (C3, owner approved 15 Oct): the game tested in a real browser.
 //   1. Whole games through the game screen, replayed in the engine turn by turn (reload and Leave included).
-//   2. Every screen and popup at 19 screen sizes, from a folded phone to a 2560 × 1440 PC screen.
+//   2. Every screen and popup at 22 screen sizes, from a folded phone to a 2560 × 1440 PC screen.
+//   2b. Chosen moments of real games (audit, 27 Nov 2026): leaving in a choice, Skipping Stones, a robot's forced card.
 //   3. The published build: security policy, offline, other apps' caches, tampered storage, the first-visit guide,
 //      the keyboard, an accessibility scan, no fast-forward.
 // QUICK=1 plays fewer games and checks fewer sizes. CHROMIUM_PATH=… uses another Chromium than Playwright's own.
@@ -9,6 +10,7 @@ import { ROOT, Report, devServer, launch, testBuild } from "./common.mjs";
 import { playGame } from "./games.mjs";
 import { SIZES, checkScreens } from "./screens.mjs";
 import { checkPublished } from "./published.mjs";
+import { checkMoments } from "./moments.mjs";
 
 const quick = !!process.env.QUICK;
 // A watchdog: a check that waits forever is a failure, not a hang
@@ -36,6 +38,9 @@ try {
   const sizes = quick ? SIZES.filter(([, , n]) => ["fold", "se1", "iphone14", "se1-land", "ipad-land", "pc-1080"].includes(n)) : SIZES;
   const { problems, combos } = await checkScreens(browser, dev.url, sizes);
   report.add("screen sizes", `${combos} screen / size combinations`, !problems.length, problems.length ? `${problems.length} problems: ${problems.slice(0, 5).join(" | ")}` : "no problem");
+
+  // 2b. Chosen moments of real games
+  await checkMoments(browser, dev.url, report).catch((e) => report.add("chosen moments", "the checks ran to the end", false, String(e).split("\n")[0]));
 
   // 3. The published build
   pub = await testBuild();

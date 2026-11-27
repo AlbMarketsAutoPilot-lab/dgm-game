@@ -66,9 +66,10 @@ class Sound {
     document.addEventListener("visibilitychange", () => { if (document.hidden) void this.ctx?.suspend(); else if (this.ctx) void this.ctx.resume(); });
   }
 
-  /** Called when a switch changes (the switches on screen show the new state). */
-  onChange(fn: () => void): void {
+  /** Called when a switch changes (the switches on screen show the new state). Returns a function that stops it. */
+  onChange(fn: () => void): () => void {
     this.listeners.add(fn);
+    return () => this.listeners.delete(fn);
   }
 
   set(which: keyof Settings, on: boolean): void {

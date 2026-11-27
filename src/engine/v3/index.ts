@@ -1,4 +1,4 @@
-// The v3 rules engine (Step I): pure TypeScript, no DOM. Used by the tests now and by the app from phase C.
+// The v3 rules engine (Step I): pure TypeScript, no DOM. The app, the tests and the measurements use it.
 export * from "./types";
 export { DESTINATIONS, areaOf, parseBoard3 } from "./board";
 export {
