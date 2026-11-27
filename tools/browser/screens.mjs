@@ -78,6 +78,7 @@ const CHECK = () => {
 // are reached on purpose: this is a test). The longest texts of the destination file are used.
 const SETUP_GAME = async (kind) => {
   const { GameScreen } = await import("/src/ui/app.ts");
+  const { TIPS } = await import("/src/ui/tips.ts"); // Mr. Lin's tips (Step I phase F)
   const root = document.querySelector("#app") ?? document.body.appendChild(Object.assign(document.createElement("main"), { id: "app" }));
   // the gallery page's own style fixes the squares at 180 px: not part of the game (the stage sizes them itself)
   for (const st of document.head.querySelectorAll("style")) st.textContent = st.textContent.replace(/\.card \{ --card: 180px;[^}]*\}/, "");
@@ -100,8 +101,9 @@ const SETUP_GAME = async (kind) => {
     case "punish": void s.decide({ kind: "punishment", player: 0, square: sq, tile: bad, area: null }); break;
     case "area": void s.decide({ kind: "punishment", player: 0, square: 80, tile: null, area: long([...B.areas.filter((a) => a.effect?.type === "backward" || a.effect?.type === "swapBehind")], (a) => a.announce ?? "").effect.type }); break;
     case "market": s.places[0] = 79; void s.decide({ kind: "swapMarket", player: 0, give: true, candidates: [1, 2, 3] }); break;
-    case "story": void s.guide.show({ title: area.name, text: area.announce }); void s.ask([{ label: "Roll again", value: "roll", primary: true }]); break;
-    case "pass": void s.guide.show({ title: bad.title, text: bad.guide, tone: "bad" }); void s.ask([{ label: "Pass the die to Yellow ▶", value: "ok", primary: true }]); break;
+    case "story": void s.guide.show({ title: area.name, text: area.announce, buttons: [{ label: "I understand", value: "ok", primary: true }] }); break;
+    case "tip": void s.guide.show({ text: long(Object.values(TIPS), (t) => t), buttons: [{ label: "I understand", value: "ok", primary: true }] }); break;
+    case "pass": s.places[1] = 61; s.places[2] = 19; void s.guide.show({ text: s.standing(0), buttons: [{ label: "Pass the die to Yellow ▶", value: "ok", primary: true }] }); break; // Mr. Lin's words at the passing (phase F)
     case "skip": void s.guide.show({ text: "Rest for now. The road will still be there tomorrow.", buttons: [{ label: "Skip this turn", value: "ok", primary: true }] }); break;
     case "welcome-lin": void s.guide.show({ text: B.areas[0].announce, buttons: [{ label: "Let's go", value: "ok", primary: true }] }); break;
     case "notes": for (const [seat, k] of [[1, "swapMarketTake"], [2, "jumpBackSkip2"], [3, "dragonBoat"]]) s.note(k, seat, "bad", 0, 20); break;
@@ -119,7 +121,7 @@ const SETUP_GAME = async (kind) => {
   }
 };
 const GUIDE_PAGES = 8;
-export const SCREENS = ["setup", "album", "records", "records-empty", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "home", "tree", "punish", "area", "market", "story", "pass", "skip", "welcome-lin", "notes", "player", "card", "square", "leave", "win", "welcome", "sound"];
+export const SCREENS = ["setup", "album", "records", "records-empty", ...Array.from({ length: GUIDE_PAGES }, (_, i) => `guide-${i + 1}`), "turn", "home", "tree", "punish", "area", "market", "story", "tip", "pass", "skip", "welcome-lin", "notes", "player", "card", "square", "leave", "win", "welcome", "sound"];
 
 /** Checks every screen at every size; returns the problems found. */
 export async function checkScreens(browser, url, sizes = SIZES) {

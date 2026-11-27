@@ -1,6 +1,6 @@
 // A v3 destination file: checked against the rules the engine implements (GCD §8.2a R1–R20), refused otherwise.
 import lanternJson from "../../../data/lantern-festival.json";
-import { MOMENT_KEYS } from "./types";
+import { MOMENT_KEYS, STANDING_KEYS } from "./types";
 import type { Area, Board3, Tile3, TileType3 } from "./types";
 
 const TYPES: readonly TileType3[] = [
@@ -25,10 +25,10 @@ export const sentences = (s: string): number => (s.replace(/\bMr\. /g, "Mr ").ma
  * placeholders {p}, {q} and {n}; a notification at most TEXT_LIMITS.noteChars characters; a guide text at most
  * TEXT_LIMITS.guideSentences sentences.
  */
-function checkText(id: string, where: string, s: unknown, kind: "name" | "guide" | "note"): void {
+function checkText(id: string, where: string, s: unknown, kind: "name" | "guide" | "note", marks = ["{p}", "{q}", "{n}"]): void {
   if (typeof s !== "string" || !s.trim()) fail(id, `${where}: text must not be empty`);
   for (const m of s.match(/\d+/g) ?? []) if (Number(m) > 6) fail(id, `${where}: no square numbers in texts (found ${m})`);
-  for (const m of s.match(/\{[^}]*\}/g) ?? []) if (m !== "{p}" && m !== "{q}" && m !== "{n}") fail(id, `${where}: unknown placeholder ${m}`);
+  for (const m of s.match(/\{[^}]*\}/g) ?? []) if (!marks.includes(m)) fail(id, `${where}: unknown placeholder ${m}`);
   if (kind === "note" && s.length > TEXT_LIMITS.noteChars) fail(id, `${where}: a notification has at most ${TEXT_LIMITS.noteChars} characters (${s.length})`);
   if (kind === "guide" && sentences(s) > TEXT_LIMITS.guideSentences) fail(id, `${where}: a guide text has at most ${TEXT_LIMITS.guideSentences} sentences`);
 }
@@ -105,6 +105,7 @@ export function parseBoard3(json: unknown): Board3 {
   // Phase B texts (owner, 25 Nov 2026).
   for (const a of areas) {
     if (a.announce !== undefined) checkText(id, `area ${a.name} announce`, a.announce, "guide");
+    if (a.at !== undefined) checkText(id, `area ${a.name} at`, a.at, "name");
     if (a.effectText !== undefined) {
       if (a.effect === null) fail(id, `area ${a.name}: effect text without an effect`);
       checkText(id, `area ${a.name} effectText`, a.effectText, "guide");
@@ -124,6 +125,12 @@ export function parseBoard3(json: unknown): Board3 {
     if (m.title !== undefined) checkText(id, `moment ${k} title`, m.title, "name");
     if (m.guide !== undefined) checkText(id, `moment ${k} guide`, m.guide, "guide");
     if (m.note !== undefined) checkText(id, `moment ${k} note`, m.note, "note");
+  }
+  // Step I phase F: Mr. Lin's words when a person passes the die (one sentence each: two are said together)
+  for (const [k, t] of Object.entries(b.standing ?? {})) {
+    if (!(STANDING_KEYS as readonly string[]).includes(k)) fail(id, `unknown standing text ${k}`);
+    checkText(id, `standing ${k}`, t, "guide", ["{a}", "{n}", "{q}", "{b}", "{m}"]);
+    if (sentences(t) > 1) fail(id, `standing ${k}: one sentence (two are said together)`);
   }
   return b;
 }

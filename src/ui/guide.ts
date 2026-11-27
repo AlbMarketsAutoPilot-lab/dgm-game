@@ -3,6 +3,7 @@
 // from "How to play" there. Skip, Back / Next, the arrow keys and Escape all work. Every rule in it is the engine's.
 // The pictures are made from the game itself: `npm run guide:shots` (tools/browser/guide-shots.mjs) makes them again.
 import { esc } from "../render/html";
+import { resetTips } from "./tips";
 import welcomeShot from "../assets/guide/welcome.png";
 import homeShot from "../assets/guide/home.png";
 import sixesShot from "../assets/guide/sixes.png";
@@ -77,6 +78,7 @@ function markSeen(): void {
 
 /** Shows the guide over the whole screen; resolves when it is closed (finished or skipped). */
 export function showGuide(): Promise<void> {
+  resetTips(); // Mr. Lin's tips are shown again after "How to play" (owner, Step I phase F)
   return new Promise((done) => {
     const el = document.createElement("div");
     el.className = "howto";

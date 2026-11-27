@@ -2,7 +2,7 @@
 // (docs/prompts/StepI_destinations.md Part 2) and the checker refuses anything the v3 rules do not allow.
 import { describe, expect, it } from "vitest";
 import { DESTINATIONS, TEXT_LIMITS, areaOf, parseBoard3, sentences } from "../src/engine/v3/board";
-import { MOMENT_KEYS } from "../src/engine/v3/types";
+import { MOMENT_KEYS, STANDING_KEYS } from "../src/engine/v3/types";
 import { ART } from "../src/render/art";
 
 const LF = DESTINATIONS["lantern-festival"];
@@ -90,6 +90,16 @@ describe("Lantern Festival (v3): texts and pictures", () => {
     expect(Object.keys(LF.notes ?? {}).length).toBe(25);
     // "swapMarket" is kept for the partner choice, written with the buttons in phase C.
     for (const k of MOMENT_KEYS.filter((m) => m !== "swapMarket")) expect(LF.moments?.[k]?.guide, `moment ${k}`).toBeTruthy();
+    // Step I phase F: Mr. Lin's words when the die is passed, and where a traveller stands in each area
+    for (const k of STANDING_KEYS) expect(LF.standing?.[k], `standing ${k}`).toBeTruthy();
+    for (const a of LF.areas) expect(a.at, `area ${a.name} at`).toBeTruthy();
+  });
+
+  it("Mr. Lin's words at the passing of the die: one sentence each, only their own placeholders", () => {
+    const withStanding = (st: Record<string, string>) => ({ ...LF, standing: { ...LF.standing, ...st } });
+    expect(() => parseBoard3(withStanding({ road: "You stand {a}. Then {n} squares remain." }))).toThrow(/one sentence/);
+    expect(() => parseBoard3(withStanding({ both: "{q} walks {x} squares ahead." }))).toThrow(/unknown placeholder/);
+    expect(() => parseBoard3(withStanding({ lunch: "Time to eat." }))).toThrow(/unknown standing/);
   });
 
   it("every approved area has all its texts", () => {
