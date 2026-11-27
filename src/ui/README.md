@@ -57,9 +57,9 @@ Two areas plus the players:
   the new ones; the album opens from the start screen ("Postcards · 5 / 16") and the win popup.
 
 **Choices** (owner, 15 Oct): at Home or in the Bog with a lantern left, a person picks "Roll for a 6" or "Spend a
-lantern and go"; the Bog boots are offered ("Wear your Bog boots?"), as the Bonus card is. A story popup stays up long
-enough to read (about 4 words a second, 1.5–5 s) before the next one replaces it, with an hourglass turning where the
-buttons go meanwhile.
+lantern and go"; the Bog boots are offered ("Wear your Bog boots?"), as the Bonus card is. Step I phase F (owner, 27 Nov 2026):
+Mr. Lin's stories and tips stay until "I understand" and the game waits; "Roll die" is only in the action area, and a
+person's roll clears the notifications (the reading timer and the hourglass are gone).
 
 **How to play** (`guide.ts`, owner 15–16 Oct): eight short pages, rules only (the v3 rules, Step I phase F), each with a picture of the real game
 screen (`src/assets/guide/`, made by `npm run guide:shots`), once per device before the start screen, and from "How

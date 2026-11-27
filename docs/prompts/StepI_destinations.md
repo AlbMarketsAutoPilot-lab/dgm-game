@@ -263,7 +263,7 @@ approved by the owner after seeing it.
 - **Saved games:** version 4; saves of the old version are dropped, collected postcards are kept.
 - **Removed (C8):** the v2 engine, the 202- and old 100-square boards, their tests, the old story texts, "Spoil it?",
   the sounds lantern-on and bog. The v2 simulator and the paper boards are in `tools/sim/archive/v2/`.
-- **Left for later phases:** "How to play" and its pictures still describe v2 (phase F); the leaderboard (phase E).
+- **Left for later phases:** "How to play" and its pictures still describe v2 (phase F, done); the leaderboard (phase E, done).
 
 ### Owner decisions in phase E (26 Nov 2026)
 
@@ -301,6 +301,48 @@ by the owner.
 - **Left for phase G:** whether the Android app tells the page it is hidden (the 5-second check covers it if not), on
   the owner's phone.
 
+### Owner decisions in phase F (27 Nov 2026)
+
+Phase F (branch `claude/stepI-F`): "How to play" for the v3 rules and Mr. Lin's game tips, plus the owner's fixes to
+how his panel works. Built in steps F1–F8, each approved by the owner; every text and picture approved word for word
+and after seeing it.
+
+- **How to play** (`src/ui/guide.ts`): 8 pages, rules only, no story words ("the last square"): welcome · roll a 6 to
+  leave Home or use the Bonus card · sixes add up, no limit · green ▲ / red ▼ / blue ◆ and tap a square · the Bonus
+  card · areas · bump (no 6 needed after) · the exact number. Every page has a picture of the real game screen with
+  its own hidden label (`src/assets/guide/`, made by `npm run guide:shots`): the start of a game; Blue's turn at Home;
+  a 6 with "A six!" and "Roll again"; the Swap Market's box over the board; the players' card badges, Blue's circled
+  and shown large below (owner); "Now entering · Mountains"; a bump with its two notifications; "needs exactly 3" with
+  a 5 on the die. The picture box fits each picture (up to about a third of the screen), below "Skip"; on phones held
+  sideways the card is wider so the smallest (653 × 280) needs no scrolling. No people drawn.
+- **The Swap Market's box** (tapped on the board) is blue like its square; "blue ◆" on page 4 is blue.
+- **Mr. Lin's tips** (`src/ui/tips.ts`, texts approved word for word): sixes, tap a square, bump, Bonus card, the exact
+  number, the Records, in his own voice. Each once per device, to people only, never when he already speaks, at most one
+  per turn. The sixes tip at the first "Roll again" after a 6 that moves; the others at the start of a "quiet turn" (a
+  person's turn where he says nothing), in this order: the exact number (the last square 6 or fewer squares away, not
+  on the boat) · bump (after this person bumped someone) · Bonus card (after a red square, the Forest's backward move
+  or the Big City's lost turn met with no card) · tap a square · the Records (after "tap a square"). A bump or card tip
+  waiting at the end of a game is forgotten. Opening "How to play" shows the tips again. Stored in `dgm.tips.v1`;
+  blocked storage: no tips; tampered: read as none shown; never an error.
+- **Talking time and game time** (owner: "lets say is game time and not talking time"). Every panel of Mr. Lin stays
+  until one of its own buttons is tapped, and the game waits: his stories and tips close with **"I understand"**;
+  choices keep their buttons; "Let's go" and "Skip this turn" stay. "Roll die" / "Roll again" are only in the action
+  area beside the die, never in a popup. When a person taps "Roll die" (or the die), all notifications go at once, so
+  the whole board is in view; notifications otherwise keep their few seconds; robots never clear them. The reading
+  timer and the hourglass are gone.
+- **"Pass the die to …"** (a one-button popup, as planned) holds Mr. Lin's words on where the player who just played
+  stands (the destination's `standing` texts and each area's `at`, approved word for word, one sentence each; checked
+  by the board check): "You stand in the Mountains, and 45 squares still lie between you and the festival lights. Red
+  walks 10 squares ahead of you, and Green follows 5 squares behind." Also: at Home, at the fallen tree, on the Dragon
+  Boat, leading, last, the others still at Home, nobody left Home; one square: "1 square still lies"
+  (`src/ui/standing.ts`).
+- **His words as a quote** (owner: so they read as said by Mr. Lin): where there is room, a cream card with a gold
+  border and large gold quote marks; smaller when space is short; plain when it would not fit (nothing scrolls).
+- **Privacy policy:** a row for the tips ("Which of Mr. Lin's tips have been shown" / "So each tip is shown only once,
+  until "How to play" is opened again"); effective 27 November 2026.
+- **Checks:** `test/tips.test.ts`, `test/standing.test.ts`; browser checks for the 8 pages at every size and real games
+  (`tools/browser/tips.mjs`): tips, game time, the passing of the die, blocked storage.
+
 ## Phased plan (approved)
 
 S = 1 session, M = 2–3, L = 4+.
@@ -312,7 +354,7 @@ S = 1 session, M = 2–3, L = 4+.
 | B ✅ | Board redesign + full narrative (voice, squares, guide and notification texts, square 54, new pictures: tree, Dragon Boat, Swap Market, area signs); measure again. **Done 26 Nov 2026** (decisions below; GCD §9.3; `docs/analysis/stepI-A_measure.md`, "Phase B") | M–L | Medium |
 | C ✅ | Screens: guide popups, notifications without numbers, Home square, card badge, start screen without board and level. **Done 26 Nov 2026** (decisions above) | M | Medium |
 | E ✅ | Leaderboard (the Records). **Done 26 Nov 2026** (decisions above) | S–M | Low |
-| F | Opening guide + in-game tips | S | Low |
+| F ✅ | Opening guide + in-game tips. **Done 27 Nov 2026** (decisions above) | S | Low |
 | G | New Android (versionCode 4, 2.0.0) and Windows (2.0.0.0) versions, step by step on the owner's PC | M | Low–medium |
 | D | Destination screen + new board shapes, then destinations 1–4 one at a time, each measured, each a later app update | L per destination | High cost, low rule risk |
 

@@ -158,6 +158,7 @@ The board is **one continuous neutral journey**. Each square is the next moment 
 - **Story moments:** Home, back Home after a bump, free to go, still at the tree, the Dragon Boat (waiting, missed the 4, won with the 4) and the finish. The Swap Market's partner choice is written with the buttons in phase C.
 - **Landmarks:** Base Camp (55), Mountain Lodge (56), Central Station (92), Festival Pier (97).
 - **On screen (phase C, owner 26 Nov 2026):** Mr. Lin's panel covers the die after the pieces stop and holds every choice; his figure is the owner's picture; the notifications are on the left. Details: `docs/prompts/StepI_destinations.md`, "Owner decisions in phase C".
+- **Talking time and game time (phase F, owner 27 Nov 2026):** each panel of Mr. Lin waits for its own button (stories and tips: "I understand"); "Roll die" is only beside the die; a person's roll clears the notifications. His six **tips** (once per device, people only, at most one per turn, again after "How to play"); at "Pass the die" he tells where the player stands; where there is room his words show as a quote. Details: `docs/prompts/StepI_destinations.md`, "Owner decisions in phase F".
 - **Pictures:** `src/render/art-lantern.ts` (the fallen tree, the Village Bus, China's falling-rocks warning sign, the Dragon Boat, the Swap Market, the forest, and the shared area sign frame); the rest reuse the approved pictures. Owner, 26 Nov 2026: pictures are approved only after the owner has seen them, at a grown-up level of detail, and without drawn people where people would be the subject.
 
 ## 10. Boards ✅
@@ -234,6 +235,7 @@ No accounts and no data leave the device (C1). Everything below lives on the dev
 - Tokens move **square by square** (no teleporting); jumps follow their ladder or snake drawing; the camera follows smoothly, with pan and zoom.
 - Card inventory visible for each player.
 - Inclusive: every event has a colour **and** an icon; big buttons; one-tap play; high contrast; reduced motion; no timers (the Records' win clock is never shown during play: owner, Step I phase E). **No read-aloud** (owner, I-7; C3).
+- **One "Roll die"**, only in the action area beside the die, never in a popup; popups are talking time and wait for their own button, the roll is game time with the whole board in view (owner, Step I phase F).
 
 ## 15. Technology ✅ (all free)
 TypeScript + Vite, HTML Canvas, PWA on GitHub Pages; Android: the web game inside a WebView on Google Play, built like the owner's KAJ app (owner, 16 Oct 2026: no Capacitor; plan: `docs/prompts/Step8_android_app.md`). The rules engine reads the frozen board files (`data/board-long.json`, `data/board-short.json`) and is covered by tests that reproduce the simulator's numbers.
