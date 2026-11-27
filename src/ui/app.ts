@@ -124,6 +124,8 @@ export class GameScreen {
   private gone = false;
   /** The area effect of the step on screen (Big City's lost turn is told as such). */
   private areaFx = "";
+  /** The area whose effect is on screen (its name starts its notifications). */
+  private areaIdx = -1;
   /** Skipping Stones' three rolls are on screen: a 6 there rolls nothing more (audit, B3). */
   private stones = false;
   /** Mr. Lin has just told a person what the square does: its notification is not repeated (owner, 27 Nov 2026). */
@@ -216,6 +218,12 @@ export class GameScreen {
   private note(key: string, seat: number, tone: "good" | "bad" | "" = "", q?: number, n?: number): void {
     const s = this.board.notes?.[key];
     if (s) this.notes.push(seat, this.fill(s, seat, q, n), tone);
+  }
+
+  /** An area effect's notification, the area's name first: "Forest: Green goes backward next turn." (owner, 27 Nov 2026) */
+  private areaNote(key: string, seat: number, tone: "good" | "bad" | "" = "", q?: number): void {
+    const s = this.board.notes?.[key], a = this.board.areas[this.areaIdx];
+    if (s && a) this.notes.push(seat, `${esc(a.name)}: ${this.fill(s, seat, q)}`, tone);
   }
 
   private async run(): Promise<void> {
@@ -577,9 +585,10 @@ export class GameScreen {
       case "area": {
         const a = B.areas[e.area];
         this.areaFx = e.effect;
+        this.areaIdx = e.area;
         const question = asked && after.length === 0;
         if (e.effect === "gifted6") this.dice.gift(); // the farmers' 6 under the die, as a rolled 6 shows: then "6 + 3 = 9" (owner, 27 Nov 2026)
-        if (e.effect === "gifted6" && !(me && a.announce)) this.note("gifted6", e.player, "good"); // he says it to a person (C3)
+        if (e.effect === "gifted6" && !(me && a.announce)) this.areaNote("areaGifted6", e.player, "good"); // he says it to a person (C3)
         // owner, 26 Nov 2026: Mr. Lin's welcome and his area announcements have their own sound ("lantern-out")
         if (me && a.announce) sound.play("lantern-out");
         if (me && !question && a.announce) await this.story({ title: esc(a.name), text: esc(a.announce), art: artFor(a.icon ?? "", ""), tone: e.effect === "gifted6" ? "good" : "", outcome: e.effect === "gifted6" ? esc(T.gifted6) : undefined });
@@ -621,7 +630,7 @@ export class GameScreen {
       case "swap": {
         const a = this.places[e.player], b = this.places[e.other];
         if (e.cause === "leader") { if (!this.toldSquare) this.note("swapLeader", e.player, "good"); }
-        else this.note("areaSwap", e.player, "", e.other);
+        else this.areaNote("areaSwap", e.player, "", e.other);
         await st.fly(b);
         this.places[e.player] = b; this.places[e.other] = a;
         this.overview.setPlace(e.player, b); this.overview.setPlace(e.other, a);
@@ -633,10 +642,10 @@ export class GameScreen {
       case "pending":
         if (e.what === "slow") { if (!this.toldSquare) this.note("slowNext", e.player, "bad"); }
         // the Forest's and the Mountains' effects: Mr. Lin has just said them to a person (owner's rule; audit, C3)
-        else if (e.what === "back") { if (!(me && this.areaFx === "backward")) this.note("backward", e.player, "bad"); }
-        else if (e.what === "double" && e.player === this.seat) { if (!(me && this.areaFx === "double")) this.note("double", e.player, "good"); }
+        else if (e.what === "back") { if (!(me && this.areaFx === "backward")) this.areaNote("areaBackward", e.player, "bad"); }
+        else if (e.what === "double" && e.player === this.seat) { if (!(me && this.areaFx === "double")) this.areaNote("areaDouble", e.player, "good"); }
         else if (e.what === "double") { if (!this.toldSquare && !after.some((x) => x.type === "pending" && x.what === "double")) this.notes.push(null, esc(B.notes?.doubleOthers ?? ""), "bad"); }
-        else if (e.what === "skip" && this.areaFx === "swapBehind") this.note("loseTurn", e.player, "bad");
+        else if (e.what === "skip" && this.areaFx === "swapBehind") this.areaNote("loseTurn", e.player, "bad");
         // T4: the Forest's backward move or the Big City's lost turn, with no card to cancel it
         if (((e.what === "back" && this.areaFx === "backward") || (e.what === "skip" && this.areaFx === "swapBehind")) && this.person(e.player) && this.cards[e.player] <= 0) this.tips.earn(e.player, "card");
         this.render();
@@ -648,7 +657,8 @@ export class GameScreen {
         if (e.source === "market" && e.from !== undefined) {
           this.cards[e.from]--;
           if (e.from === this.seat) this.note("swapMarketGive", e.from, "", e.player); else this.note("swapMarketTake", e.player, "", e.from);
-        } else if (!(e.source === "square" && this.toldSquare)) this.note("card", e.player, "good");
+        } else if (e.source === "seaside") this.areaNote("card", e.player, "good");
+        else if (!(e.source === "square" && this.toldSquare)) this.note("card", e.player, "good");
         this.render();
         await this.wait(700);
         break;
