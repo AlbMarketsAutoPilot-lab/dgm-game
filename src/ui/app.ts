@@ -27,6 +27,7 @@ import { RT, rankingLine, showRecords } from "./records-page";
 import { POSTCARDS, loadAlbum, postcardsFor, saveAlbum, showAlbum, type Postcard } from "./postcards";
 import { clearGame, newGame, replay, saveGame, type DestinationId, type SavedGame } from "./save";
 import { Tips } from "./tips";
+import { standingWords } from "./standing";
 
 export interface Setup {
   players: number;
@@ -648,24 +649,10 @@ export class GameScreen {
 
   // ---- Mr. Lin's panel ----
 
-  /**
-   * Mr. Lin's words when a person passes the die (owner, Step I phase F, 27 Nov 2026): where they stand, then the
-   * nearest traveller ahead and behind (players still at Home are not "behind"). Texts: the destination's `standing`.
-   */
+  /** Mr. Lin's words when a person passes the die (owner, Step I phase F): `standing.ts`. */
   private standing(seat: number): string {
-    const S = this.board.standing ?? {}, p = this.game.players[seat], pos = this.places[seat];
-    const area = this.board.areas.find((a) => pos >= a.from && pos <= a.to);
-    const one = (s: string) => s.replace(/\b1 squares\b/g, "1 square");
-    const first = p.boat ? S.boat : p.stuck ? S.tree : pos <= 0 ? S.home : S.road;
-    const others = this.places.map((q, i) => ({ q, i })).filter((o) => o.i !== seat && o.q > 0);
-    const ahead = others.filter((o) => o.q > pos).sort((x, y) => x.q - y.q)[0];
-    const behind = others.filter((o) => o.q < pos).sort((x, y) => y.q - x.q)[0];
-    const second = !others.length ? (pos > 0 ? S.othersHome : S.noneLeft) : ahead && behind ? S.both : behind ? S.leader : S.last;
-    const fill = (s = "") => one(esc(s).replace(/\{a\}/g, esc(area?.at ?? "")).replace(/\{n\}/g, String(this.board.endTile - pos)));
-    const fill2 = (s = "") => one(esc(s)
-      .replace(/\{q\}/g, ahead ? this.name(ahead.i) : "").replace(/\{n\}/g, ahead ? String(ahead.q - pos) : "")
-      .replace(/\{b\}/g, behind ? this.name(behind.i) : "").replace(/\{m\}/g, behind ? String(pos - behind.q) : ""));
-    return [fill(first), fill2(second)].filter(Boolean).join(" ");
+    const p = this.game.players[seat];
+    return standingWords(this.board, seat, this.places, { boat: !!p.boat, stuck: !!p.stuck }, (i) => this.name(i));
   }
 
   /**
