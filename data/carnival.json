@@ -123,7 +123,7 @@
       "name": "The Runaway Oranges",
       "title": "The Runaway Oranges"
     },
-    "41": {
+    "42": {
       "cat": "R",
       "type": "card",
       "name": "Pantalone's Lucky Coin",
@@ -136,7 +136,7 @@
       "name": "The Standing Ferry",
       "title": "The Standing Ferry"
     },
-    "50": {
+    "49": {
       "cat": "P",
       "type": "tree",
       "name": "High Water",
@@ -190,7 +190,7 @@
       "name": "The Broken Glass Swan",
       "title": "The Broken Glass Swan"
     },
-    "81": {
+    "83": {
       "cat": "R",
       "type": "card",
       "name": "A Lucky Glass Bead",
@@ -202,7 +202,7 @@
       "name": "The Mask Market",
       "title": "The Mask Market"
     },
-    "91": {
+    "89": {
       "cat": "P",
       "type": "nearest",
       "target": "P",

@@ -15,7 +15,7 @@ describe("Carnival: the board file", () => {
   it("passes the engine's board check, with the approved areas and squares", () => {
     expect(board.id).toBe("carnival");
     expect(board.areas.map((a) => [a.from, a.to])).toEqual([[0, 6], [7, 26], [27, 46], [47, 66], [67, 86], [87, 100]]);
-    expect(Object.keys(board.tiles).map(Number)).toEqual([4, 9, 14, 19, 25, 29, 33, 37, 41, 45, 50, 54, 58, 62, 65, 69, 73, 77, 81, 88, 91, 95, 98, 100]);
+    expect(Object.keys(board.tiles).map(Number)).toEqual([4, 9, 14, 19, 25, 29, 33, 37, 42, 45, 49, 54, 58, 62, 65, 69, 73, 77, 83, 88, 89, 95, 98, 100]);
   });
 });
 
