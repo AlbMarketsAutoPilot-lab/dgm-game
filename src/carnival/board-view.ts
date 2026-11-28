@@ -9,7 +9,8 @@ import { INK, catColour } from "../render/palette";
 
 /** Squares smaller than this on screen (px) are zoomed in on first. */
 const TAP = 40;
-import { PLAYERS, tokenSvg } from "../ui/players";
+import { PLAYERS } from "../ui/players";
+import { maskAt } from "./masks";
 import { esc } from "../render/html";
 
 const U = 100;
@@ -229,8 +230,8 @@ export class CarnivalBoard {
       const t = document.createElement("div");
       t.className = "ov-token";
       t.dataset.seat = String(i);
-      t.innerHTML = `<svg viewBox="-60 -60 120 120"><circle class="halo" r="58" fill="none" stroke="${INK}" stroke-width="8" stroke-dasharray="14 10"/>`
-        + `<g transform="translate(-40 -40) scale(.8)">${tokenSvg(i).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</g></svg>`;
+      t.innerHTML = `<svg viewBox="-60 -60 120 120"><circle class="halo" r="58" fill="none" stroke="${NAVY}" stroke-width="8" stroke-dasharray="14 10"/>`
+        + `${maskAt(i, -56, -56, 112)}</svg>`; // the Carnival's masks (owner, 28 Nov 2026)
       this.tokenLayer.append(t);
       this.tokens.push(t);
     }
@@ -326,7 +327,7 @@ export class CarnivalBoard {
       const c = this.px(pointOf(this.layout, pos));
       let dx = 0, dy = 0, scale = "";
       // At Home each seat has its own place, smaller and in the lower half: the "Home" label above stays readable (U4)
-      if (pad && this.layout.start.h > 1.5) { dx = ((i % 2) - 0.5) * U * 1.15; dy = (Math.floor(i / 2) - 0.3) * U * 0.95 + 20; scale = " scale(.6)"; }
+      if (pad && this.layout.start.h > 1.5) { dx = ((i % 2) - 0.5) * U * 1.15; dy = (Math.floor(i / 2) - 0.3) * U * 1.05 + 20; scale = " scale(.9)"; }
       else if (pad) { dx = (i - 1.5) * U; dy = 20; scale = " scale(.6)"; }
       else if (n > 1) { dx = (k - (n - 1) / 2) * 30; dy = n > 2 ? (k % 2 ? 14 : -14) : 0; scale = " scale(.8)"; }
       t.style.opacity = "1";
