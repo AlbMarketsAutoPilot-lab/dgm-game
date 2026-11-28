@@ -106,8 +106,8 @@ export class CarnivalBoard {
     let s = `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="${WALL}" stroke="${GOLD}" stroke-width="10"/>`;
     // the squares, each tinted by its area
     const areaOf = (n: number) => Math.max(0, board.areas.findIndex((a) => n >= a.from && n <= a.to));
-    // Squares have sharp corners; at each bend of the snake the two squares of the turn round their outside corner, so the
-    // road reads as one canal winding down the board. Every square stays a square of its own (owner, 28 Nov 2026).
+    // Squares have sharp corners; at each bend of the snake the two squares of the turn join across the wall and round
+    // their outside corner, so the road reads as one canal winding down the board (owner, 28 Nov 2026).
     const COLS = 10, BEND = 0.5 * U;
     const bendOf = (n: number): "" | "tl" | "tr" | "br" | "bl" => {
       const right = L.squares[n].x > (COLS - 1) / 2;
@@ -120,6 +120,12 @@ export class CarnivalBoard {
       const frame = t ? catColour(t.cat) : null, fill = t ? EVENT_PAPER : TINTS[areaOf(n) % TINTS.length];
       const kind = t ? (t.cat === "R" ? ", good square" : t.cat === "P" ? ", bad square" : ", swap square") : "";
       s += `<g class="pick sq" data-pos="${n}" tabindex="-1" role="button" aria-label="Square ${n}${kind}">`;
+      if (bend === "tr" || bend === "tl") { // the joint across the wall: each half in its square's colour (next to an event square, all in the district's colour), a narrow line between them
+        const below = P(L.squares[n + 1]), t2 = board.tiles[n + 1], fill2 = t2 ? EVENT_PAPER : TINTS[areaOf(n + 1) % TINTS.length], mid = (c.y + below.y) / 2;
+        const up = t && !t2 ? fill2 : fill, down = t2 && !t ? fill : fill2;
+        s += `<rect x="${c.x - w / 2}" y="${c.y}" width="${w}" height="${mid - c.y + 1}" fill="${up}"/><rect x="${c.x - w / 2}" y="${mid}" width="${w}" height="${below.y - mid}" fill="${down}"/>`
+          + `<rect x="${c.x - w / 2}" y="${(t && !t2 ? c.y + ht / 2 : t2 && !t ? below.y - ht / 2 - 4 : mid - 2)}" width="${w}" height="4" fill="${WALL}"/>`; // a narrow line: two squares (owner, 28 Nov 2026)
+      }
       s += `<path d="${box(c.x - w / 2, c.y - ht / 2, w, ht, bend, BEND)}" fill="${fill}"/>`;
       if (frame) {
         s += `<path d="${box(c.x - w / 2 + 7, c.y - ht / 2 + 7, w - 14, ht - 14, bend, BEND - 7)}" fill="none" stroke="${frame}" stroke-width="10"/>`
