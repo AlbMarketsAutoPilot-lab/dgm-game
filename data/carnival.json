@@ -1,0 +1,246 @@
+{
+  "id": "carnival",
+  "description": "Step I phase D (owner, 28 Nov 2026): the Carnival on 100 squares, the same v3 rules and engine as the Lantern Festival, its own map drawn as a zig-zag snake (10 squares a row, 11 rows, each area two rows). Map and names approved by the owner on 28 Nov 2026; Signor Marco's stories, the notifications and the pictures come later, each approved by the owner.",
+  "guide": {
+    "name": "Signor Marco"
+  },
+  "lastTile": 100,
+  "endTile": 101,
+  "rules": {
+    "version": 3,
+    "startCards": 1,
+    "capture": true,
+    "endRule": "exact",
+    "maxEventJump": 20,
+    "robotForceAfter": 3
+  },
+  "areas": [
+    {
+      "name": "The Arrival Steps",
+      "from": 0,
+      "to": 6,
+      "effect": null
+    },
+    {
+      "name": "The Labyrinth of Lanes",
+      "from": 7,
+      "to": 26,
+      "effect": {
+        "type": "backward"
+      }
+    },
+    {
+      "name": "The Old Bridge of Shops",
+      "from": 27,
+      "to": 46,
+      "effect": {
+        "type": "gifted6"
+      }
+    },
+    {
+      "name": "The Grand Canal",
+      "from": 47,
+      "to": 66,
+      "effect": {
+        "type": "swapAhead",
+        "range": 20,
+        "otherwise": "card"
+      }
+    },
+    {
+      "name": "The Island of Glass",
+      "from": 67,
+      "to": 86,
+      "effect": {
+        "type": "double"
+      }
+    },
+    {
+      "name": "The Square of the Winged Lion",
+      "from": 87,
+      "to": 100,
+      "effect": {
+        "type": "swapBehind",
+        "range": 10,
+        "otherwise": "loseTurn"
+      }
+    }
+  ],
+  "tiles": {
+    "4": {
+      "cat": "P",
+      "type": "slowNext",
+      "name": "The Sleeping Cat",
+      "title": "The Sleeping Cat"
+    },
+    "9": {
+      "cat": "R",
+      "type": "jump",
+      "to": 26,
+      "name": "The Secret Passage",
+      "title": "The Secret Passage"
+    },
+    "14": {
+      "cat": "R",
+      "type": "card",
+      "name": "The Mask Maker's Workshop",
+      "title": "The Mask Maker's Workshop"
+    },
+    "19": {
+      "cat": "P",
+      "type": "jump",
+      "to": 6,
+      "name": "The Lane Ends at the Water",
+      "title": "The Lane Ends at the Water"
+    },
+    "25": {
+      "cat": "R",
+      "type": "nearest",
+      "target": "R",
+      "name": "Follow Harlequin",
+      "title": "Follow Harlequin"
+    },
+    "29": {
+      "cat": "R",
+      "type": "swapLeader",
+      "name": "Two Identical Masks",
+      "title": "Two Identical Masks"
+    },
+    "33": {
+      "cat": "R",
+      "type": "rollSum",
+      "dice": 2,
+      "name": "Hot Carnival Fritters!",
+      "title": "Hot Carnival Fritters!"
+    },
+    "37": {
+      "cat": "P",
+      "type": "jump",
+      "to": 21,
+      "name": "The Runaway Oranges",
+      "title": "The Runaway Oranges"
+    },
+    "41": {
+      "cat": "R",
+      "type": "card",
+      "name": "Pantalone's Lucky Coin",
+      "title": "Pantalone's Lucky Coin"
+    },
+    "45": {
+      "cat": "R",
+      "type": "jump",
+      "to": 63,
+      "name": "The Standing Ferry",
+      "title": "The Standing Ferry"
+    },
+    "50": {
+      "cat": "P",
+      "type": "tree",
+      "name": "High Water",
+      "title": "High Water"
+    },
+    "54": {
+      "cat": "R",
+      "type": "card",
+      "name": "The Gondolier's Serenade",
+      "title": "The Gondolier's Serenade"
+    },
+    "58": {
+      "cat": "P",
+      "type": "jump",
+      "to": 40,
+      "name": "The Fog Rolls In",
+      "title": "The Fog Rolls In"
+    },
+    "62": {
+      "cat": "R",
+      "type": "rollSum",
+      "dice": 3,
+      "name": "The Costume Regatta",
+      "title": "The Costume Regatta"
+    },
+    "65": {
+      "cat": "R",
+      "type": "dragonBoat",
+      "to": 97,
+      "need": 4,
+      "name": "The Golden Barge",
+      "title": "The Golden Barge"
+    },
+    "69": {
+      "cat": "P",
+      "type": "doubleOthers",
+      "name": "Spellbound by the Glassblowers",
+      "title": "Spellbound by the Glassblowers"
+    },
+    "73": {
+      "cat": "R",
+      "type": "jump",
+      "to": 92,
+      "name": "A Ride with the Fishermen",
+      "title": "A Ride with the Fishermen"
+    },
+    "77": {
+      "cat": "P",
+      "type": "jump",
+      "to": 61,
+      "name": "The Broken Glass Swan",
+      "title": "The Broken Glass Swan"
+    },
+    "81": {
+      "cat": "R",
+      "type": "card",
+      "name": "A Lucky Glass Bead",
+      "title": "A Lucky Glass Bead"
+    },
+    "88": {
+      "cat": "S",
+      "type": "swapMarket",
+      "name": "The Mask Market",
+      "title": "The Mask Market"
+    },
+    "91": {
+      "cat": "P",
+      "type": "nearest",
+      "target": "P",
+      "name": "Swept Along by the Parade",
+      "title": "Swept Along by the Parade"
+    },
+    "95": {
+      "cat": "P",
+      "type": "jump",
+      "to": 85,
+      "name": "Forgot Your Mask!",
+      "title": "Forgot Your Mask!"
+    },
+    "98": {
+      "cat": "P",
+      "type": "jump",
+      "to": 85,
+      "then": "skip2",
+      "name": "Squashed Flat!",
+      "title": "Squashed Flat!"
+    },
+    "100": {
+      "cat": "P",
+      "type": "jump",
+      "to": 82,
+      "name": "The Pigeons Take Flight",
+      "title": "The Pigeons Take Flight"
+    }
+  },
+  "landmarks": {
+    "85": {
+      "name": "The Mask Shop"
+    },
+    "93": {
+      "name": "The Old Coffee House"
+    },
+    "97": {
+      "name": "The Lion Pier"
+    },
+    "99": {
+      "name": "The Clock of the Bronze Giants"
+    }
+  }
+}
