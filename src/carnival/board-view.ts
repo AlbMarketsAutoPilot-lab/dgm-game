@@ -148,8 +148,7 @@ export class CarnivalBoard {
       else lines.push(word);
     }
     const lh = fs * 1.15;
-    // where the plaza is tall (the column beside the rows), the six areas of the road under the name, each with its tint
-    const legend = tall ? board.areas : [];
+    const legend: typeof board.areas = []; // owner, 28 Nov 2026: no colour key in the plaza, only the destination's name
     const chipFs = 30, chipLine = Math.floor((ew - 90) / (chipFs * 0.44)); // one size for all six, long names on two lines
     const wrap = (t: string): string[] => { // one line if it fits, else two lines of about the same length
       if (t.length <= chipLine) return [t];
@@ -173,6 +172,18 @@ export class CarnivalBoard {
       + `<rect x="${e.x - ew / 2 + 14}" y="${e.y - eh / 2 + 14}" width="${ew - 28}" height="${eh - 28}" rx="14" fill="#fff4c8" stroke="${NAVY}" stroke-opacity=".5" stroke-width="3" stroke-dasharray="10 8"/>`
       + plaza
       + `</g>`;
+    { // owner, 28 Nov 2026: two golden arrows only, from Home into square 1 and from square 100 into the destination
+      const arrow = (a: Point, b: Point) => {
+        const p = P(a), q = P(b), ang = (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI, len = Math.hypot(q.x - p.x, q.y - p.y);
+        return `<g transform="translate(${p.x} ${p.y}) rotate(${ang})"><path d="M0 0H${len - 8}" stroke="#f2a530" stroke-width="12" stroke-linecap="round"/>`
+          + `<path d="M${len - 26} -17L${len - 4} 0L${len - 26} 17z" fill="#f2a530" stroke="#f2a530" stroke-width="6" stroke-linejoin="round"/></g>`;
+      };
+      const one = L.squares[1], hd = L.heading[0], last = L.squares[board.lastTile], he = L.heading[board.lastTile];
+      const homeEdge = hd.y ? { x: one.x, y: L.start.centre.y + L.start.h / 2 } : { x: L.start.centre.x + L.start.w / 2, y: one.y };
+      const endEdge = he.y ? { x: last.x, y: L.endPad.centre.y - L.endPad.h / 2 } : { x: L.endPad.centre.x + L.endPad.w / 2, y: last.y };
+      s += arrow({ x: homeEdge.x - hd.x * 0.05, y: homeEdge.y - hd.y * 0.05 }, { x: one.x - hd.x * 0.36, y: one.y - hd.y * 0.36 });
+      s += arrow({ x: last.x + he.x * 0.36, y: last.y + he.y * 0.36 }, { x: endEdge.x + he.x * 0.05, y: endEdge.y + he.y * 0.05 });
+    }
     const view = `viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet"`;
     const markup = `<svg class="overview-board" ${view} role="group" aria-label="The whole board">${s}</svg>`
       + `<svg class="overview-live" ${view} aria-hidden="true">`
