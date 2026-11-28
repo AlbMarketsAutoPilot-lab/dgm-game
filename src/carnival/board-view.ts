@@ -13,11 +13,11 @@ import { PLAYERS, tokenSvg } from "../ui/players";
 import { esc } from "../render/html";
 
 const U = 100;
-/** The carnival's colours (owner, 28 Nov 2026: its own look, not the Lantern Festival's): a midnight-lagoon board with a
- * faint gold harlequin pattern and a gold rim, and each district in its own carnival colour. */
-const WALL = "#10234a";
+/** The carnival's colours (owner, 28 Nov 2026: its own look, not the Lantern Festival's; one plain colour around the
+ * squares, no pattern): Venetian red with a gold rim, and each district in its own light carnival colour. */
+const WALL = "#7a1f33";
 const GOLD = "#e9b949";
-const NAVY = "#10234a";
+const NAVY = "#3d1220"; // the dark ink of the texts and arrows: a deep wine
 /** Event squares keep the game's green / red / blue frames on bright paper. */
 const EVENT_PAPER = "#fffaf0";
 const PIPS: Record<number, [number, number][]> = {
@@ -34,7 +34,7 @@ export const reachSteps = (double: boolean): { face: number; steps: number }[] =
 
 /** Soft paper tints of the six areas, in their order on the road (plain squares only; the event frames keep their colours). */
 // ivory stone · terracotta · saffron · turquoise · amethyst · rose
-const TINTS = ["#f3e9d2", "#eeb79a", "#f5d06e", "#93d8d0", "#c9b0ea", "#f2b3c6"];
+const TINTS = ["#f8f2e4", "#f6d6c6", "#f9e6a8", "#c8ece7", "#e4d9f6", "#f8d5e0"];
 
 /** A w × h box with sharp corners, but for one corner rounded with radius r (the outside of a bend). */
 function box(x: number, y: number, w: number, h: number, corner: "" | "tl" | "tr" | "br" | "bl", r: number): string {
@@ -102,9 +102,7 @@ export class CarnivalBoard {
     this.zoomOut.hidden = true;
     const P = (p: Point) => ({ x: (p.x - B.x) * U, y: (p.y - B.y) * U });
     const M = L.maze, m = P({ x: M.x, y: M.y });
-    let s = `<defs><pattern id="harlequin" width="80" height="120" patternUnits="userSpaceOnUse"><path d="M40 0L80 60 40 120 0 60z" fill="#1a3463" stroke="${GOLD}" stroke-opacity=".22" stroke-width="2"/></pattern></defs>`
-      + `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="${WALL}"/>`
-      + `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="url(#harlequin)" stroke="${GOLD}" stroke-width="10"/>`;
+    let s = `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="${WALL}" stroke="${GOLD}" stroke-width="10"/>`;
     // the squares, each tinted by its area
     const areaOf = (n: number) => Math.max(0, board.areas.findIndex((a) => n >= a.from && n <= a.to));
     // Squares have sharp corners; at each bend of the snake the two squares of the turn join across the wall and round
