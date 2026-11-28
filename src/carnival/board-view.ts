@@ -5,7 +5,7 @@
 import type { Board3 } from "../engine/v3";
 import type { BoardLayout, Place as Pos, Point } from "../render/layout";
 import { designFor, layoutFor, pointOf } from "./layout";
-import { INK, PAPER, catColour } from "../render/palette";
+import { INK, catColour } from "../render/palette";
 
 /** Squares smaller than this on screen (px) are zoomed in on first. */
 const TAP = 40;
@@ -13,7 +13,13 @@ import { PLAYERS, tokenSvg } from "../ui/players";
 import { esc } from "../render/html";
 
 const U = 100;
-const WALL = "#3b1f5e";
+/** The carnival's colours (owner, 28 Nov 2026: its own look, not the Lantern Festival's): a midnight-lagoon board with a
+ * faint gold harlequin pattern and a gold rim, and each district in its own carnival colour. */
+const WALL = "#10234a";
+const GOLD = "#e9b949";
+const NAVY = "#10234a";
+/** Event squares keep the game's green / red / blue frames on bright paper. */
+const EVENT_PAPER = "#fffaf0";
 const PIPS: Record<number, [number, number][]> = {
   1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
   5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
@@ -27,7 +33,15 @@ export const reachSteps = (double: boolean): { face: number; steps: number }[] =
   [1, 2, 3, 4, 5].map((face) => ({ face, steps: double ? 2 * face : face }));
 
 /** Soft paper tints of the six areas, in their order on the road (plain squares only; the event frames keep their colours). */
-const TINTS = ["#f7f1e3", "#ecdcc0", "#f6d3c3", "#d3ebe7", "#e3daf3", "#f2e1a4"];
+// ivory stone · terracotta · saffron · turquoise · amethyst · rose
+const TINTS = ["#f3e9d2", "#eeb79a", "#f5d06e", "#93d8d0", "#c9b0ea", "#f2b3c6"];
+
+/** A w × h box with sharp corners, but for one corner rounded with radius r (the outside of a bend). */
+function box(x: number, y: number, w: number, h: number, corner: "" | "tl" | "tr" | "br" | "bl", r: number): string {
+  const R = (c: string) => (c === corner ? r : 0);
+  return `M${x + R("tl")} ${y}H${x + w - R("tr")}${R("tr") ? `A${r} ${r} 0 0 1 ${x + w} ${y + r}` : ""}V${y + h - R("br")}${R("br") ? `A${r} ${r} 0 0 1 ${x + w - r} ${y + h}` : ""}`
+    + `H${x + R("bl")}${R("bl") ? `A${r} ${r} 0 0 1 ${x} ${y + h - r}` : ""}V${y + R("tl")}${R("tl") ? `A${r} ${r} 0 0 1 ${x + r} ${y}` : ""}Z`;
+}
 
 export class CarnivalBoard {
   layout!: BoardLayout;
@@ -88,47 +102,45 @@ export class CarnivalBoard {
     this.zoomOut.hidden = true;
     const P = (p: Point) => ({ x: (p.x - B.x) * U, y: (p.y - B.y) * U });
     const M = L.maze, m = P({ x: M.x, y: M.y });
-    let s = `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="${WALL}"/>`;
-    // The road steps down into the next row through the wall between the rows: a thin golden arrow, never a strip of
-    // paper (it must not look like a square), as on the Lantern Festival's board.
-    const link = (a: Point, b: Point) => { // a golden arrow from a to b, its head at b
-      const p = P(a), q = P(b), ang = (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI, len = Math.hypot(q.x - p.x, q.y - p.y);
-      return `<g transform="translate(${p.x} ${p.y}) rotate(${ang})"><path d="M0 0H${len - 8}" stroke="#f2c230" stroke-width="12" stroke-linecap="round"/>`
-        + `<path d="M${len - 26} -17L${len - 4} 0L${len - 26} 17z" fill="#f2c230" stroke="#f2c230" stroke-width="6" stroke-linejoin="round"/></g>`;
-    };
-    // from the edge of one place to the edge of the next, across the wall
-    const across = (a: Point, b: Point, h: Point) => link({ x: a.x + h.x * 0.36, y: a.y + h.y * 0.36 }, { x: b.x - h.x * 0.36, y: b.y - h.y * 0.36 });
-    let links = "";
-    for (let n = 1; n < board.lastTile; n++) if (Math.abs(L.squares[n + 1].y - L.squares[n].y) > 0.5) links += across(L.squares[n], L.squares[n + 1], L.heading[n]);
-    { // Home into square 1, and square 100 into the destination
-      const one = L.squares[1], hd = L.heading[0], last = L.squares[board.lastTile], he = L.heading[board.lastTile];
-      const homeEdge = hd.y ? { x: one.x, y: L.start.centre.y + L.start.h / 2 } : { x: L.start.centre.x + L.start.w / 2, y: one.y };
-      const endEdge = he.y ? { x: last.x, y: L.endPad.centre.y - L.endPad.h / 2 } : { x: L.endPad.centre.x + L.endPad.w / 2, y: last.y };
-      links += link({ x: homeEdge.x - hd.x * 0.05, y: homeEdge.y - hd.y * 0.05 }, { x: one.x - hd.x * 0.36, y: one.y - hd.y * 0.36 });
-      links += link({ x: last.x + he.x * 0.36, y: last.y + he.y * 0.36 }, { x: endEdge.x + he.x * 0.05, y: endEdge.y + he.y * 0.05 });
-    }
+    let s = `<defs><pattern id="harlequin" width="80" height="120" patternUnits="userSpaceOnUse"><path d="M40 0L80 60 40 120 0 60z" fill="#1a3463" stroke="${GOLD}" stroke-opacity=".22" stroke-width="2"/></pattern></defs>`
+      + `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="${WALL}"/>`
+      + `<rect x="${m.x}" y="${m.y}" width="${M.w * U}" height="${M.h * U}" rx="22" fill="url(#harlequin)" stroke="${GOLD}" stroke-width="10"/>`;
     // the squares, each tinted by its area
     const areaOf = (n: number) => Math.max(0, board.areas.findIndex((a) => n >= a.from && n <= a.to));
+    // Squares have sharp corners; at each bend of the snake the two squares of the turn join across the wall and round
+    // their outside corner, so the road reads as one canal winding down the board (owner, 28 Nov 2026).
+    const COLS = 10, BEND = 0.5 * U;
+    const bendOf = (n: number): "" | "tl" | "tr" | "br" | "bl" => {
+      const right = L.squares[n].x > (COLS - 1) / 2;
+      if (n % COLS === 0 && n < board.lastTile) return right ? "tr" : "tl";
+      if (n % COLS === 1 && n > 1) return right ? "br" : "bl";
+      return "";
+    };
     for (let n = 1; n <= board.lastTile; n++) {
-      const c = P(L.squares[n]), h = L.heading[n], w = U - 4, ht = U - 4, t = board.tiles[n];
-      const frame = t ? catColour(t.cat) : null;
+      const c = P(L.squares[n]), h = L.heading[n], w = U - 4, ht = U - 4, t = board.tiles[n], bend = bendOf(n);
+      const frame = t ? catColour(t.cat) : null, fill = t ? EVENT_PAPER : TINTS[areaOf(n) % TINTS.length];
       const kind = t ? (t.cat === "R" ? ", good square" : t.cat === "P" ? ", bad square" : ", swap square") : "";
-      s += `<g class="pick sq" data-pos="${n}" tabindex="-1" role="button" aria-label="Square ${n}${kind}"><rect x="${c.x - w / 2}" y="${c.y - ht / 2}" width="${w}" height="${ht}" rx="7" fill="${t ? PAPER : TINTS[areaOf(n) % TINTS.length]}" stroke="${INK}" stroke-opacity=".35" stroke-width="3"/>`;
+      s += `<g class="pick sq" data-pos="${n}" tabindex="-1" role="button" aria-label="Square ${n}${kind}">`;
+      if (bend === "tr" || bend === "tl") { // the joint across the wall: each half in its square's colour; next to an event square, all in the district's colour
+        const below = P(L.squares[n + 1]), t2 = board.tiles[n + 1], fill2 = t2 ? EVENT_PAPER : TINTS[areaOf(n + 1) % TINTS.length], mid = (c.y + below.y) / 2;
+        const up = t && !t2 ? fill2 : fill, down = t2 && !t ? fill : fill2;
+        s += `<rect x="${c.x - w / 2}" y="${c.y}" width="${w}" height="${mid - c.y + 1}" fill="${up}"/><rect x="${c.x - w / 2}" y="${mid}" width="${w}" height="${below.y - mid}" fill="${down}"/>`;
+      }
+      s += `<path d="${box(c.x - w / 2, c.y - ht / 2, w, ht, bend, BEND)}" fill="${fill}"/>`;
       if (frame) {
-        s += `<rect x="${c.x - w / 2 + 7}" y="${c.y - ht / 2 + 7}" width="${w - 14}" height="${ht - 14}" rx="6" fill="none" stroke="${frame}" stroke-width="10"/>`
+        s += `<path d="${box(c.x - w / 2 + 7, c.y - ht / 2 + 7, w - 14, ht - 14, bend, BEND - 7)}" fill="none" stroke="${frame}" stroke-width="10"/>`
           + `<path d="${t!.cat === "R" ? `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 34}l10-14 10 14z` : t!.cat === "P" ? `M${c.x + w / 2 - 34} ${c.y - ht / 2 + 20}l10 14 10-14z` : `M${c.x + w / 2 - 24} ${c.y - ht / 2 + 16}l10 11-10 11-10-11z`}" fill="${frame}"/>`;
-      } else if (n % 3 === 1 && Math.abs(h.x) > 0.5) { // which way the row runs
+      } else if (n % 3 === 1 && Math.abs(h.x) > 0.5 && !bend) { // which way the row runs
         const ang = (Math.atan2(h.y, h.x) * 180) / Math.PI;
-        s += `<path d="M-8 -12l12 12-12 12" transform="translate(${c.x} ${c.y}) rotate(${ang})" fill="none" stroke="${INK}" stroke-opacity=".3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`;
+        s += `<path d="M-8 -12l12 12-12 12" transform="translate(${c.x} ${c.y}) rotate(${ang})" fill="none" stroke="${NAVY}" stroke-opacity=".35" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`;
       }
       s += `</g>`;
     }
-    s += links; // over the squares' edges, so each step down into the next row is plain to see
     // Home (everyone waits here) and the destination's plaza (the notifications show over it)
     const home = board.moments?.home?.title ?? "Home", dest = board.destination?.name ?? "";
     const sp = P(L.start.centre), sw = L.start.w * U - 4, sh = L.start.h * U - 4;
-    s += `<g class="pick" data-pos="0" tabindex="-1" role="button" aria-label="${esc(home)}"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${INK}" stroke-width="7"/>`
-      + `<text x="${sp.x}" y="${sp.y - sh / 2 + 34}" text-anchor="middle" class="ov-sub">${esc(home)}</text></g>`; // the tokens wait below it (U4)
+    s += `<g class="pick" data-pos="0" tabindex="-1" role="button" aria-label="${esc(home)}"><rect x="${sp.x - sw / 2}" y="${sp.y - sh / 2}" width="${sw}" height="${sh}" rx="10" fill="#fff4c8" stroke="${GOLD}" stroke-width="8"/>`
+      + `<text x="${sp.x}" y="${sp.y - sh / 2 + 34}" text-anchor="middle" class="ov-sub" style="fill:${NAVY}">${esc(home)}</text></g>`; // the tokens wait below it (U4)
     const e = P(L.endPad.centre), ew = L.endPad.w * U - 8, eh = L.endPad.h * U - 8;
     // the destination's name on as few lines as fit the plaza's width
     const tall = L.endPad.h > 4, fs = tall ? 46 : 58, perLine = Math.max(6, Math.floor((ew - 50) / (fs * 0.44))), lines: string[] = [];
@@ -151,16 +163,16 @@ export class CarnivalBoard {
     const chips = legend.map((a) => wrap(a.name)), chipH = (n: number) => 22 + n * chipFs * 1.1, chipGap = 14;
     const blockH = lines.length * lh + (legend.length ? 36 + chips.reduce((t, c) => t + chipH(c.length) + chipGap, -chipGap) : 0);
     const top = e.y - blockH / 2 + fs * 0.8;
-    let plaza = lines.map((l, i) => `<text x="${e.x}" y="${top + i * lh}" text-anchor="middle" class="ov-fest" style="font-size:${fs}px">${esc(l)}</text>`).join("");
+    let plaza = lines.map((l, i) => `<text x="${e.x}" y="${top + i * lh}" text-anchor="middle" class="ov-fest" style="font-size:${fs}px;fill:${NAVY}">${esc(l)}</text>`).join("");
     let y = top + (lines.length - 1) * lh + fs * 0.4 + 36;
     chips.forEach((c, i) => {
       const cw = ew - 60, h = chipH(c.length);
-      plaza += `<rect x="${e.x - cw / 2}" y="${y}" width="${cw}" height="${h}" rx="12" fill="${TINTS[i % TINTS.length]}" stroke="${INK}" stroke-opacity=".45" stroke-width="3"/>`
-        + c.map((l, k) => `<text x="${e.x}" y="${y + 11 + chipFs * 0.85 + k * chipFs * 1.1}" text-anchor="middle" fill="${INK}" style="font-size:${chipFs}px">${esc(l)}</text>`).join("");
+      plaza += `<rect x="${e.x - cw / 2}" y="${y}" width="${cw}" height="${h}" rx="12" fill="${TINTS[i % TINTS.length]}" stroke="${NAVY}" stroke-opacity=".35" stroke-width="3"/>`
+        + c.map((l, k) => `<text x="${e.x}" y="${y + 11 + chipFs * 0.85 + k * chipFs * 1.1}" text-anchor="middle" style="font-size:${chipFs}px;fill:${NAVY}">${esc(l)}</text>`).join("");
       y += h + chipGap;
     });
-    s += `<g class="pick" data-pos="${board.endTile}" tabindex="-1" role="button" aria-label="${esc(dest)}"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="24" fill="#f2c230" stroke="${INK}" stroke-width="8"/>`
-      + `<rect x="${e.x - ew / 2 + 14}" y="${e.y - eh / 2 + 14}" width="${ew - 28}" height="${eh - 28}" rx="14" fill="#fff4c8" stroke="${INK}" stroke-width="3" stroke-dasharray="10 8"/>`
+    s += `<g class="pick" data-pos="${board.endTile}" tabindex="-1" role="button" aria-label="${esc(dest)}"><rect x="${e.x - ew / 2}" y="${e.y - eh / 2}" width="${ew}" height="${eh}" rx="24" fill="${GOLD}" stroke="${NAVY}" stroke-width="6"/>`
+      + `<rect x="${e.x - ew / 2 + 14}" y="${e.y - eh / 2 + 14}" width="${ew - 28}" height="${eh - 28}" rx="14" fill="#fff4c8" stroke="${NAVY}" stroke-opacity=".5" stroke-width="3" stroke-dasharray="10 8"/>`
       + plaza
       + `</g>`;
     const view = `viewBox="0 0 ${B.w * U} ${B.h * U}" preserveAspectRatio="xMidYMid meet"`;
