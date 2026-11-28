@@ -1,6 +1,9 @@
 {
   "id": "carnival",
   "description": "Step I phase D (owner, 28 Nov 2026): the Carnival on 100 squares, the same v3 rules and engine as the Lantern Festival, its own map drawn as a zig-zag snake (10 squares a row, 11 rows, each area two rows). Map and names approved by the owner on 28 Nov 2026; Signor Marco's stories, the notifications and the pictures come later, each approved by the owner.",
+  "destination": {
+    "name": "The Flight of the Dove"
+  },
   "guide": {
     "name": "Signor Marco"
   },
